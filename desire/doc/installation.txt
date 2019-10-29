@@ -1,0 +1,46 @@
+---------------------------------
+   Steps for installing DeSIRe
+---------------------------------
+
+1) Copy "desire.tar" to the base directory where you want to install DeSIRe.
+   The tar will create a folder named "desire" with everything you need.
+
+   /home/user> cp desire.tar .
+
+2) If you already have a "desire" directory (for instance, from a previous
+   installation) it is better to remove it before the installation in order
+   to delete any old obsolete file that may be not used. Extract the tar.
+
+   home/user> rm -r desire
+   home/user> tar xvf desire.tar
+
+3) Now you have the directory tree created.
+   /home/user/desire       : DeSIRe base directory
+   /home/user/desire/bin   : executables
+   /home/user/desire/doc   : documentation
+   /home/user/desire/idl   : usefull IDL procedures
+   /home/user/desire/run   : working directory
+   /home/user/desire/src   : source code
+   /home/user/desire/var   : application data files
+
+4) Build the executables.
+
+   home/user> cd desire/src
+   home/user/desire/src> make install    (if ifort compiler)
+   home/user/desire/src> make fc=gfortran install   (if gfortran compiler)
+
+5) Run the example to check whether everything is OK.
+
+   home/user/desire/src> cd ../run/example
+   home/user/desire/run/example> ../../bin/desire desire.dtrol
+
+6) For convenience, you can include the "bin" directory in your PATH.
+
+7) Create as many working directories as you want within the "run" directory.
+   It is a good practice that every working directory have an "input" folder
+   with the input model files that DeSIRe needs (see "run/example").
+
+8) Suggestion: to customize an inversion create a new subdirectory within
+   the "run" directory and copy to it "desire.dtrol", "keyword.input" as well
+   as the "input" folder included in "run/example". Then you can modify them
+   to your personal case.
