@@ -32,11 +32,8 @@ c		  print*,'il taulinea gamma y fi',atmos(6*ntau+1),atmos(7*ntau+1),il
                 enddo
              endif
 
-
-
-        if(cth.eq.1.) return
-
-
+c        if(cth.eq.1.) return
+        if(abs(cth-1) .lt. 1.e-4) return
 
 	if(abs(cth).ge.1)then
 	   sth=0.
@@ -221,14 +218,14 @@ c____________________________________________________________________
 
 	do i=2,ntau
  	   diff=phi(i)-phi(i-1)  !esto tiene que ser un multiplo de cantidad
-	   if(diff.eq.0.)then
+	   if(abs(diff).lt.1.e-5)then
 		xquito=0.
 	   else
 		xquito=int(diff/(0.51*cantidad))*diff/abs(diff)*cantidad
 	   endif
 
            phi(i)=phi(i)+xquito
-	   if(xquito.ne.0.)print*,'i,quito=',i,xquito
+c	   if(xquito.ne.0.)print*,'i,quito=',i,xquito
 	enddo    
 
 c       Se supone que ahora tenemos todos los fis sin saltos, referidos al primer

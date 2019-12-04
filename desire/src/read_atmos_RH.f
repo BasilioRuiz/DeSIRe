@@ -1,5 +1,7 @@
+c
 c read_atmos_RH reads the model atmosphere in RH (Multi) format
-c and runs the program "convert" to reevaluate the Hydrost. Equilibrium using RH subroutines
+c and runs the program "convert" to reevaluate the Hydrostatic Equilibrium
+c using RH subroutines
 c natmos=1: First component, natmos=2: second component
 c
 c 19/06/19 epm: New routines to run RH executables as functions.
@@ -11,25 +13,20 @@ c ________________________________________________________________________
       implicit real*4 (a-h,o-z)
       include 'PARAMETER'   !por kt,kn,kl,kld
 
-      character model_multi*(*),Bmodel_multi*(30)
-      character*100 ID_format,string_s,ID_model,linea,linealast
-      character ID1*1,ID2*2	
-      real*4 atmos(*),pp(10)
-      real*4 nh1,nh2,nh3,nh4,nh5,nh6,nhtot(kt)
-      real*4 elec_densi,di,Ti,pei,vzi,vmici,bi,gi,phii,pgpr
-      real*4 depth_scale(kt),tau1(kt)
-      real*4 pg(*),z(*),rho(*),x(kt),y(kt)
+      character model_multi*(*)
+      real*4 atmos(*)
+      real*4 Bi
+      real*4 pg(*),z(*),rho(*)
       real*4 B(*),gamma(*),phi(*)
       real*4 Vmac,fill,strayfac
-      real*4 rhomedio(kt),rho1(kt),pg1(kt)
+      real*4 rhomedio(kt),rho1(kt)      !,pg1(kt)
 c     19/06/19 epm: we don't need 'tau(kt)' anymore.
-c     real*4 kappa(kt),kapparho(kt),tau(kt)
-      real*4 kappa(kt),kapparho(kt)
-      real*4 tauei,kappai,rhoi,kac,d1,d2
-      real*4 wgt,abu,ei1,ei2,pmusum,asum,pesomedio
-      real*4 log_g,bol,cgases,avog,gravity
-      integer ntau,itau,iB,natmos,nn,HEon
-      integer ifi1,ieq1,ifi2,ieq2,ndepths,istatus
+c     real*4 tau(kt)
+c     real*4 wgt,abu,ei1,ei2,pmusum,asum
+c     real*4 cgases,avog
+      real*4 bol,gravity
+      integer ntau,natmos,nn,HEon
+      integer ndepths,istatus
       character*100 ruta,ruta2,ruta3,filewavename
       character*80 men1,men2,men3
       real*4 alog10mu
@@ -41,7 +38,7 @@ c     19/06/19 epm: Double precision for the variables of conversion().
       real*8 tau_RH(kt), mass(kt), z1(kt), T(kt), nele(kt), vz(kt), Vturb(kt)
 
 c     19/06/19 epm: New functions and variables to run RH applications.
-      integer*4 conversion, system
+      integer*4 conversion      !, system
       integer*4 atmos_nspace
       integer*8 cpu1, cpu2, wall1, wall2
 
@@ -107,9 +104,9 @@ c     print*,bol,gravity,ndepths
       if(natmos .eq. 2)nn=8*ntau+2
 
       do i=2,ntau
-         deltaz=(z1(i-1)-z1(i))*1.e2  !cm
+         deltaz=real((z1(i-1)-z1(i)))*1.e2  !cm
          if(deltaz .lt. 1)deltaz=1.
-         rhomedio(i-1)=1.e-1*(mass(i)-mass(i-1))/deltaz
+         rhomedio(i-1)=1.e-1*real(mass(i)-mass(i-1))/deltaz
       end do
       rho1(1)=1.5*rhomedio(1)-0.5*rhomedio(2)
       do i=2,ntau
@@ -120,23 +117,23 @@ c     print*,bol,gravity,ndepths
          k=ntau-i+1
 c        19/06/19 epm: Now we are not using 'tau(k)' but 'tau_RH(k)'.
 c        atmos(i+nn)=tau(k)-alog10mu              !log tau
-         atmos(i+nn)=dlog10(tau_RH(k))-alog10mu   !log tau
-         atmos(i+nn+ntau)=T(k)    !T
-         atmos(i+nn+2*ntau)=nele(k)*bol*T(k)*1.e-6  !pe (cgs conversion e-/m^3 a e/cm^3)
-         atmos(i+nn+3*ntau)=Vturb(k)*1.e2 !micro
+         atmos(i+nn)=real(dlog10(tau_RH(k)))-alog10mu   !log tau
+         atmos(i+nn+ntau)=real(T(k))    !T
+         atmos(i+nn+2*ntau)=real(nele(k)*T(k))*bol*1.e-6  !pe (cgs conversion e-/m^3 a e/cm^3)
+         atmos(i+nn+3*ntau)=real(Vturb(k))*1.e2 !micro
          atmos(i+nn+4*ntau)=B(k)          !B
          Bi=Bi+B(k)
-         atmos(i+nn+5*ntau)=-vz(k)*1.e2   !Los Velocity cm/s redshifted positive
-         atmos(i+nn+6*ntau)=gamma(k)      !inclination phi(k)        
-         atmos(i+nn+7*ntau)=phi(k)        !azimuth          
-         z(i)=z1(k)*1.e-3                 !Km
+         atmos(i+nn+5*ntau)=-real(vz(k))*1.e2   !Los Velocity cm/s redshifted positive
+         atmos(i+nn+6*ntau)=gamma(k)      !inclination phi(k)
+         atmos(i+nn+7*ntau)=phi(k)        !azimuth
+         z(i)=real(z1(k))*1.e-3                 !Km
          rho(i)=rho1(k)
          if(HEon .eq. 1)then
-            pg(i)=mass(k)*gravity*1.e-1
+            pg(i)=real(mass(k))*gravity*1.e-1
          else
-            tsi=T(k)
-            psi=nele(k)*bol*T(k)*1.e-6      !pe (cgs conversion e-/m^3 a e/cm^3)
-            call PgmufromPeT_isub(tsi,psi,pgsi,pesomediosi,rhosi,kappasi)   
+            tsi=real(T(k))
+            psi=real(nele(k)*T(k))*bol*1.e-6      !pe (cgs conversion e-/m^3 a e/cm^3)
+            call PgmufromPeT_isub(tsi,psi,pgsi,pesomediosi,rhosi,kappasi)
             pg(i)=pgsi
          end if
 c        print*,'read_atmos_RH 105 ',i,atmos(i+nn),atmos(i+nn+4*ntau),atmos(i+nn+6*ntau),atmos(i+nn+7*ntau)

@@ -6,14 +6,14 @@
 c      parameter (nmax=100,tiny=1.0d-20)
 c      dimension a(np,np),indx(n),vv(nmax)
 
-      parameter (tiny=1.0d-20)
+      parameter (tiny=1.0e-20)
       dimension a(np,np),indx(n),vv(kn)
 
-      d=1.d0
+      d=1.0
 
       do 12 i=1,n
 
-        aamax=0.d0
+        aamax=0.0
 
         do 11 j=1,n
 
@@ -22,10 +22,10 @@ c      dimension a(np,np),indx(n),vv(nmax)
 11      continue
 
 C        if (aamax.eq.0.d0) pause 'singular matrix.'
-        if (aamax.eq.0.d0) aamax=1.e-6
+        if (aamax.lt.1.e-6) aamax=1.e-6
 
 
-        vv(i)=1.d0/aamax
+        vv(i)=1.0/aamax
 
 12    continue
 
@@ -53,7 +53,7 @@ C        if (aamax.eq.0.d0) pause 'singular matrix.'
 
         endif
 
-        aamax=0.d0
+        aamax=0.0
 
         do 16 i=j,n
 
@@ -105,7 +105,7 @@ C        if (aamax.eq.0.d0) pause 'singular matrix.'
 
         if(j.ne.n)then
 
-          if(a(j,j).eq.0.d0)a(j,j)=tiny
+          if(abs(a(j,j)).lt.tiny)a(j,j)=tiny
 
           dum=1./a(j,j)
 
@@ -119,7 +119,7 @@ C        if (aamax.eq.0.d0) pause 'singular matrix.'
 
 19    continue
 
-      if(a(n,n).eq.0.d0)a(n,n)=tiny
+      if(abs(a(n,n)).lt.tiny)a(n,n)=tiny
 
       return
 

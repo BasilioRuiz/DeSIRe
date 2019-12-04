@@ -6,7 +6,7 @@ c equi rutina que evalua la presion en equilibrio hidrostatico
 	include 'PARAMETER'  !solo por kt
 	parameter (nex=28)
 	real*4 tau(*),t(*),pe(*),x(kt),kap(kt),pg(kt),pgold,kac,d2,d3
-	real wgt,abu,ei1,ei2,pp(10),tsi,psi,psg,d1(10)
+	real*4 wgt,abu,ei1,ei2,pp(10),tsi,psi,psg,d1(10)
         common/constantes/g,avog	!gravedad,n. avogadro/pmu
 	common/mu/cth
         common/preciso/prec      
@@ -63,7 +63,7 @@ c grado para kap'
 
         do i=i0,ntau-1
 c          kap(i+1)=kap(i)
-           b=(x(i+1)/x(i)-1.d0)*(2.d0*g*x(i)/pg(i) - kap(i))
+           b=(x(i+1)/x(i)-1.0)*(2.0*g*x(i)/pg(i) - kap(i))
            kap(i+1)=-b+sqrt(b*b+kap(i)*kap(i)*x(i+1)/x(i)) 
            paso=x(i+1)-x(i)
            dif=1.e10
@@ -103,7 +103,7 @@ c              print*,'i+1=',i+1,' n=',n,' dif=',dif,' pg=',pg(i+1)
 
         do i=i0,2,-1
 c          kap(i-1)=kap(i)
-           b=(x(i-1)/x(i)-1.d0)*(2.d0*g*x(i)/pg(i) - kap(i))
+           b=(x(i-1)/x(i)-1.0)*(2.0*g*x(i)/pg(i) - kap(i))
            kap(i-1)=-b+sqrt(b*b+kap(i)*kap(i)*x(i-1)/x(i)) 
            paso=x(i-1)-x(i)
            n=0
@@ -190,7 +190,7 @@ c y haciendo pg'=pg+2*g*(x'-x)/(kap'+kap) se llega a una ec. de segundo
 c grado para kap'
 
         do i=ntau,2,-1
-           b=(x(i-1)/x(i)-1.d0)*(2.d0*g*x(i)/pg(i) - kap(i))
+           b=(x(i-1)/x(i)-1.0)*(2.0*g*x(i)/pg(i) - kap(i))
            kap(i-1)=-b+sqrt(b*b+kap(i)*kap(i)*x(i-1)/x(i)) 
            if(kap(i-1).le.0)kap(i-1)=kap(i)
            paso=x(i-1)-x(i)
@@ -292,7 +292,7 @@ c ahora calculo los niveles u0,u1,u2 y sus derivadas
       do 5 i=1,ncontr
       		iii=i
 5     		call neldatb(iii,0.,weight,alfai(i),chi1(i),chi2(i))
-6     do 4 i=1,ncontr
+      do 4 i=1,ncontr
       	  iii=i
 4     	  call nelfctb(iii,t,u0(iii),u1(iii),u2(iii),du0,du1,du2)
 
@@ -302,7 +302,7 @@ c ahora calculo los niveles u0,u1,u2 y sus derivadas
       g3=saha(theta,0.754,1.,u0(1),pe)        ! p(h)/p(h-) 
 
       call acota(g3,1.e-30,1.e30)
-      g3=1.d0/g3                              ! p(h-)/p(h) 
+      g3=1.0/g3                              ! p(h-)/p(h) 
      
       g1=0.
       do 1 i=2,ncontr

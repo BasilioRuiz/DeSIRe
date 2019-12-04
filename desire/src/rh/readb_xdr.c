@@ -64,7 +64,7 @@ bool_t readB(Atmosphere *atmos)
   atmos->B = (double *) malloc(atmos->Nspace * sizeof(double));
   atmos->gamma_B = (double *) malloc(atmos->Nspace * sizeof(double));
   atmos->chi_B   = (double *) malloc(atmos->Nspace * sizeof(double));
-         
+
   if (input.xdr_endian) {
     xdrstdio_create(&xdrs, fp_stokes, XDR_DECODE);
 
@@ -78,17 +78,21 @@ bool_t readB(Atmosphere *atmos)
   } else {
     recordsize = atmos->Nspace;
 
+    //result &= (fread(atmos->B, sizeof(double), recordsize,
+    //                 fp_stokes) == recordsize);
+    //result &= (fread(atmos->gamma_B, sizeof(double), recordsize,
+    //                 fp_stokes) == recordsize);
+    //result &= (fread(atmos->chi_B, sizeof(double), recordsize,
+    //                 fp_stokes) == recordsize);
+
     for (result = TRUE, i = 0; i < recordsize; i++) {
-        nitems = fscanf(fp_stokes, "%lf %lf %lf", &atmos->B[i], &atmos->gamma_B[i], &atmos->chi_B[i]);
-        if (nitems != 3) {
-            result = FALSE;
-            break;
-        }
-    }        
-    sprintf(messageStr, "Reading magnetic field from file %s", input.Stokes_input);
-    Error(WARNING, routineName, messageStr);  
-    sprintf(messageStr, "Fisrt magnetic field from file %lf", atmos->B[0]);
-    Error(WARNING, routineName, messageStr);    
+      nitems = fscanf(fp_stokes, "%lf %lf %lf",
+                      &atmos->B[i], &atmos->gamma_B[i], &atmos->chi_B[i]);
+      if (nitems != 3) {
+        result = FALSE;
+        break;
+      }
+    }
   }
 
   if (!result) {

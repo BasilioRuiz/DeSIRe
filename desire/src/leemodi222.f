@@ -11,13 +11,13 @@ c ierror=3 no existen los modelos 1 ni 2
         implicit real*4 (a-h,o-z)
 
 	include 'PARAMETER'  !por kt
-	real*4 atmos(*),a(8),vmac1,vmac2
+	real*4 atmos(*),vmac1,vmac2
 	real*4 tau(kt),t(kt),pe(kt),mic(kt),h(kt),vz(kt),gam(kt),phi(kt)
         real*4 pg1(*),z1(*),ro1(*)
         real*4 pg2(*),z2(*),ro2(*)
         character model1*(*),model2*(*)
 	character*100 control
-	character*80 men1
+	character*100 men1
 	common/canal/icanal
 	common/nombrecontrol/control
 	common/nohaycampo/nohaycampo1,nohaycampo2
@@ -39,7 +39,7 @@ c leemos el modelo 1
 	     end do
 221	     ntau=ntau-1
 	     close(ican)
-	     if(abs(fill1-1.0).ne.0 .and. ierror.eq.2)then 
+	     if(abs(fill1-1.0).gt.1.e-6 .and. ierror.eq.2)then 
 	        men1='     WARNING: The FILLING FACTOR is being changed to 1.0'
 	        print*,men1
 	        fill1=1.

@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Tue May 22 16:07:29 2018 --
+       Last modified: Thu May 31 09:12:22 2018 --
 
        --------------------------                      ----------RH-- */
 
@@ -23,8 +23,7 @@
 
 enum keywordtype  {KEYWORD_REQUIRED, KEYWORD_DEFAULT, KEYWORD_OPTIONAL};
 
-enum S_interpol          {S_LINEAR, S_PARABOLIC, CUBIC_HERMITE,
-			  BEZIER, BEZIER3};
+enum S_interpol          {S_LINEAR, S_PARABOLIC, S_BEZIER3};
 enum S_interpol_stokes   {DELO_PARABOLIC, DELO_BEZIER3};
 
 enum order_3D     {LINEAR_3D, BICUBIC_3D};
@@ -94,7 +93,7 @@ typedef struct {
          NmaxScatter, Nthreads;
   double iterLimit, PRDiterLimit, metallicity;
 
-         pthread_attr_t thread_attr;
+  pthread_attr_t thread_attr;
 } InputData;
 
 

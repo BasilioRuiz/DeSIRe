@@ -34,7 +34,8 @@ C*****************************************************************
 
  
       V=ABS(VV) 
-      IF(A.NE.0) GOTO 1 
+c      IF(A.NE.0) GOTO 1 
+      IF(abs(A).gt.1.e-10) GOTO 1 
       IF(J.NE.0) GOTO 3 
       VOIGT=EXP(-V*V)   
       RETURN
@@ -114,8 +115,8 @@ C*****************************************************************
 	ivsigno=1
         if(vv.lt.0)ivsigno=-1
         v=ivsigno*vv
-
-        IF(A.eq.0)then 
+c        IF(A.eq.0)then 
+        IF(abs(A).lt.1.e-10) then
 	  v2=V*V       				
           H=EXP(-v2)   
       				

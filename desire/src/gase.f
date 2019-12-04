@@ -5,18 +5,19 @@ c pn=presion de los neutros
 
 
       subroutine gase(t,pe,pg,pp,mui,mun,pn)
-              implicit real*4 (a-h,o-z)
+      implicit real*4 (a-h,o-z)
       parameter (ncontr=28)
       real*4 alfai(ncontr),chi1(ncontr),chi2(ncontr),
      *u0(ncontr),u1(ncontr),u2(ncontr)
       real*4 du0,du1,du2,mui,mun,pesos(ncontr),num_iones,num_neutros,pn
       real*8 pp(*),p(ncontr)
-      real*8 t,pe,pg,g1,g2,g3,g4,g5,thetad,g3i
+      real*8 t,pe,pg,g1,g2,g3,g4,g5,thetad
       real*8 a,b,c,d,e,c1,c2,c3,f1,f2,f3,f4,f5,fe,phtot
-      real*4 theta,cmol(91),dcmol(91) 
+      real*4 theta,cmol(91),dcmol(91),treal
 
-
-      theta=5040./t
+      treal=real(t)
+      pereal=real(pe)
+      theta=5040./treal
       thetad=5040.d0/t
       call molecb(theta,cmol,dcmol)
       g4=pe*10.**(cmol(1))
@@ -27,9 +28,9 @@ c	ahora calculo las funciones de particion u0,u1,u2 y sus derivadas
         do 5 i=1,ncontr
       		iii=i
 5     		call neldatb(iii,0.,pesos(i),alfai(i),chi1(i),chi2(i))
-6       do 4 i=1,ncontr
+        do 4 i=1,ncontr
       	  iii=i
-	  t0=t
+	  t0=treal
      	  call nelfctb(iii,t0,u0(iii),u1(iii),u2(iii),du0,du1,du2)
 4       end do
       
@@ -47,12 +48,12 @@ c	ahora calculo las funciones de particion u0,u1,u2 y sus derivadas
 	
 	  c=1.+a*(1.+b)        !c=n(Fe)/n(FeI)
           p(i)=alfai(i)/c      ! p/ph' for neutral he,li, ... o sea n(FeI)/n(Htot)
+	  preal=real(p(i))
+	  num_neutros=num_neutros+preal  !n(FeI)/n(Htot)
+	  mun=mun+pesos(i)*preal
 	
-	  num_neutros=num_neutros+p(i)  !n(FeI)/n(Htot)
-	  mun=mun+pesos(i)*p(i)
-	
-	  num_iones=num_iones+p(i)*a*(1.+b)
-	  mui=mui+pesos(i)*p(i)*a*(1.+b) !p(i)*a*(1.+b)=n(FeI)/n(Htot)*n(FeII)/n(FeI)*[1.+n(FeIII)/n(FeII)]
+	  num_iones=num_iones+preal*real(a*(1.+b))
+	  mui=mui+pesos(i)*preal*real(a*(1.+b)) !p(i)*a*(1.+b)=n(FeI)/n(Htot)*n(FeII)/n(FeI)*[1.+n(FeIII)/n(FeII)]
 		
 	  g1=g1+p(i)*a*(1.+2.*b)   !numero total de e que no vienen de ionizar H
         end do
@@ -79,8 +80,8 @@ c	ahora calculo las funciones de particion u0,u1,u2 y sus derivadas
 	phtot=pe/fe     !kT ne/(ne/nh')=n(h')kt
 
         if(f5.gt.1.e-4) goto 2
-          const6=g5/pe*f1**2
-          const7=f2-f3+g1
+          const6=real(g5/pe*f1**2)
+          const7=real(f2-f3+g1)
 
 	  do 3 i=1,5
       	       f5=phtot*const6
@@ -97,13 +98,13 @@ c	ahora calculo las funciones de particion u0,u1,u2 y sus derivadas
         pp(8)=fe   ! pe/p(h')
         pp(9)=pe/(1.38054e-16*t) ! n(e)=pe/kt
 		
-	num_neutros=num_neutros+f1+f5   !num neutros/n(h')
-	mun=(mun+f1+2.*f5)/num_neutros  !peso medio neutros
+	num_neutros=num_neutros+real(f1+f5)   !num neutros/n(h')
+	mun=(mun+real(f1+2.*f5))/num_neutros  !peso medio neutros
 		
-	num_iones=num_iones+f2+f3+f4    !num iones/n(h')
-	mui=(mui+f2+f3+2.*f4)/num_iones  !peso medio iones
+	num_iones=num_iones+real(f2+f3+f4)    !num iones/n(h')
+	mui=(mui+real(f2+f3+2.*f4))/num_iones  !peso medio iones
 	
-	pn=num_neutros*phtot       !presion de los neutros
+	pn=num_neutros*real(phtot)       !presion de los neutros
 
       return
       end

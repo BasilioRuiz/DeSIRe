@@ -4,7 +4,7 @@
 	include 'PARAMETER'   !por kt,kn,kl,kld    
 	
 	real*4 atmos(*),z(*),pg(*),ro(*),tauoriginal(*)
-	real*4 taunew(ntau),ti,tau1,xa(3),ya(3)
+	real*4 ti,xa(3),ya(3)
 	real*4 tau(ntau),atmosnew(16*kt+2)
 	real*4 znew(kt),pgnew(kt),ronew(kt)
 	integer ntau,ngrado,n2,num,n,imodel,irow,nn

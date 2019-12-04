@@ -19,8 +19,8 @@ c external FROMFORT
 c	real*8 degrad,Bs,gs,fis
 c	real*8 vector(3*ntau),vector2(3*ntau)
 c	real*8 degrad,x,epsil
-	real*8 log_mass,bol
-	real*8 mass_columnold(ntau),mass_column(ntau)
+	real*8 log_mass
+	real*8 mass_column(ntau)      !,mass_columnold(ntau)
 	real*8 gravity,dlog10g
 	real*4 pg1(kt),z1(kt),ro1(kt),pg2(kt),z2(kt),ro2(kt),z1i,z0,zn
 	real*4 gamma_rad(kt),phi_rad(kt)
@@ -32,7 +32,7 @@ c	real*8 degrad,x,epsil
 c        print*,'write_atmos_RH campo=',ntau,atmosLG(4*ntau+1),atmosLG(6*ntau+1),atmosLG(7*ntau+1)
 c        stop
 c	epsil=1.d-6
-	bol=1.3806488d-16         !erg/s
+	bolr=1.3806488e-16
 c	degrad=3.1415926535897932385d0/180.d0
 c       degrad=0.017453293005625408d0
 	gravity=27413.847972d0      !cgs
@@ -71,19 +71,19 @@ c           mass_columnold(ntau)=mass_column(ntau)
            z0=zn
            log_mass= dlog10(mass_column(ntau))
            T=atmosLG(2*ntau)
-           elec_dens=atmosLG(3*ntau)/bol/T
+           elec_dens=atmosLG(3*ntau)/bolr/T
            vz=-atmosLG(6*ntau)*1.e-5
            vmic=atmosLG(4*ntau)*1.e-5
            write(ican,100)log_mass,T,elec_dens,vz,vmic      !WARNING Vz=0 --> vz*0.
 	   do k=ntau-1,1,-1
 	      T=atmosLG(k+ntau)
-              elec_dens=atmosLG(k+2*ntau)/bol/T
+              elec_dens=atmosLG(k+2*ntau)/bolr/T
               vz=-atmosLG(k+5*ntau)*1.e-5
               vmic=atmosLG(k+3*ntau)*1.e-5
 	      rho1=atmosLG(10*ntau+2+k)
 	      z1i=atmosLG(8*ntau+2+k)
 	      delta_z=(z1i-z0)*1.e5
-	      x=rho1/rho0-1.d0
+	      x=rho1/rho0-1.0
 	      if(x .gt. epsil)then
 	         mass_column(k)=mass_column(k+1)-rho0*delta_z*x/dlog(1.d0+x)
 	      else
@@ -101,7 +101,7 @@ c              if(k .eq. 301)stop
 c          print*,'We are in Hydrostatic equilibrium'
 	  do k=ntau,1,-1
              T=atmosLG(k+ntau)
-             elec_dens=atmosLG(k+2*ntau)/bol/T
+             elec_dens=atmosLG(k+2*ntau)/bolr/T
              vz=-atmosLG(k+5*ntau)*1.e-5
              vmic=atmosLG(k+3*ntau)*1.e-5
 c             print*,'write_atmos_RH pe',k,atmosLG(k+2*ntau)

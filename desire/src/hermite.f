@@ -13,9 +13,8 @@
 c internas
         real*4 sol(4,kt),tau(kt),taue(kt),s0(kt)
         real*4 deltae(kt),deltai(kt),delt2i(kt)
-	real*4 ds(kt), detal(4,4,kt), etal(4,4,kt), etall(4,4,kt)
-	real*4 etal2(4,4,kt)
-	real*4 s(kt), den(4), num(4,4), den2(4,4)
+	real*4 ds(kt), etall(4,4,kt)
+	real*4 s(kt)
 	real*4 OO(4,4,kt)
         real*4 tk(kt16),pk(kt16),hk(kt16),vk(kt16),gk(kt16),fk(kt16),mk(kt16)
 	real*4 bt(kt)
@@ -123,7 +122,7 @@ c 	       print*,'jx=',jx,'jxext=',(i-1)/kfac+1
 	    enddo   
          endif
 
-         call inicializa(icontornonew,etalnew,snew,dsnew,oonew,solnew,ierror)
+         call inicializanew(ktnew,icontornonew,etalnew,snew,dsnew,oonew,solnew,ierror)
 
          call numden(icontornonew,nnew,ktnew,taunew,deltainew,delt2inew,etalnew,snew,dsnew,OOnew,solnew,svec)
       
@@ -171,13 +170,13 @@ c 	       print*,'jx=',jx,'jxext=',(i-1)/kfac+1
 	end
 
 c ___________________________________________________________________
-       subroutine inicializa(icontorno,etal,s,ds,oo,sol,ierror)
+       subroutine inicializanew(ktt,icontorno,etal,s,ds,oo,sol,ierror)
 
        implicit real*4 (a-h,o-z)
 
        include 'PARAMETER' !por kt
        parameter (kt16=16*kt)
-       real*4 etal(4,4,kt),inveta(4,4),s(*),ds(*),oo(4,4,kt),sol(4,kt)
+       real*4 etal(4,4,ktt),inveta(4,4),s(*),ds(*),oo(4,4,ktt),sol(4,ktt)
 
        do k=1,icontorno
 	  do j=1,4
@@ -212,7 +211,7 @@ c-------------------------------------------------------------------
        implicit real*4 (a-h,o-z)
               
        integer icontorno,n,i,ii,jj,k
-       real*4 etal(4,4,kt),etal2(4,4,kt),ssuma,detal(4,4,kt)
+       real*4 etal(4,4,kt),etal2(4,4,kt),detal(4,4,kt)
        real*4 s(kt), ds(kt),den(4), num(4,4), den2(4,4)
        real*4 sol(4,kt),OO(4,4,kt),tau(kt)
        real*4 deltai(kt),delt2i(kt),svec(4)

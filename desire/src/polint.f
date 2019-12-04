@@ -22,7 +22,7 @@
           W=C(I+1)-D(I)
           DEN=HO-HP
 c          IF(DEN.EQ.0.)PAUSE
-          IF(DEN.EQ.0.)DEN=1.e-12
+          IF(abs(DEN).lt.1.e-12)DEN=1.e-12
           DEN=W/DEN
           D(I)=HP*DEN
           C(I)=HO*DEN

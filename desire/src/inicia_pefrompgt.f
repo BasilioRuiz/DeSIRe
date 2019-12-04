@@ -7,7 +7,7 @@ c solo para le H
     	nu=0.9091       ! only Hydrogen is ionized
 	saha=-0.4771+2.5*alog10(t)-alog10(pg)-(13.6*5040./t)
 	saha=10**saha
-	aaa=1.d0+saha
+	aaa=1.0+saha
 	bbb=-(nu-1.)*saha
 	ccc=-saha*nu
 

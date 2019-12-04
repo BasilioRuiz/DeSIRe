@@ -45,8 +45,8 @@ c      enddo
             scale=scale+dabs(da(k,i))
 
 11        continue
-
-          if (scale.ne.0.0) then
+c          if (scale.ne.0.0) then
+          if (dabs(scale).gt.1.d-20) then
 
             do 12 k=i,m
 
@@ -113,8 +113,8 @@ c      enddo
             scale=scale+dabs(da(i,k))
 
 17        continue
-
-          if (scale.ne.0.0) then
+c          if (scale.ne.0.0) then
+          if (dabs(scale).gt.1.d-20) then
 
             do 18 k=l,n
 
@@ -178,8 +178,8 @@ c      enddo
       do 32 i=n,1,-1
 
         if (i.lt.n) then
-
-          if (g.ne.0.0) then
+c          if (g.ne.0.0) then
+          if (dabs(g).gt.1.d-20) then
 
             do 26 j=l,n
 
@@ -240,8 +240,8 @@ c              if(abs(a(i,l)) .lt. 1.e-12)print,'svdcmp 183',i,l,a(i,l)
 33        continue
 
         endif
-
-        if (g.ne.0.0) then
+c        if (g.ne.0.0) then
+        if (dabs(g).gt.1.d-20) then
 
           g=1.0d0/g
 
@@ -296,10 +296,10 @@ c              if(abs(a(i,l)) .lt. 1.e-12)print,'svdcmp 183',i,l,a(i,l)
           do 41 l=k,1,-1
 
             nm=l-1
-
-            if ((dabs(rv1(l))+anorm).eq.anorm)  go to 2
-
-            if ((abs(w(nm))*1.d0+anorm).eq.anorm)  go to 1
+c            if ((dabs(rv1(l))+anorm).eq.anorm)  go to 2
+            if ( dabs(rv1(l)) .lt. 1.d-20 )  go to 2
+c            if ((abs(w(nm))*1.d0+anorm).eq.anorm)  go to 1
+            if ( abs(w(nm)) .lt. 1.e-15)  go to 1
 
 41        continue
 
@@ -310,8 +310,8 @@ c              if(abs(a(i,l)) .lt. 1.e-12)print,'svdcmp 183',i,l,a(i,l)
           do 43 i=l,k
 
             f=s*rv1(i)
-
-            if ((dabs(f)+anorm).ne.anorm) then
+c            if ((dabs(f)+anorm).ne.anorm) then
+            if ( dabs(f) .gt. 1.d-20) then
 
               g=w(i)*1.d0
 
@@ -427,9 +427,9 @@ c            print*,'svdcmp2 405 f h z ',f,h,z,1./z
 
               z=v(nm,i)
 
-              v(nm,j)= (x*c)+(z*s)
+              v(nm,j)= real((x*c)+(z*s))
 
-              v(nm,i)=-(x*s)+(z*c)
+              v(nm,i)=real(-(x*s)+(z*c))
               
 c              vnmj=(x*c)+(z*s)
 c              vnmi=-(x*s)+(z*c)
@@ -448,8 +448,8 @@ c              if(v(nm,i)+1. .eq. v(nm,i))stop
             z=dsqrt(f*f+h*h)
 
             w(j)=real(z)
-
-            if (z.ne.0.0) then
+c            if (z.ne.0.0) then
+            if (dabs(z).gt.1.d-20) then
 
               z=1.0d0/z
 

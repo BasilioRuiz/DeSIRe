@@ -4,9 +4,10 @@ c	'exact' inversion of 4 X 4 matrix
 
       implicit real*4 ( a-h, o-z )
 
-      dimension a ( 4 , 4 ) , b ( 4 , 4 )
+      real*4 a ( 4 , 4 ) , b ( 4 , 4 )
 c      dimension c(4,4)
       integer i , j
+      tiny=1.e-25
 
       ierror=0
       absmax = 0.
@@ -17,14 +18,14 @@ c          c(i,j)=a(i,j)
 	  if ( abs ( a ( i , j ) ) .gt. absmax ) absmax =abs( a ( i , j ))
 5010  continue
 
-      if ( absmax .eq. 0. ) then
+      if ( absmax .lt. tiny ) then
 c          stop 'singularity problem in matinx2'
 	  ierror=1
           return
       end if
 
 
-      fabsmx = 1.d00 / absmax
+      fabsmx = 1.00 / absmax
 
 
       do 5020 i = 1 , 4

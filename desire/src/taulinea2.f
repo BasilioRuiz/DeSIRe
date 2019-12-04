@@ -20,7 +20,8 @@ c	common/LOS/ gammal1,phil1,gammal2,phil2  !para ASP: subsir
            atmos2(i)=atmos(i+8*ntau+2)
 	end do
         
-	if(cth.ne.1.)then
+c	if(cth.ne.1.)then
+	if(abs(cth-1) .lt. 1.e-4)then 
 	   print*,'The atmospheres are assumed to be line of sight!!'
            print*,'However, hydrostatic equilibrium is computed along'
            print*,'the vertical (using the heliocentric angle provided)',cth

@@ -12,7 +12,7 @@ c Basilio  11 abril 2013
        real*4 u_ion,du_ion,ddu_ion,thermo(14)
        real*4 pg,dpg,ddpg,grado1,grado,alpha,delta
        real*4 pmusum,asum,pesomedio,rho
-       real*4 uint_neutro,uint,dluint,ddluint
+c      real*4 uint_neutro
        real*4 cv,ga31,ga1,nabad,cs,cp
        
        theta=5040./t

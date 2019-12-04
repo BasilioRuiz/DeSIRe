@@ -116,19 +116,19 @@ c		         endif
 	             if(y1.gt.cotafi)y1=cotafi     !acoto superiormente
 c	        print*,'amp2 2',pert(kred),atmosr(kred),y1
 
-              else if(i.eq.7.or.i.eq.15.)then
+              else if(i.eq. 7 .or. i.eq. 15)then
                  y1=atmosr(kred)-pert(kred)
 c                 print*,'amp2 118',y1
   	             if(y1.lt.-cotafi)y1=-cotafi   !acoto inferiormente
 	             if(y1.gt.cotafi)y1=cotafi     !acoto superiorment
-              else if (i.eq.2.or.i.eq.10) then
-                 if(pert(kred).eq.0)goto 999
+              else if (i.eq.2 .or. i .eq. 10) then
+                 if(abs(pert(kred)).lt.1.e-20)goto 999
 	                y1=(atmosr(kred)/pert(kred))-1    !perturbacion multiplicativa 
 c	                print*,'perturbacion presion en amp2=',y1,pert(kred),atmosr(kred)
                     if(y1.lt.-0.25)y1=-0.25 !acoto inferiormente
                     if(y1.gt.0.25)y1=0.25  !acoto superiormente
               else
-                 if(pert(kred).eq.0)goto 999
+                 if(abs(pert(kred)).lt.1.e-20)goto 999
                  y1=(atmosr(kred)/pert(kred))-1.    !perturbacion multiplicativa 
 c                 print*,'amp2 122 y1=',y1,y1*pert(kred)
   	             if(y1.lt.-cota)y1=-cota   !acoto inferiormente

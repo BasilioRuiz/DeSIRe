@@ -5,7 +5,7 @@
 #
 #      Version:       rh2.0
 #      Author:        Han Uitenbroek (huitenbroek@nso.edu)
-#      Last modified: Tue Jan  8 12:42:42 2013 --
+#      Last modified: Thu May 31 09:11:05 2018 --
 #
 ##     --------------------------                      ----------RH-- ##
 
@@ -25,9 +25,10 @@ CFLAGS   = -O2 -m64 -I../
 LD       = gcc
 LDFLAGS  = -O2 -m64 -L../
 
+
 #      --                                              -------------- ##
 
 ARCHLIBS = -lm -lpthread
-ARCHINC  =
+ARCHINC  = 
 
 ## ---                                                 -------------- ##

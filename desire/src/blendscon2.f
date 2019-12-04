@@ -19,21 +19,21 @@ c para las funciones respuesta
 	real*4 x(kt)
 
 c para los perfiles 
-	real*4 atmos(*),inten(*),icont   !,con_i(kl)
+	real*4 atmos(*),inten(*),icont      !,con_i(kl)
         real*4 con_i1(kl),con_i2(kl),wcon_i1(kl),wcon_i2(kl),continuoharr(kld)
 
 c para la atmosfera
 	real*4 tau(kt),t(kt),pe(kt),vtur(kt),vz(kt),bp(kt),bt(kt)
 	real*4 taue(kt),dbp(kt),vof(kt),logpe(kt)
-	real*4 continuoh,conhsra,dplnck,dtplanck,ccc
-	real*8 cc_RH,conhsra_RH,conhsra_RHLTE
+	real*4 continuoh,conhsra      !,dplnck,dtplanck
+	real*8 conhsra_RHLTE      !,cc_RH,conhsra_RH
 	integer mnodos(*)
 
 c para la matriz de absorcion y sus derivadas
 	real*4 dab(kt),tk(kt),pk(kt),vk(kt),mk(kt)
 	real*4 dabtot(kt,kld)
 	real*4 tktot(kt,kld),pktot(kt,kld),mktot(kt,kld),vktot(kt,kld)
-        real*4 www,dyt(kt),dyp(kt),alpha(kt),depar(kt)
+        real*4 www,dyt(kt),dyp(kt),alpha(kt)
  
 c para la malla
 	real*4 dlongd(kld),dlamda0(kl)
@@ -68,7 +68,7 @@ c para hermite_c
 	real*4 deltae(kt),deltai(kt),delt2i(kt)
 
 c para barklem
-        real*4 bol,pir,v0,melectron,mhidrogeno,xmasaproton,avo,borh,uma
+        real*4 bol,pir,v0,melectron,mhidrogeno,xmasaproton,avo,uma
 	real*4 gas,coc2,coc3
 	
 	real*8 saha_db,dsaha_db
@@ -369,10 +369,7 @@ c corregido con zeff (termino 'semiempirico' caca de la vaca)
 c (se supone despreciable el debido a stark)
 c si el damping asi calculado es mayor que 3 lo reescalaremos
 
-
-
-        if(alfa.eq.0..or.sigma.eq.0.)then
-
+        if(abs(alfa).lt.1.e-25.or.abs(sigma).lt.1.e-25)then
 
 	chi1=chi10
 	if(istage.eq.2)chi1=chi20
@@ -537,7 +534,8 @@ c   a=(chydro*(pg(1)/pg(90)*pg(91))*t(i)**0.3*((.992093+weinv)**.3
 c  &  +.6325*pg(2)/pg(1)*(.2498376+weinv)**.3+.48485*pg(89)/pg(1)*
 c  &  (.4960465+weinv)**.3)+crad)/(12.5663706*vdop)
 	
-        if(sigma.eq.0.or.alfa.eq.0)then        
+        if(abs(alfa).lt.1.e-25.or.abs(sigma).lt.1.e-25)then
+
             if(pg(1).gt.1.e-20)then !EVITAMOS DAMPING NULO POR PG(1)=0
 	
 	    aj=chydro*(pg(1)/pg(90)*pg(91))*ts**0.3
@@ -746,7 +744,7 @@ c !ojo las perturbaciones son relativas a los parametros en z no a linea vision
         continuoh=continuoharr(ikk1)
 
         if(mnodos(1).ne.0)then
-           if(mnodos(2).eq.0.)then
+           if(mnodos(2).eq.0)then
 	      do kk=1,ntau  !introduccion de grp en grt
                  suma=0.
                  do kj=1,kk-2

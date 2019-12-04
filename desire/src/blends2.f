@@ -37,9 +37,9 @@ c para la atmosfera
         real*4 tau(kt),t(kt),pe(kt),vtur(kt),h(kt),vz(kt),bp(kt),bt(kt),dbp(kt)
         real*4 vof(kt)
         real*4 taue(kt),gamma(kt),phi(kt),agamma(kt),aphi(kt)
-        real*4 continuoh,conhsra,ccc    !,dplnck,dtplanck
+        real*4 continuoh,conhsra      !,dplnck,dtplanck
         integer mnodos(*)
-        real*8 cc_RH,conhsra_RH,conhsra_RHLTE
+        real*8 conhsra_RHLTE      !,cc_RH,conhsra_RH
 
 c para la matriz de absorcion y sus derivadas
         real*4 dab(kt16),tk(kt16),pk(kt16),hk(kt16),vk(kt16),gk(kt16)
@@ -49,7 +49,7 @@ c para la matriz de absorcion y sus derivadas
         real*4 vktot(kt7,kld),mktot(kt7,kld)
         real*4 dabb(16),gkb(16),fkb(16),tkb(16),pkb(16),hkb(16),vkb(16)
         real*4 mkb(16)
-        real*4 www,dyt(kt),dyp(kt),alpha(kt)   !,depar(kt)
+        real*4 www,dyt(kt),dyp(kt),alpha(kt)
         real*4 beta1(kl,kt),beta2(kl,kt)
 
 c para la malla
@@ -72,7 +72,7 @@ c para el patron zeeman
         character atom*2
         parameter (mc=20)       !numero maximo de componentes zeeman
         integer mult(2),ji(2),jf(2)
-        character design(2)*1           !,multno*6
+        character design(2)*1
         real*4 tam(2),abu
         real*4 dlp(mc),dll(mc),dlr(mc),sp(mc),sl(mc),sr(mc)
 
@@ -402,8 +402,7 @@ c corregido con zeff (termino 'semiempirico' caca de la vaca)
 c (se supone despreciable el debido a stark)
 c si el damping asi calculado es mayor que 3 lo reescalaremos
 
-        if(alfa.eq.0.or.sigma.eq.0)then
-
+        if(abs(alfa).lt.1.e-25.or.abs(sigma).lt.1.e-25)then
            chi1=chi10
            if(istage.eq.2)chi1=chi20
            eupper=energy+1.2398539e-4/wvac      
@@ -604,8 +603,7 @@ c   a=(chydro*(pg(1)/pg(90)*pg(91))*t(i)**0.3*((.992093+weinv)**.3
 c  &  +.6325*pg(2)/pg(1)*(.2498376+weinv)**.3+.48485*pg(89)/pg(1)*
 c  &  (.4960465+weinv)**.3)+crad)/(12.5663706*vdop)
 
-
-        if(sigma.eq.0.or.alfa.eq.0)then
+        if(abs(alfa).lt.1.e-25.or.abs(sigma).lt.1.e-25)then
 
            if(pg(1).gt.1.e-20)then !!!!!!!! CORRECCION PARA EVITAR DAMPING NULO POR PG(1)=0
         

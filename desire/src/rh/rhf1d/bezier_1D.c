@@ -1,4 +1,4 @@
-/* ------- file: -------------------------- bezier.c ----------------
+/* ------- file: -------------------------- bezier_1D.c -------------
 
    Cubic DELO-Bezier (polarized) and cubic short-char Bezier solvers.
    
@@ -10,14 +10,14 @@
    Modifications:
            2017-03-12, JdlCR: Created!
 
-       Last modified: Wed May 23 09:05:19 2018 --
+       Last modified: Wed Feb 20 13:30:27 2019 --
 
        --------------------------                      ----------RH-- */
 
 
+#include <stdlib.h>
 #include <math.h>
-#include <string.h>    // memcpy, memset
-#include <x86intrin.h> // Intrinsic SSE instructions
+#include <string.h>
 
 #include "rh.h"
 #include "error.h"
@@ -26,19 +26,6 @@
 #include "geometry.h"
 #include "spectrum.h"
 #include "bezier.h"
-
-
-/* --- Macros --                                       -------------- */
-
-#define min(a,b) (((a)<(b))?(a):(b))
-#define max(a,b) (((a)>(b))?(a):(b))
-
-/* --- Global variables --                             -------------- */
-
-extern Geometry geometry;
-extern Atmosphere atmos;
-extern Spectrum spectrum;
-extern char messageStr[];
 
 
 /* --- Identity matrix --                              -------------- */
@@ -50,247 +37,19 @@ static const double ident[4][4] =
    {0.0, 0.0, 0.0, 1.0}};
 
 
-/* ------- begin -------------------------- cent_deriv.c ------------ */
+/* --- Global variables --                             -------------- */
 
-inline double cent_deriv(double dsup,double dsdn, 
-			 double chiup,double chic, double chidn)
-{
-  /* --- Derivative Fritsch & Butland (1984) --        -------------- */
-
-  double fim1, fi, alpha, wprime;
-  
-  fim1=(chic-chiup)/dsup;
-  fi=(chidn-chic)/dsdn;
-
-  if (fim1*fi > 0) {
-    alpha = 0.333333333333333333333333 * ( 1.0 + dsdn/(dsdn+dsup) );
-    wprime = (fim1*fi) / ( (1.0-alpha) * fim1 + alpha*fi );
-  } else {
-    wprime=0.0;
-  }
-  return wprime;
-}
-/* ------- end ---------------------------- cent_deriv.c ------------ */
+extern Geometry geometry;
+extern Atmosphere atmos;
+extern Spectrum spectrum;
+extern char messageStr[];
 
 
-/* ------- begin -------------------------- cent_deriv_mat.c -------- */
+/* ------- begin -------------------------- Piece_Stokes_Bezier3_1D.c */
 
-inline void cent_deriv_mat(double wprime[4][4], double dsup, double dsdn,
-			   double chiup[4][4], double chic[4][4],
-			   double chidn[4][4])
-{
-  register int i,j;
-  
-  for(j=0;j<4;j++)
-    for(i=0;i<4;i++)
-      wprime[j][i] = cent_deriv(dsup, dsdn, chiup[j][i], chic[j][i],
-				chidn[j][i]);
-}
-/* ------- end ---------------------------- cent_deriv_mat.c -------- */
-
-
-/* ------- begin -------------------------- cent_deriv_vec.c -------- */
-
-inline void cent_deriv_vec(double wprime[4], double dsup, double dsdn,
-		    double chiup[4], double chic[4], double chidn[4])
-{
-  register int i;
-  
-  for(i=0;i<4;i++)
-    wprime[i] = cent_deriv(dsup, dsdn, chiup[i], chic[i], chidn[i]);
-  
-}
-/* ------- end ---------------------------- cent_deriv_vec.c -------- */
-
-
-/* ------- begin -------------------------- m4m.c ------------------- */
-
-
-inline void m4m(double a[4][4], double b[4][4], double c[4][4])
-{
-
-  /* --- Matrix multiplication --                      -------------- */
-
-  register int i, j, k;
-  memset(&c[0][0],0,sizeof(double)*16);
-  for(j = 0; j<4; j++)
-    for(i = 0; i<4; i++)
-      for(k = 0; k<4; k++)
-	c[j][i] += a[k][i]*b[j][k]; 
-}
-/* ------- end ---------------------------- m4m.c ------------------- */
-
-
-/* ------- begin -------------------------- m4v.c ------------------- */
-
-/* --- Matrix/vector multiplication.
-       We use matrix as float to be able to use Intel's
-       matrix inversion --                         ------------------ */
-
-inline void m4v(float a[4][4], double b[4], double c[4])
-{
-  register int k, i;
-  memset(&c[0],0,sizeof(double)*4);
-  for(i = 0; i<4; i++)
-    for(k = 0; k<4; k++)
-      c[i] += ((double)a[i][k]) * b[k];
-}
-/* ------- end ---------------------------- m4v.c ------------------- */
-
-
-/* ------- begin -------------------------- Svec.c ------------------ */
-
-inline void Svec(int k, double **S, double *Sf)
-{
-  /* --- Extracts the Source vector at depth-points k -- ------------ */
-
-  Sf[0] = S[0][k], Sf[1] = S[1][k], Sf[2] = S[2][k], Sf[3] = S[3][k];
-}
-/* ------- end ---------------------------- Svec.c ------------------ */
-
-
-/* ------- begin -------------------------- SIMD_MatInv.c ----------- */
-
-void SIMD_MatInv(float* src)
-{
-  /* --- 
-
-     Very fast in-place 4x4 Matrix inversion using SIMD instrutions
-     Only works with 32-bits floats. It uses Cramer's rule.
-     
-     Provided by Intel
-
-     Requires SSE instructions but all x86 machines since 
-     Pentium III have them.
-     
-     --                                            ------------------ */
-  
-  __m128 minor0, minor1, minor2, minor3;
-  __m128 row0, row1, row2, row3;
-  __m128 det, tmp1;
-  
-  // -----------------------------------------------
-  tmp1 = _mm_loadh_pi(_mm_loadl_pi(tmp1, (__m64*)(src)), (__m64*)(src+ 4));
-  row1 = _mm_loadh_pi(_mm_loadl_pi(row1, (__m64*)(src+8)), (__m64*)(src+12));
-  row0 = _mm_shuffle_ps(tmp1, row1, 0x88);
-  row1 = _mm_shuffle_ps(row1, tmp1, 0xDD);
-  tmp1 = _mm_loadh_pi(_mm_loadl_pi(tmp1, (__m64*)(src+ 2)), (__m64*)(src+ 6));
-  row3 = _mm_loadh_pi(_mm_loadl_pi(row3, (__m64*)(src+10)), (__m64*)(src+14));
-  row2 = _mm_shuffle_ps(tmp1, row3, 0x88);
-  row3 = _mm_shuffle_ps(row3, tmp1, 0xDD);
-  // -----------------------------------------------
-  tmp1 = _mm_mul_ps(row2, row3);
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-  minor0 = _mm_mul_ps(row1, tmp1);
-  minor1 = _mm_mul_ps(row0, tmp1);
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-  minor0 = _mm_sub_ps(_mm_mul_ps(row1, tmp1), minor0);
-  minor1 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor1);
-  minor1 = _mm_shuffle_ps(minor1, minor1, 0x4E);
-  // -----------------------------------------------
-  tmp1 = _mm_mul_ps(row1, row2);
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-  minor0 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor0);
-  minor3 = _mm_mul_ps(row0, tmp1);
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-  minor0 = _mm_sub_ps(minor0, _mm_mul_ps(row3, tmp1));
-  minor3 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor3);
-  minor3 = _mm_shuffle_ps(minor3, minor3, 0x4E);
-  // -----------------------------------------------
-  tmp1 = _mm_mul_ps(_mm_shuffle_ps(row1, row1, 0x4E), row3);
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-  row2 = _mm_shuffle_ps(row2, row2, 0x4E);
-  minor0 = _mm_add_ps(_mm_mul_ps(row2, tmp1), minor0);
-  minor2 = _mm_mul_ps(row0, tmp1);
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-  minor0 = _mm_sub_ps(minor0, _mm_mul_ps(row2, tmp1));
-  minor2 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor2);
-  minor2 = _mm_shuffle_ps(minor2, minor2, 0x4E);
-  // -----------------------------------------------
-  tmp1 = _mm_mul_ps(row0, row1);
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-  minor2 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor2);
-  minor3 = _mm_sub_ps(_mm_mul_ps(row2, tmp1), minor3);
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-  minor2 = _mm_sub_ps(_mm_mul_ps(row3, tmp1), minor2);
-  minor3 = _mm_sub_ps(minor3, _mm_mul_ps(row2, tmp1));
-  // -----------------------------------------------
-  tmp1 = _mm_mul_ps(row0, row3);
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-  minor1 = _mm_sub_ps(minor1, _mm_mul_ps(row2, tmp1));
-  minor2 = _mm_add_ps(_mm_mul_ps(row1, tmp1), minor2);
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-  minor1 = _mm_add_ps(_mm_mul_ps(row2, tmp1), minor1);
-  minor2 = _mm_sub_ps(minor2, _mm_mul_ps(row1, tmp1));
-  // -----------------------------------------------
-  tmp1 = _mm_mul_ps(row0, row2);
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-  minor1 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor1);
-  minor3 = _mm_sub_ps(minor3, _mm_mul_ps(row1, tmp1));
-  tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-  minor1 = _mm_sub_ps(minor1, _mm_mul_ps(row3, tmp1));
-  minor3 = _mm_add_ps(_mm_mul_ps(row1, tmp1), minor3);
-  // -----------------------------------------------
-  det = _mm_mul_ps(row0, minor0);
-  det = _mm_add_ps(_mm_shuffle_ps(det, det, 0x4E), det);
-  det = _mm_add_ss(_mm_shuffle_ps(det, det, 0xB1), det);
-  tmp1 = _mm_rcp_ss(det);
-  det = _mm_sub_ss(_mm_add_ss(tmp1, tmp1),
-		   _mm_mul_ss(det, _mm_mul_ss(tmp1, tmp1)));
-  det = _mm_shuffle_ps(det, det, 0x00);
-  minor0 = _mm_mul_ps(det, minor0);
-  _mm_storel_pi((__m64*)(src), minor0);
-  _mm_storeh_pi((__m64*)(src+2), minor0);
-  minor1 = _mm_mul_ps(det, minor1);
-  _mm_storel_pi((__m64*)(src+4), minor1);
-  _mm_storeh_pi((__m64*)(src+6), minor1);
-  minor2 = _mm_mul_ps(det, minor2);
-  _mm_storel_pi((__m64*)(src+ 8), minor2);
-  _mm_storeh_pi((__m64*)(src+10), minor2);
-  minor3 = _mm_mul_ps(det, minor3);
-  _mm_storel_pi((__m64*)(src+12), minor3);
-  _mm_storeh_pi((__m64*)(src+14), minor3);
-}
-/* ------- end ---------------------------- SIMD_MatInv.c ----------- */
-
-
-/* ------- begin -------------------------- Bezier3_coeffs ---------- */
-
-inline void Bezier3_coeffs(double dt, double *alpha, double *beta,
-		    double *gamma, double *theta, double *eps)
-{
-  /* --- Integration coeffs. for cubic Bezier interpolants
-         Use Taylor expansion if dtau is small --  ------------------ */
-  
-  double dt2 = dt*dt, dt3 = dt2 * dt,  dt4;
-    
-  if(dt >= 5.e-2){
-
-    *eps = exp(-dt);
-
-    *alpha = (-6.0 + 6.0 * dt - 3.0 * dt2 + dt3 + 6.0 * eps[0])        / dt3;
-    dt3 = 1.0/dt3;
-    *beta  = (6.0 + (-6.0 - dt * (6.0 + dt * (3.0 + dt))) * eps[0])    * dt3;
-    *gamma = 3.0 * (6.0 + (-4.0 + dt)*dt - 2.0 * (3.0 + dt) * eps[0])  * dt3;
-    *theta = 3.0 * ( eps[0] * (6.0 + dt2 + 4.0 * dt) + 2.0 * dt - 6.0) * dt3;
-  } else{
-    dt4 = dt2*dt2;
-    *eps = 1.0 - dt + 0.5 * dt2 - dt3 / 6.0 + dt4 / 24.0;
-
-    *alpha = 0.25 * dt - 0.05 * dt2 + dt3 / 120.0 - dt4 / 840.0;
-    *beta  = 0.25 * dt - 0.20 * dt2 + dt3 / 12.0  - dt4 / 42.0; 
-    *gamma = 0.25 * dt - 0.10 * dt2 + dt3 * 0.025 - dt4 / 210.0; 
-    *theta = 0.25 * dt - 0.15 * dt2 + dt3 * 0.05  - dt4 / 84.0; 
-  }
-}
-/* ------- end ---------------------------- Bezier3_coeffs ---------- */
-
-
-/* ------- begin -------------------------- PiecewiseStokesBezier3 -- */
-
-void PiecewiseStokesBezier3(int nspect, int mu, bool_t to_obs,
-			    double *chi, double **S, double **I,
-			    double *Psi)
+void Piece_Stokes_Bezier3_1D(int nspect, int mu, bool_t to_obs,
+			     double *chi, double **S, double **I,
+			     double *Psi)
 {
   /* --- Cubic DELO-Bezier solver for polarized light
          Coded by J. de la Cruz Rodriguez (ISP-SU 2017)
@@ -299,7 +58,7 @@ void PiecewiseStokesBezier3(int nspect, int mu, bool_t to_obs,
          J. de la Cruz Rodriguez & N. Piskunov (2013)
          --                                        ------------------ */
   
-  const char routineName[] = "PiecewiseStokesBezier3";
+  const char routineName[] = "Piece_Stokes_Bezier3_1D";
   register int k, n, m, i, j;
   
   int    Ndep = geometry.Ndep, k_start, k_end, dk;
@@ -314,6 +73,7 @@ void PiecewiseStokesBezier3(int nspect, int mu, bool_t to_obs,
   float Md[4][4];
   double *z = geometry.height;
 
+  
   if (to_obs) {
     dk      = -1;
     k_start = Ndep-1;
@@ -379,8 +139,8 @@ void PiecewiseStokesBezier3(int nspect, int mu, bool_t to_obs,
   
   /* --- Upwind path_length (BEzier3 integration) -- ---------------- */
 
-  c2 = max(chi[k]    - (dsup/3.0) * dchi_c,  0.0);
-  c1 = max(chi[k-dk] + (dsup/3.0) * dchi_up, 0.0);
+  c2 = MAX(chi[k]    - (dsup/3.0) * dchi_c,  0.0);
+  c1 = MAX(chi[k-dk] + (dsup/3.0) * dchi_up, 0.0);
   
   dtau_uw = 0.25 * dsup * (chi[k] + chi[k-dk] + c1 + c2);
 
@@ -418,17 +178,18 @@ void PiecewiseStokesBezier3(int nspect, int mu, bool_t to_obs,
       
     /* --- Make sure that c1 and c2 don't do below zero -- ---------- */
       
-    c2 = max(chi[k]    + (dsdn/3.0) * dchi_c , 0.0);
-    c1 = max(chi[k+dk] - (dsdn/3.0) * dchi_dn, 0.0);
+    c2 = MAX(chi[k]    + (dsdn/3.0) * dchi_c , 0.0);
+    c1 = MAX(chi[k+dk] - (dsdn/3.0) * dchi_dn, 0.0);
           
     /* --- Bezier3 integrated dtau --              ------------------ */
       
     dtau_dw = 0.25 * dsdn * (chi[k] + chi[k+dk] + c1 + c2);
-    dt = dtau_uw, dt03 = dt / 3.0;
+    dt = dtau_uw;
+    dt03 = dt / 3.0;
   
     /* --- Bezier3 coeffs. --                      ------------------ */
       
-    Bezier3_coeffs(dt, &alpha, &beta, &gamma, &theta, &eps);
+    Bezier3_coeffs(dt, &beta, &alpha, &theta, &gamma, &eps);
    
     /* --- Diagonal operator --                    ------------------ */
       
@@ -531,14 +292,14 @@ void PiecewiseStokesBezier3(int nspect, int mu, bool_t to_obs,
   m4v(Md,V0,V1);      // Multiply Md^-1 * V0
   
   for (n = 0;  n < 4;  n++) I[n][k] = V1[n];
-  }
-/* ------- end ------------------------- PiecewiseStokesBezier3 -- -- */
+}
+/* ------- end ------------------------- Piece_Stokes_Bezier3_1D.c -- */
 
 
-/* ------- begin ----------------------- Piecewise_Bezier3 -- ------- */
+/* ------- begin ----------------------- Piecewise_Bezier3_1D.c ----- */
 
-void Piecewise_Bezier3(int nspect, int mu, bool_t to_obs,
-		       double *chi, double *S, double *I, double *Psi)
+void Piecewise_Bezier3_1D(int nspect, int mu, bool_t to_obs,
+			  double *chi, double *S, double *I, double *Psi)
 {
   
   /* --- Cubic Bezier solver for unpolarized light
@@ -554,13 +315,12 @@ void Piecewise_Bezier3(int nspect, int mu, bool_t to_obs,
          --                                            -------------- */
   
   register int k;
-  const char routineName[] = "Piecewise_Bezier3";
+  const char routineName[] = "Piecewise_Bezier3_1D";
 
   int    k_start, k_end, dk, Ndep = geometry.Ndep;
-  double dtau_uw, dtau_dw, dS_uw, I_upw, c1, c2, w[3],
-         zmu, Bnu[2];
-  double dsup,dsdn,dt,dt03,eps=0,alpha=0,beta=0,gamma=0,theta=0;
-  double dS_up,dS_c,dchi_up,dchi_c,dchi_dn,dsdn2;
+  double dtau_uw, dtau_dw, dS_uw, I_upw, c1, c2, w[3], zmu, Bnu[2];
+  double dsup, dsdn, dt03, eps=0, alpha=0, beta=0, gamma=0, theta=0;
+  double dS_up, dS_c, dchi_up, dchi_c, dchi_dn, dsdn2;
 
   zmu = 1.0 / geometry.muz[mu];
 
@@ -579,7 +339,6 @@ void Piecewise_Bezier3(int nspect, int mu, bool_t to_obs,
   
   dtau_uw = 0.5 * zmu * (chi[k_start] + chi[k_start+dk]) *
     fabs(geometry.height[k_start] - geometry.height[k_start+dk]);
-  dS_uw = (S[k_start] - S[k_start+dk]) / dtau_uw;
 
   /* --- Boundary conditions --                        -------------- */
 
@@ -594,6 +353,7 @@ void Piecewise_Bezier3(int nspect, int mu, bool_t to_obs,
       break;
     case IRRADIATED:
       I_upw = geometry.Ibottom[nspect][mu];
+      break;
     case REFLECTIVE:
       sprintf(messageStr, "Boundary condition not implemented: %d",
 	      geometry.vboundary[BOTTOM]);
@@ -610,6 +370,7 @@ void Piecewise_Bezier3(int nspect, int mu, bool_t to_obs,
       break;
     case IRRADIATED:
       I_upw = geometry.Itop[nspect][mu];
+      break;
     case REFLECTIVE:
       sprintf(messageStr, "Boundary condition not implemented: %d",
 	      geometry.vboundary[BOTTOM]);
@@ -623,24 +384,24 @@ void Piecewise_Bezier3(int nspect, int mu, bool_t to_obs,
   /* --- Set variables for first iteration to allow simple 
          shift for all next iterations --              -------------- */
 
-  k=k_start+dk;
+  k = k_start+dk;
   dsup = fabs(geometry.height[k] - geometry.height[k-dk]) * zmu;
   dsdn = fabs(geometry.height[k+dk] - geometry.height[k]) * zmu;
-  dchi_up= (chi[k] - chi[k-dk])/dsup;
+  dchi_up = (chi[k] - chi[k-dk]) / dsup;
   
   /* --- dchi/ds at central point --                   -------------- */
 
-  dchi_c = cent_deriv(dsup,dsdn,chi[k-dk],chi[k],chi[k+dk]);
+  dchi_c = cent_deriv(dsup, dsdn, chi[k-dk], chi[k], chi[k+dk]);
   
   /* --- upwind path_length (Bezier3 integration) --   -------------- */
 
-  c1 = max(chi[k] - (dsup/3.0) * dchi_c, 0.0);
-  c2 = max(chi[k-dk] + (dsup/3.0) * dchi_up,  0.0);
-  dtau_uw =  dsup * (chi[k] + chi[k-dk] + c1 + c2) * 0.25;
+  c1 = MAX(chi[k]    - (dsup/3.0) * dchi_c,   0.0);
+  c2 = MAX(chi[k-dk] + (dsup/3.0) * dchi_up,  0.0);
+  dtau_uw = dsup * (chi[k] + chi[k-dk] + c1 + c2) * 0.25;
 
   /* dS/dtau at upwind point */
 
-  dS_up = (S[k]-S[k-dk]) / dtau_uw;
+  dS_up = (S[k] - S[k-dk]) / dtau_uw;
 
   /* --- Solve transfer along ray --                   -------------- */
 
@@ -650,9 +411,9 @@ void Piecewise_Bezier3(int nspect, int mu, bool_t to_obs,
 
       /* --- Downwind path length --                   -------------- */
       
-       dsdn = fabs(geometry.height[k+dk] - geometry.height[k]   ) * zmu;
+       dsdn = fabs(geometry.height[k+dk] - geometry.height[k]) * zmu;
        
-      /* --- dchi/ds at downwind point --              -------------- */
+       /* --- dchi/ds at downwind point --             -------------- */
        
        if (abs(k - k_end) > 1) {
 	 dsdn2=fabs(geometry.height[k+2*dk] -
@@ -664,17 +425,17 @@ void Piecewise_Bezier3(int nspect, int mu, bool_t to_obs,
        
        /* --- Make sure that c1 and c2 don't go below zero -- ------- */
     
-       c1 = max(chi[k]    + (dsdn/3.0) * dchi_c,  0.0);
-       c2 = max(chi[k+dk] - (dsdn/3.0) * dchi_dn, 0.0);
+       c1 = MAX(chi[k]    + (dsdn/3.0) * dchi_c,  0.0);
+       c2 = MAX(chi[k+dk] - (dsdn/3.0) * dchi_dn, 0.0);
 
        /* --- Downwind optical path length --          -------------- */
 
-       dtau_dw =  dsdn * (chi[k] + chi[k+dk] + c1 + c2) * 0.25;
-       dt=dtau_uw, dt03 = dt/3.0;
+       dtau_dw = dsdn * (chi[k] + chi[k+dk] + c1 + c2) * 0.25;
+       dt03    = dtau_uw / 3.0;
       
       /* --- Compute interpolation parameters --       -------------- */
        
-       Bezier3_coeffs(dt, &alpha, &beta, &gamma, &theta, &eps);
+       Bezier3_coeffs(dtau_uw, &beta, &alpha, &theta, &gamma, &eps);
        
        /* --- dS/dt at central point --                -------------- */
        
@@ -682,8 +443,8 @@ void Piecewise_Bezier3(int nspect, int mu, bool_t to_obs,
 
        /* --- Source function control points --        -------------- */
        
-       c1 = max(S[k]    - dt03 * dS_c , 0.0);
-       c2 = max(S[k-dk] + dt03 * dS_up, 0.0);       
+       c1 = MAX(S[k]    - dt03 * dS_c , 0.0);
+       c2 = MAX(S[k-dk] + dt03 * dS_up, 0.0);       
      
        /* --- Solve integral in this interval --       -------------- */
        
@@ -723,51 +484,4 @@ void Piecewise_Bezier3(int nspect, int mu, bool_t to_obs,
     dS_up = dS_c;
   }
 }
-/* ------- end ---------------------------- Piecewise_Bezier3.c ----- */
-
-
-/* ------- begin -------------------------- m4inv.c ----------------- */
-
-void m4inv(double MI[4][4])
-{
-
-  /* --- In-place Shipley-Coleman matrix inversion
-         Fast, but ... how accurate??
-         Pivoting is always done in the diagonal.
-         Copied here just in case the SIMD matrix inversion 
-         gives troubles. --                            -------------- */
-  
-  register int k, i, j;
-  
-  for (k = 0;  k < 4;  k++){
-
-    /* --- The pivot element --                        -------------- */
-    
-    MI[k][k] = -1.0 / MI[k][k];
-
-    /* --- The pivot column --                         -------------- */
-    
-    for(i = 0;  i < 4;  ++i) if(i != k) MI[i][k]*=MI[k][k];
-
-    /* --- Elements not in a pivot row or column --    -------------- */
-    
-    for(i = 0;  i < 4;  ++i) {
-      if(i != k)
-	for(j = 0;  j < 4;  ++j)
-	  if(j != k)
-	    MI[i][j] += MI[i][k] * MI[k][j];
-    }
-    /* --- Elements in a pivot row --                  -------------- */
-    
-    for(i = 0;  i < 4;  ++i) {
-      if(i != k)
-	MI[k][i] *= MI[k][k];
-    }
-  }
-  
-  for(i = 0;  i < 4;  ++i) {
-    for(j = 0;  j < 4;  ++j) MI[i][j] = -MI[i][j];
-  }
-  return;
-}
-/* ------- end ---------------------------- m4inv.c ----------------- */
+/* ------- end ---------------------------- Piecewise_Bezier3_1D.c -- */

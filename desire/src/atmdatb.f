@@ -142,7 +142,7 @@ c     Leemos las abundancias
       U3=2.00000
       RETURN
 4     U1=AMAX1(1.,.631+7.032E-5*T) ! BE
-	if(u1.ne.1.)du1=7.032e-5/u1
+	if(abs(u1-1.).gt.1.e-5)du1=7.032e-5/u1
       U2=2.00
       U3=1.000
       RETURN
@@ -199,7 +199,7 @@ c     Leemos las abundancias
 	du1=(-6.019e-3+2*t*1.657e-7)/u1
 	end if
       U2=AMAX1(4.,3.51+8.E-5*T)
-	if(u2.ne.4.)du2=8.e-5/u2
+	if(abs(u2-4.).gt.1.e-5 )du2=8.e-5/u2
       	if(T.GT.3.64E4)then
  	u2=68.7+T*(-4.216E-3+T*6.885E-8)
 	du2=(-4.216e-3+2*t*6.885e-8)/u2
@@ -234,7 +234,7 @@ c     Leemos las abundancias
 	du3=7.956e-5/u3
       RETURN
 11    U1=AMAX1(2.,1.72+9.3E-5*T) ! NA
-	if(u1.ne.2.)du1=9.3e-5/u1
+	if(abs(u1-2.).gt.1.e-5)du1=9.3e-5/u1
       	if(T.GT.5400.)then
  	U1=-0.83+5.66E-4*T
 	du1=5.66e-4/u1
@@ -267,13 +267,13 @@ c     Leemos las abundancias
 13    U1=5.2955+Y*(.27833-Y*(4.7529E-2-Y*3.0199E-3)) ! AL
 	du1=1.e-3*(.27833-y*(2*4.7529e-2-3*y*3.0199e-3))/u1
       U2=AMAX1(1.,.725+3.245E-5*T)
-	if(u2.ne.1.)du2=3.245e-5/u2
+	if(abs(u2-1.).gt.1.e-5)du2=3.245e-5/u2
       	if(T.GT.2.24E4)then
  	U2=61.06+T*(-5.987E-3+T*1.485E-7)
 	du2=(-5.987e-3+2*t*1.485e-7)/u2
 	end if
       U3=AMAX1(2.,1.976+3.43E-6*T)
-	if(u3.ne.2.)du3=3.43e-6/u3
+	if(abs(u3-2.).gt.1.e-5)du3=3.43e-6/u3
       	if(T.GT.1.814E4)then
  	U3=3.522+T*(-1.59E-4+T*4.382E-9)
 	du3=(-1.59e-4+2*t*4.382e-9)/u3
@@ -292,7 +292,7 @@ c     Leemos las abundancias
 	du2=(-2.22e-3+2*t*6.188e-8)/u2
 	end if
       U3=AMAX1(1.,.911+1.1E-5*T)
-	if(u3.ne.1.)du3=1.1e-5/u3
+	if(abs(u3-1.).gt.1.e-5)du3=1.1e-5/u3
       	if(T.GT.3.33E4)then
  	U3=19.14+T*(-1.408E-3+T*2.617E-8)
 	du3=(-1.408e-3+2*t*2.617e-8)/u3
@@ -453,18 +453,18 @@ c     Leemos las abundancias
 	du3=6.9e-4/u3
       RETURN
 29    U1=AMAX1(2.,1.50+1.51E-4*T) ! CU
-	if(u1.ne.2.)du1=1.51e-4/u1
+	if(abs(u1-2.).gt.1.e-5)du1=1.51e-4/u1
       	IF(T.GT.6250.)then
  	U1=-.3+4.58E-4*T
 	du1=4.58e-4/u1
 	end if
       U2=AMAX1(1.,.22+1.49E-4*T)
-	if(u2.ne.1.)du2=1.49e-4/u2
+	if(abs(u2-1.).gt.1.e-5)du2=1.49e-4/u2
       U3=8.025+9.4E-5*T
 	du3=9.4e-5/u3
       RETURN
 30    U1=AMAX1(1.,.632+5.11E-5*T) ! ZN
-	if(u1.ne.1.)du1=5.11e-5/u1
+	if(abs(u1-1.).gt.1.e-5)du1=5.11e-5/u1
       U2=2.00
       U3=1.00
       RETURN
@@ -513,7 +513,7 @@ c     Leemos las abundancias
 	du3=2.23e-4/u3
       RETURN
 37    U1=AMAX1(2.,1.38+1.94E-4*T) ! RB
-	if(u1.ne.2.)du1=1.94e-4/u1
+	if(abs(u1-2.).gt.1.e-5)du1=1.94e-4/u1
       	if(T.GT.6250.)then
  	U1=-14.9+2.79E-3*T
 	du1=2.79e-3/u1
@@ -530,7 +530,7 @@ c     Leemos las abundancias
 	du1=1.224e-3/u1
 	end if
         u2=amax1(2.,.84+2.6e-4*t)
-	if(u2.ne.2.)du2=2.6e-4/u2
+	if(abs(u2-2.).gt.1.e-5)du2=2.6e-4/u2
       U3=1.0 ! APPROXIMATELY
       RETURN
 39    U1=.2+2.58E-3*T ! Y
@@ -609,7 +609,7 @@ c     Leemos las abundancias
       U3=3.769+4.971E-5*T
       RETURN
 56    U1=AMAX1(1.,-1.8+9.85E-4*T) ! BA
-	if(u1.ne.1.)du1=9.85e-4/u1
+	if(abs(u1-1.).gt.1.e-5)du1=9.85e-4/u1
       	if(T.GT.6850.)then
  	U1=-16.2+3.08E-3*T
 	du1=3.08e-3/u1
@@ -729,27 +729,27 @@ c     Leemos las abundancias
 80    U1=1.0 ! HG
       U2=2.0
       U3=AMAX1(1.,.669+3.976E-5*T)
-	if(u3.ne.1.)du3=3.976e-5/u3
+	if(abs(u3-1.).gt.1.e-5)du3=3.976e-5/u3
       RETURN
 81    U1=AMAX1(2.,0.63+3.35E-4*T) ! TL
-	if(u1.ne.2.)du1=3.35e-4/u1
+	if(abs(u1-2.).gt.1.e-5)du1=3.35e-4/u1
       U2=1.0
       U3=2.
       RETURN
 82    U1=AMAX1(1.,0.42+2.35E-4*T) ! PB
-	if(u1.ne.1.)du1=2.35e-4/u1
+	if(abs(u1-1.).gt.1.e-5)du1=2.35e-4/u1
       	if(T.GT.6125.)then
  	U1=-1.2+5.E-4*T
 	du1=5.e-4/u1
 	end if
       U2=AMAX1(2.,1.72+7.9E-5*T)
-	if(u2.ne.2.)du2=7.9e-5/u2
+	if(abs(u2-2.).gt.1.e-5)du2=7.9e-5/u2
       U3=1.0
       RETURN
 83    U1=2.78+2.87E-4*T ! BI
 	du1=2.87e-4/u1
       U2=AMAX1(1.,.37+1.41E-4*T)
-	if(u2.ne.1.)du2=1.41e-4/u2
+	if(abs(u2-1.).gt.1.e-5)du2=1.41e-4/u2
       U3=2.5 ! APPROXIMATELY
       RETURN
   84  U1=5. ! PO

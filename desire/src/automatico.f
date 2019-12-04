@@ -28,7 +28,7 @@ c calculamos los posibles nodos
            nodosposibles(2)=2
            do j=3,ntau
               resto=(ntau-1)-(j-1)*((ntau-1)/(j-1))
-              if(resto.eq.0)then
+              if(abs(resto).lt.1.e-4)then
                  k=k+1
                  nodosposibles(k)=j
               end if
@@ -164,7 +164,7 @@ c        print*,'criterio area abs neto',a0,a1/a0
 
         a1=a1/a0
 
-        if(a1.eq.1)then
+        if(abs(a1-1.) .lt. 1.e-4)then
           mi=1
           return
         end if
@@ -237,7 +237,8 @@ c al caso de los 2 nodos le echamos de comer a parte
 	if(aij.le.aijmin)aijmin=aij
         a=abs(aijmax-aijmin)*sesgo1
 c        print*,'area criterio new',2,a
-        if(a.eq.amax)then
+c        if(a.eq.amax)then
+        if(abs(a-amax) .lt. abs(amax)*1.e-5)then
            mi=2
            return
         end if

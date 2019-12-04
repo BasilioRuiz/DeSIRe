@@ -1,18 +1,28 @@
-c                 DeSIRe
 c
-c Stokes Inversion based on Response functions considering NLTE atomic populations 
-c evaluated with RH
-c Carlos Quintero Noda, David Orozco Suarez, Han Uytenbroek & Basilio Ruiz Cobo
-c May 22, 2018
-c 454       call read_keyword_input_RH('ATMOS_FILE',RH_model)      !BRC-RH Jun 19 2017
-c 455       call read_keyword_input_RH('ABUND_FILE',RH_abundance)  !BRC-RH Jun 19 2017
-c 456       call read_keyword_input_RH('STOKES_INPUT',RH_magneticfield) !BRC-RH Jun 20 2017
-c Takes into account the position over the disk: it supposes that
-c input/out models are in the Local Reference Frame (LRF)
-C To sinthesize/invert input/output models are transformed to the Line of Sight Reference Frame (LoS) 
-c_______________________________________________________________________
+c File          _______ : desire.f
+c Description   _______ : Stokes Inversion based on Response functions
+c                         considering NLTE atomic populations evaluated
+c                         with RH.
+c                         Takes into account the position over the disk:
+c                         it supposes that input/out models are in the Local
+c                         Reference Frame (LRF). To sinthesize/invert
+c                         input/output models are transformed to the Line
+c                         of Sight Reference Frame (LoS).
+c Project       _______ : DeSIRe
+c Creation date _______ : 22/05/18
+c Author        _______ : Basilio Ruiz Cobo (brc@iac.es)
+c                         Han Uytenbroek, Carlos Quintero, David Orozco
 c
-c     DIMENSIONES:
+c Versions:
+c
+c 1.00 (20/05/19): Version base con llamadas al sistema (2019 = año 1).
+c 1.09 (09/09/19): Primera version con ejecutables convertidos en funciones.
+c 1.10 (10/10/19): Coeficientes de Barklem por argumento desde SIR a RH.
+c 1.11 (11/11/19): Codigo RH nuevo y codigo SIR depurado.
+c
+c_____________________________________________________________________________
+c
+c     DIMENSIONES
       implicit real*4 (a-h,o-z)
 
       include 'PARAMETER'
@@ -26,31 +36,30 @@ c     parameter (mfitmax=200)  !incluido en PARAMETER
 
 c     PARA LA MALLA
       integer nlin(kl),nlins(kl4),npas(kl),npass(kl4),npos(kld4),nposi(kld),indice(kl)
-      integer nlincheck(kl),ihemi,imaya,ici,iauto
+      integer nlincheck(kl),imaya,ici,iauto
       integer ist(4),nble(kl),nlinsn(kl),il
       real*4 dlamda0(kl),dlamda(kld),pist(4)
       real*4 dlamdas(kld4),cth,vx,vy
       integer m(18), HEon, numerical(18),numericalor(18)
-      integer icanal,ican,iciclo,ncifno,ncifnoOUT,ixt1,ixt2
+      integer icanal,ican,ncifno,ncifnoOUT,ixt1,ixt2
       real abu(na)
 
 c     PARA LA ATMOSFERA
       integer icalerr,ncontpg,ipgmag,multiformat1,multiformat2
-      integer ntau,ierror,nrays,istatus,ndepths
+      integer ntau,ierror,nrays,ndepths
       real*4 atmos(kt16),atmosr(kt16),atmosrlin(kt16),atmosr_old(kt16)
-      real*4 atmosout(kt16),atmoslin(kt16),tau(kt),atmosor(kt16)
+      real*4 atmosout(kt16),atmoslin(kt16),tau(kt)
 c     real*4 atmosoutold(kt16)
-      real*4 pg1(kt),z1(kt),ro1(kt),gam1(kt),T1(kt),Pe1(kt)
-      real*4 pg2(kt),z2(kt),ro2(kt),gam2(kt),T2(kt),Pe2(kt)
+      real*4 pg1(kt),z1(kt),ro1(kt),T1(kt),Pe1(kt)
+      real*4 pg2(kt),z2(kt),ro2(kt),T2(kt),Pe2(kt)
       real*4 B1(kt),gamma1(kt),phi1(kt)
-      real*4 B2(kt),gamma2(kt),phi2(kt)        
+      real*4 B2(kt),gamma2(kt),phi2(kt)
       real*4 B1_RH(kt),gamma1_RH(kt),phi1_RH(kt)
       real*4 B2_RH(kt),gamma2_RH(kt),phi2_RH(kt)
       real*4 pg1b(kt),z1b(kt),ro1b(kt),deglat,deglon
       real*4 pg2b(kt),z2b(kt),ro2b(kt)
       real*4 pg01,pg02,ro01,ro02,alog10mu
       real*4 Vmac1,fill1,strayfac,Vmac2,fill2    
-      real*4 atmos1LG(kt12),atmos2LG(kt12)
       real*4 depth(kt),temp(kt),Nelec(kt),Vz(kt),Vtur(kt)
       real*4 tauoriginal(kt)
 
@@ -67,8 +76,6 @@ c     PARA LA INVERSION
       real*4 mreadr2,mreadr3                 !,ileoNLTE
 
 c     PARA LOS COEFICIENTES DE ALEJAMIENTO
-      real*4 xa(11),ya(11)
-      integer*4 indexpar(kl)
       integer iRH1,iRH2
       integer iRH1_store(101),iRH2_store(101)
       real*4 rnlte_th
@@ -80,7 +87,7 @@ c     integer ifiable(kn16),indi(kn16)
       real*4 maximo
 
 c     PARA EL FICHERO LOG
-      integer	nguvec(500),posicionciclo(20),mvec(500,18),mvecmax(18)
+      integer nguvec(500),posicionciclo(20),mvec(500,18),mvecmax(18)
       real*4  addvec(500),snchivec(500),chprintvec(500),amac1vec(500),amac2vec(500)
       real*4  amic1vec(500),amic2vec(500),fill2vec(500),contrastevec(500)
       real*4  porcienvector(500)
@@ -89,7 +96,8 @@ c     PARA EL FICHERO LOG
 c     CADENAS
       character*100 uveobs,uveout,modelout1,modelout2,modelin1,modelin2,mod1inic,mod2inic
       character*100 modelin2ini,coorfile,extensioncoor,extensionmodel
-      character*100 model_multi1,model_multi2,Bmodel_multi1,Bmodel_multi2
+      character*100 model_multi1,model_multi2
+      character*101 Bmodel_multi1,Bmodel_multi2
       character*100 malla,control,controlb,fcontrol,modelerr1,modelerr2,difusa
       character*100 pesos_file
       character*100 snychi
@@ -98,21 +106,19 @@ c     CADENAS
       character chaweight*4
       character chasnychi*4
       character*100 mreadc2
-      character*100 nomlineas,fichabun               !,departfile
+      character*100 nomlineas,fichabun
       character*80 men1,men2,men3
       character*120 linlarga
       character*70 cartel
-      character*100 vprint,ruta,ruta2,ruta3,filewavename,modelcp1,modelcp2
+      character*100 vprint,ruta,ruta2,ruta3,filewavename
       character*4 cth_char
 
 c     RH
       character*100 RH_model,RH_abundance,RH_magneticfield,label_ID_model !BRC-RH Jun 20 2017
-      character*100 RH_model1,RH_magneticfield1
-      character*100 RH_model2,RH_magneticfield2
-      character*100 RH_rays,RH_starting_j,starting_j
+      character*100 starting_j      !,RH_rays,RH_starting_j
 c     character*100 key1,key1back,key2back
 c     real*4 pe1_change(kt),pe2_change(kt),pg1_change(kt),pg2_change(kt)
-      real*4 atmosnew(kt16)
+c     real*4 atmosnew(kt16)
 
 c     10/05/19 epm: To measure time.
       integer*8 cpu1, cpu2, wall1, wall2
@@ -248,7 +254,7 @@ c     21/06/19 epm: Read the command line.
       print*, ''
       print*, ' __________________________________________________________ '
       print*, '|                                                          |'
-      CARTEL=' |            DeSIRe version 1.4  (10/Oct/2019)             |'
+      CARTEL=' |            DeSIRe version 1.11  (11/Nov/2019)            |'
       print'(a)',CARTEL
       print*, '|__________________________________________________________|'
       print*, ''
@@ -264,7 +270,7 @@ c     Inicializa algunas variables
       cotaminima=-0.99  !valor minimo de cualquier p. Stokes
                         !cualquier Stokes menor de cotaminima tendra una sigma=1.e15
 
-      vx=0.d0           !vx=1.95d5 velocidad rotacion fotosfera solar ecuador
+      vx=0.0            !vx=1.95e5 velocidad rotacion fotosfera solar ecuador
 
       icanal=24         !canal del fichero log
       ican=23           !canal de lectura del fichero de control
@@ -410,13 +416,18 @@ c defining the path from   solveray from the path for  rhf1d
         iprimeravez_ruta=iprimeravez_ruta+1
         if(iprimeravez_ruta.eq.1)then
            islash=0
-           do ii=1,25
+           isalgo=0
+           call busco(' ',ruta,1,islashb)
+           do while(islash .lt. islashb-1 .and. isalgo .ne.1)
               call busco('/',ruta(islash+1:100),1,islash1) 
-              if(islash1 .ge. 100)go to 1
-              islash=islash+islash1
+              if(islash+islash1 .ge. islashb-1 )then
+                 isalgo=1
+              else
+                 islash=islash+islash1
+              end if
            end do
-1          ruta2=ruta(1:islash)//'solveray'
-           ruta3=ruta(1:islash)//'conversion'
+           ruta2=ruta(1:islash)//'solveray'
+           ruta3=ruta(1:islash)//'conversion'           
         end if
         
         pi=3.14159265
@@ -455,23 +466,23 @@ c        cthabs=abs(cth)
         ncontpg=0
         ro01=0.
         ro02=0.
-        if(pg01.gt.0..or.pg02.gt.0. .and. abs(m(2))+abs(m(10)) .eq.0 )then
+        if(pg01.gt.0. .or. pg02.gt.0. .and. abs(m(2))+abs(m(10)).eq.0)then
            print*,'Boundary condition in gas pressure'
-	   if(pg02.eq.0.)pg02=pg01
-	   if(pg01.eq.0.)pg01=pg02
+	   if(pg02.lt.0.)pg02=pg01
+	   if(pg01.lt.0.)pg01=pg02
            ncontpg=1
         end if
-        if(pg01.lt.0..or.pg02.lt.0 .and. abs(m(2))+abs(m(10)) .eq.0 )then
+        if(pg01.lt.0. .or. pg02.lt.0. .and. abs(m(2))+abs(m(10)).eq.0)then
            print*,'Boundary condition in density'
-	   if(pg02.eq.0.)pg02=pg01
-	   if(pg01.eq.0.)pg01=pg02
+	   if(pg02.lt.0.)pg02=pg01
+	   if(pg01.lt.0.)pg01=pg02
            pg01=abs(pg01)
            pg02=abs(pg02)
            ro01=pg01
            ro02=pg02
            ncontpg=-1
         end if
-	if(ncontpg.eq.0 .and. abs(m(2))+abs(m(10)) .eq.0 )then
+	if(ncontpg.eq.0 .and. abs(m(2))+abs(m(10)) .eq.0)then
            print*,'Boundary condition in electronic pressure'
 	   print*,'Better results are expected setting boundary condition in gas pressure/density'
 	end if
@@ -511,7 +522,7 @@ c cadenas para el output
              iratio(i)=0     !iratio(Q)=1 -> se invierte Q/I, etc
              if(pist(i).lt.0)iratio(i)=1
              pist(i)=abs(pist(i))
-             if(pist(i).ne.0.)ist(i)=1
+             if(pist(i).gt.0)ist(i)=1
           end do
 	  if(ist(1).eq.0)print*,'Stokes I is not considered in this inversion'
 	  if(ist(2).eq.0)print*,'Stokes Q is not considered in this inversion'
@@ -669,7 +680,7 @@ c       ------------------------------------------------------
   	call read_keyword_input_RH('ATMOS_FILE',RH_model)           !BRC-RH Jun 19 2017
 c 	call read_keyword_input_RH('ABUND_FILE',RH_abundance)       !BRC-RH Jun 19 2017
 c 	call read_keyword_input_RH('NRAYS',RH_rays)
- 	if(iprimeravez_ruta .eq. 1. .or. nrays.ne.nraysini)call write_keyword_input_RH('NRAYS',nrays)                  !BRC-RH Jul 3 2018	 
+ 	if(iprimeravez_ruta .eq. 1 .or. nrays.ne.nraysini)call write_keyword_input_RH('NRAYS',nrays)                  !BRC-RH Jul 3 2018	 
 c        call read_keyword_input_RH('STARTING_J',RH_starting_j)
 c        STARTING_J      ='NEW_J'  
         if(iprimeravez_ruta .eq. 1)starting_j='NEW_J'
@@ -711,7 +722,7 @@ c           call lines_kurucz(nomlineas)
            read(50,*,err=771,end=991)Vmac1,fill1,strayfac
            read(50,*,err=771)B1i,gamma1i,phi1i !si hay una sola linea valores constantes
            do i=1,ndepths
-              B1_RH(i)=B1i*1.d-4
+              B1_RH(i)=B1i*1.e-4
               gamma1_RH(i)=gamma1i*3.14159265/180.
               phi1_RH(i)=phi1i*3.14159265/180.
               b1(i)=B1i
@@ -721,7 +732,7 @@ c           call lines_kurucz(nomlineas)
 
 	   do i=2,ndepths
 	      read(50,*,err=991,end=991)B1i,gamma1i,phi1i
-	      B1_RH(i)=B1i*1.d-4
+	      B1_RH(i)=B1i*1.e-4
               gamma1_RH(i)=gamma1i*3.14159265/180.
               phi1_RH(i)=phi1i*3.14159265/180.	 
               b1(i)=B1i
@@ -793,7 +804,7 @@ c And now with atmosphere 2:
              read(50,*,err=772,end=992)Vmac2,fill2,strayfac2
              read(50,*,err=772)B2i,gamma2i,phi2i !si ahy una sola linea valores constantes
              do i=1,ndepths
-                B2_RH(i)=B2i*1.d-4
+                B2_RH(i)=B2i*1.e-4
                 gamma2_RH(i)=gamma2i*3.14159265/180.
                 phi2_RH(i)=phi2i*3.14159265/180.
                 b2(i)=B2i
@@ -803,7 +814,7 @@ c And now with atmosphere 2:
 
 	    do i=2,ndepths
 	       read(50,*,err=992,end=992)B2i,gamma2i,phi2i
-	       B2_RH(i)=B2i*1.d-4
+	       B2_RH(i)=B2i*1.e-4
                gamma2_RH(i)=gamma2i*3.14159265/180.
                phi2_RH(i)=phi2i*3.14159265/180.	 
                b2(i)=B2i
@@ -1001,7 +1012,8 @@ c -----------------------------------------------------------------
            print*,'Output profiles: ',trim(uveout)
                     
            if(ici.eq.1)then
-	     open(icanal,file=control,access='append')
+c	     open(icanal,file=control,access='append')
+	     open(icanal,file=control)
 	        write(icanal,*)trim(linlarga )
 	     close(icanal)
 	   endif
@@ -1090,7 +1102,8 @@ c -----------------------------------------------------------------
 
         print*,trim(linlarga)
 	if(ici.eq.1)then
-	   open(icanal,file=control,access='append')
+c	   open(icanal,file=control,access='append')
+	   open(icanal,file=control)	   
 	   write(icanal,*) trim(linlarga)
 	endif 
 
@@ -1368,10 +1381,10 @@ c _____________________________________________________________________________
 c                        empieza el ciclo iterativo
 c _____________________________________________________________________________
 
-        factorrep=1
-	diag=-1.d0
-	chi0=1.d20
-	varchi=1.d0
+        factorrep=1.
+	diag=-1.0
+	chi0=1.e20
+	varchi=1.0
 	isigo=1
 	it=0
 	iamplio=0
@@ -1526,6 +1539,7 @@ c	        iamplioold=1
                    end if            
                 end if
                 
+
 	        if(varchi.le.cotavar)isigo=0
                 if(ngu.eq.100)then 
                    isigo=0
@@ -1553,7 +1567,9 @@ c	        iamplioold=1
 		contrastevec(ll)=contraste
 		porcienvector(ll)=porcien
 				
-		if(isigo.eq.1)posicionciclo(ici)=ll
+c		if(isigo.eq.1)posicionciclo(ici)=ll
+		posicionciclo(ici)=ll
+
 				
                 kv=0
                 do i=1,18
@@ -1561,7 +1577,7 @@ c	        iamplioold=1
                    if(mvecmax(i).lt.m(i))mvecmax(i)=m(i)
                 end do
                 
-	        if(iauto.eq.0. .and. vprint .ne. 'q'.and.vprint.ne.'Q')
+	        if(iauto.eq.0 .and. vprint .ne. 'q'.and.vprint.ne.'Q')
      &	        write(*,1002)ngu,add,snchi,chprint,amac1,amac2,amic1,amic2,
      &                        fill2,contraste,porcien
 
@@ -1900,7 +1916,8 @@ c         close(13)
 	 end do	!fin del do en el numero de ciclos (ici)
 	 close(icanal)
 
-	open(icanal,file=control,access='append')
+c	open(icanal,file=control,access='append')
+	open(icanal,file=control)
         if(iauto.eq.0)write(icanal,1000)"ite","DE","s/neqv","chi**2","Mac1","Mac2","mic1","mic2"
      &                ,"fill2","Ic1/Ic2","stray"
 
@@ -1912,6 +1929,7 @@ c         close(13)
 !esta es la correcta
 
         do i=1,ll
+c          print*,'desire 1912 escribo en log ',i,nguvec(i),addvec(i)
  	  if(iauto.eq.0)write(icanal,1002)nguvec(i),addvec(i),snchivec(i),chprintvec(i),amac1vec(i),
      &                      amac2vec(i),amic1vec(i),amic2vec(i),
      &                      fill2vec(i),contrastevec(i),porcienvector(i)
@@ -1919,7 +1937,8 @@ c         close(13)
      & (mvec(i,jj),jj=1,18)
 
 	  do j=1,nciclos-1   
-             if(i.eq.posicionciclo(j))then         
+             if(i.eq.posicionciclo(j))then     
+c               print*,'desire 1931 escribo en log ',i,j,posicionciclo(j)
 	       if(iauto.eq.0)write(icanal,1000)"ite","DE","s/neqv","chi**2","Mac1","Mac2",
      &                "mic1","mic2","fill2","Ic1/Ic2","stray"
                if(iauto.eq.1)write(icanal,2000)"ite","DE","s/neqv","chi**2",
@@ -1951,7 +1970,6 @@ c     Formats.
 1002  format(1x,i3,1x,f4.0,1x,1pe9.2,1x, e10.3,1x, 0pf6.3,5(1x, f6.3),1x,f6.3)
 2000  format(2x,a2,2x, a2,5x,a3,6x,a6,3x,18(a3))
 2002  format(1x,i3,1x,f4.0,1x,1pe9.2,1x, e10.3, 18(i3))
-999   format(3x,a4,1x,1pe9.2,1x)
 423   format(a,i2,a)
 
 c     Happy ending.
@@ -1965,76 +1983,167 @@ c     21/06/19 epm: Error opening control file.
 
 c _______________________________________________________________________
 
-	subroutine diagonal(diag0,diag,isigo,iamplio,varchi,it)
+      subroutine diagonal_FUNCIONA_PEOR(diag0,diag,isigo,iamplio,varchi,it)
 
-	implicit real*4(a-h,o-z)
-        real*4 diagon(100) 
-	character diver*10,espacio*36
+      implicit real*4(a-h,o-z)
+      real*4 diagon(7),diagonold(7) 
+      character diver*11,espacio*35
 
-	common/iteradiagonal/itt
-        common/repeticion/factorrep !factor de diag para evitar repeticiones
-	data ir/1/
+      common/iteradiagonal/itt
+      common/repeticion/factorrep !factor de diag para evitar repeticiones
+      data ir/1/
 
-	diver=' increases '
-	espacio=' _________________________________ '
-  
-        if(it.eq.1)then
-           ir=1  
-           itt=0       
-	endif
-      
-	if(ir.eq.1)diagon(ir)=diag0
-        ir=ir+1
-	if(ir.eq.100)ir=6
-        diagon(ir)=diag
-                              
-	if(diag.eq.0)then
-	    isigo=0
-	    iamplio=0
-	    return
-	else if(diag.gt.diag0)then
-            isigo=1
-	    iamplio=0
-	    itt=itt+1
-	else if(diag.le.diag0)then
-            isigo=1
-	    iamplio=1
-	    itt=0
-	end if
+      diver=' increases '
+      espacio=' _________________________________ '
 
-	if(ir.gt.5.)then
-           if(diagon(ir).eq.diagon(ir-2).or.
-     &                  diagon(ir-1).eq.diagon(ir-3))then
-	     factorrep=0.
-           else
-	     factorrep=1.
-           end if 
-        end if
+      if(it.eq.1)then
+         ir=1
+         itt=0
 
-	if(ir.gt.7)then
-          if(diagon(ir).eq.diagon(ir-1).and.
-     &                  diagon(ir).eq.diagon(ir-2).and.
-     &                  diagon(ir).eq.diagon(ir-3).and.
-     &                  diagon(ir).eq.diagon(ir-4).and.
-     &                  diagon(ir).eq.diagon(ir-5))factorrep=1.
-        end if
-       		
-	if(diag0.gt.0)then
-	     if(diag.gt.diag0)then
-	          varchi=1.0
-	          add=-20.
-	          if(diag0.gt.0.0)add=alog10(diag0)
-	          write(*,1100)add,diver,espacio
-	          if(itt.ge.7)then
-	               isigo=0
-	               iamplio=0
-	          end if
-	     end if
-	end if
-		
-	return
-1100	format(5x,f4.0,1x,a10,a53)
-	end
+         diagonold(1)=diag0
+         diagon(1)=diag0
+         do j=2,7 
+            diagonold(j)=diag
+         end do
+      end if
+      ir=it
+      if(ir .gt. 6)ir=6
+      do j=1,ir
+         diagonold(j)=diagon(j)
+      end do 
+      do j=1,ir-1
+         diagon(j)=diagonold(j+1)
+      end do   
+      diagon(ir)=diag
+
+      if(abs(diag).lt.1.e-15)then
+         isigo=0
+         iamplio=0
+         return
+      else if(diag.gt.diag0)then
+         isigo=1
+         iamplio=0
+         itt=itt+1
+      else if(diag.le.diag0)then
+         isigo=1
+         iamplio=1
+         itt=0
+      end if
+
+      if(ir.gt.5.)then
+         dir02=abs(diagon(ir)-diagon(ir-2))
+         dir13=abs(diagon(ir-1)-diagon(ir-3))
+         if(dir02 .lt. 1.e-8 .or. dir13 .lt. 1.e-8)then
+            factorrep=0.
+         else
+            factorrep=1.
+         end if 
+      end if
+
+c     if(ir.eq.7)then
+c        dir01=abs(diagon(ir)-diagon(ir-1))
+c        dir03=abs(diagon(ir)-diagon(ir-3))
+c        dir04=abs(diagon(ir)-diagon(ir-4))
+c        dir05=abs(diagon(ir)-diagon(ir-5))
+c
+c        if(dir01 .lt. 1.e-12 .and.dir02 .lt. 1.e-12 .and.
+c     &     dir03 .lt. 1.e-12 .and.dir04 .lt. 1.e-12 .and.
+c     &     dir05 .lt. 1.e-12 )factorrep=1.
+c     end if
+
+      if(diag0.gt.0)then
+         if(diag.gt.diag0)then
+            varchi=1.0
+            add=-20.
+            if(diag0.gt.0.0)add=alog10(diag0)
+            write(*,1100)add,diver,espacio
+            if(itt.ge.7)then
+               isigo=0
+               iamplio=0
+            end if
+         end if
+      end if
+
+      return
+1100  format(5x,f4.0,1x,a11,a52)
+      end
+
+c _______________________________________________________________________
+
+      subroutine diagonal(diag0,diag,isigo,iamplio,varchi,it)
+
+      implicit real*4(a-h,o-z)
+      real*4 diagon(100) 
+      character diver*11,espacio*35
+
+      common/iteradiagonal/itt
+      common/repeticion/factorrep !factor de diag para evitar repeticiones
+      data ir/1/
+
+      diver=' increases '
+      espacio=' _________________________________ '
+
+      if(it.eq.1)then
+         ir=1
+         itt=0
+      endif
+
+      if(ir.eq.1)diagon(ir)=diag0
+      ir=ir+1
+      if(ir.eq.100)ir=6
+      diagon(ir)=diag
+
+      if(abs(diag).lt.1.e-15)then
+         isigo=0
+         iamplio=0
+         return
+      else if(diag.gt.diag0)then
+         isigo=1
+         iamplio=0
+         itt=itt+1
+      else if(diag.le.diag0)then
+         isigo=1
+         iamplio=1
+         itt=0
+      end if
+
+      if(ir.gt.5.)then
+         dir02=abs(diagon(ir)-diagon(ir-2))
+         dir13=abs(diagon(ir-1)-diagon(ir-3))
+         if(dir02 .lt. 1.e-8 .or. dir13 .lt. 1.e-8)then
+            factorrep=0.
+         else
+            factorrep=1.
+         end if
+      end if
+
+      if(ir.gt.7)then
+         dir01=abs(diagon(ir)-diagon(ir-1))
+         dir03=abs(diagon(ir)-diagon(ir-3))
+         dir04=abs(diagon(ir)-diagon(ir-4))
+         dir05=abs(diagon(ir)-diagon(ir-5))
+
+         if(dir01 .lt. 1.e-12 .and.dir02 .lt. 1.e-12 .and.
+     &      dir03 .lt. 1.e-12 .and.dir04 .lt. 1.e-12 .and.
+     &      dir05 .lt. 1.e-12 )factorrep=1.
+      end if
+
+      if(diag0.gt.0)then
+         if(diag.gt.diag0)then
+            varchi=1.0
+            add=-20.
+            if(diag0.gt.0.0)add=alog10(diag0)
+            write(*,1100)add,diver,espacio
+            if(itt.ge.7)then
+               isigo=0
+               iamplio=0
+            end if
+         end if
+      end if
+
+      return
+1100  format(5x,f4.0,1x,a11,a52)
+      end
 
 c _______________________________________________________________
 c rutina convierte
@@ -2118,7 +2227,7 @@ c _______________________________________________________________________
         real*4 pg2(kt),z2(kt),ro2(kt),b2(kt),gam2(kt)
         character*26 var(18) 
         integer icalerr,ncontpg,ipgmag
-        real*4 g,avog,cth,prec,precitera,pg01,pg02,ro01,ro02
+        real*4 prec,pg01,pg02,ro01,ro02
         
         common/preciso/prec      
         common/calerr/icalerr !si calculo errores=1 else =0
@@ -2127,7 +2236,7 @@ c _______________________________________________________________________
         common/contornoro/ro01,ro02
         common/pgmag/ipgmag
 
-	epsilon=1.d-2
+	epsilon=1.e-2
 
 c precision equilibrio hidrostatico en tanto por uno (necesaria para equisubmu)
         prec=1.e-3  ! 
@@ -2169,7 +2278,7 @@ c precision equilibrio hidrostatico en tanto por uno (necesaria para equisubmu)
   	         if(y1.lt.-cotafi)y1=-cotafi   !acoto inferiormente
 	         if(y1.gt.cotafi)y1=cotafi     !acoto superiormente
       	      else
-                 if(pert(kred).eq.0)goto 999   !por aqui nunca va a pasar!!!!
+                 if(abs(pert(kred)).lt.1.e-10)goto 999   !por aqui nunca va a pasar!!!!
 	         y1=(atmosr(kred)/pert(kred))-1.    !perturbacion multiplicativa
   	         if(y1.lt.-cota)y1=-cota   !acoto inferiormente
 	         if(y1.gt.cota)y1=cota     !acoto superiormente
@@ -2487,7 +2596,7 @@ c and later rotate around X axis to the South
      
 c       print*,'deglat =',deglat, asin(sinlat)*pi180
 
-c Following Küker & Rüdiger (2008)
+c Following Kuker & Rudiger (2008)
 c  http://iopscience.iop.org/article/10.1088/1742-6596/118/1/012029/meta
 c the rotation velocity is
 c Omega=(14.05 -1.492*cos^2(theta) -2.606*cos^4(theta)) degrees/day with theta=colatitude

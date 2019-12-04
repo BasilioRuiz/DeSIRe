@@ -25,27 +25,25 @@ c     10/06/19 epm: Arrays for the spectrum.
       parameter (n_wave_NLTE=50000)
 
 c     Departure coefficients.
-      integer ican,i,i1,i2,itotalmax,nlevels,natmos
-      integer ifirst,linea_nlte(kl)
+      integer nlevels,natmos
+      integer linea_nlte(kl)
       integer nlow_i(kl),nup_i(kl),ntau,ntotal_lines
-      real*8 elec_dens(kt),bol
+      real*8 bol
       real*4 stok_RH(kld4)   !,tau5RH(kt),tauRH_step(kt)
-c     real*4 beta1(kl,kt),beta2(kl,kt),dd,departure(kt500)  !,pe_dep(kt)
-      real*4 beta1(kl,kt),beta2(kl,kt),dd                   !,pe_dep(kt)
+c     real*4 beta1(kl,kt),beta2(kl,kt),departure(kt500)  !,pe_dep(kt)
+      real*4 beta1(kl,kt),beta2(kl,kt)                   !,pe_dep(kt)
 c     06/06/19 epm: Double precision for departure coefficients.
       real*8 departure(kt500)
       character*100 label_ID_model,RH_model,RH_magneticfield !BRC-RH Jun 20 2017
       character*2 atom_nlte(kl),atomi
-      integer model1_or_2,itime1,itime2,istatus,istatus1,istatus2
+      integer istatus,istatus1,istatus2
       integer nspect
 
-      real*4 atmos(kt16),b(kt),gamma(kt),phi(kt)
       real*4 tau(kt),T(kt),Pe(kt),Pg(kt),z(kt),ro(kt)
       real*4 Vmac,fill,strayfac
 c     real*4 atmosnew(kt16)
 c     real*4 pe1_change(kt),pe2_change(kt),pg1_change(kt),pg2_change(kt)
 c     real*4 tauoriginal(kt)
-      character*80 men1
       character*100 vprint,ruta,ruta2,ruta3,filewavename
 
 c     Para la atmosfera.
@@ -243,7 +241,7 @@ c ------------------------------------------------------------------------------
         character*2 atom_nlte_i
         character*100 file_pops
 
-        integer nlow_i(*),nup_i(*),ntau,ntotal_lines,itotalmax
+        integer nlow_i(*),nup_i(*),ntau,itotalmax
         real*4 departure(*),dep_ii
         data nlevelsmax/500/
 
@@ -305,19 +303,17 @@ c       parameter (n_wave_NLTE=50000)
         real*4 SI_LTE(kld),SQ_LTE(kld),SU_LTE(kld),SV_LTE(kld),continuo
         real*4 stok_RH(*)
         character*100 ruta,ruta2,ruta3,filewavename
-        real*8 x0,x1,x2,x,y0,y1,y2,y,delta,delta2          !,conhsra_RH,cc_RH
+        real*8 x0,x1,x2,x,y0,y1,y2,y,delta2          !,conhsra_RH,cc_RH
         real*4 continuohNLTEarr(kld)
 
         real*4 stok(kld4),sigd(kld4)                  !,conhsra,ccc
         real*4 dlamda0(kl),dlongd(kld),dlamda00(kl)   !,con_i(kl)
-        integer nlin(kl),nlins(kl4),npas(kl),indice(kl)
+        integer nlin(kl),npas(kl)
         integer ist(4),nble(kl)
 
         integer mult(2)
         real tam(2),loggf,wlengt1,zeff,alfa,sigma,energy
-        character design(2)*1,atom*2,linea*100
-        character*1 code1(21)
-        real*4 lambda,wvac,wc,c
+        character design(2)*1,atom*2
 
         common/ruta/ruta,ruta2,ruta3,filewavename
         common/responde2/ist,ntau,ntl,nlin,npas,nble
@@ -374,7 +370,7 @@ c              print*,'departures conhsra ',conhsra(wlengt1)*real(conhsra_RH(wle
         end if   
      
 c interpolating
-        iLTE=0
+        iLTE=1
         iii=0
       do iln=1,ntl
 c          d00=dlamda00(iln)*1.e-14            
@@ -384,11 +380,10 @@ c          d00=dlamda00(iln)*1.e-14
              x=wave_LTE(iii)
              continuo=continuohNLTEarr(iii)           !*x*x*1.e-28/30.
              if( continuo .lt. 1.e-30)continuo=1.e-30
-
+             
              call locating(wave_NLTE,nlam_NLTE,x,iLTE)
-             if(iLTE.eq.1)iLTE=2
-               
-                   ii0=iLTE-1
+             if(iLTE.eq.1)iLTE=2             
+             ii0=iLTE-1
              x0=wave_NLTE(ii0)
              ishift=0
              ii1=iLTE+ishift
@@ -576,13 +571,13 @@ c ------------------------------------------------------------------------------
 
 c ------------------------------------------------------------------------------------------------------          
 
-          FUNCTION w_vac(w_air)
+          FUNCTION w_vac_fn(w_air)
 
-        real*8 w_vac,w_air,refrax,ss,ww
+        real*8 w_vac_fn,w_air,refrax,ss
            ss=1.d8/w_air/w_air  !wvac in A
            refrax=1.d0+8.336624212083d-5+2.408926869968d-2/(130.1065924522d0 - ss) + 
      &           1.599740894897d-4 / (38.92568793293d0 - ss)
-           w_vac=w_air*refrax   
+           w_vac_fn=w_air*refrax   
 
         return
         end

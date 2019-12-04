@@ -8,7 +8,7 @@
 
         bp=dplnck(temp,x) 
 
-        if(bratio.eq.1.)then
+        if(abs(bratio-1.) .lt. 1.e-6)then
            bt=dtplanck(temp,x) 
            return
         else

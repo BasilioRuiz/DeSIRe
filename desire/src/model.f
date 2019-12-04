@@ -68,7 +68,7 @@ c     	print*,'paso igual a cero no equiespaciado'
     	print*,'Give the initial log tau, final log tau and step (eg, 1.2,-4,.1): '
 	    read*,tau1,taun,paso
 	    paso=-paso
-	    if(paso.eq.0)then
+	    if(abs(paso).lt.1.e-8)then
 	       print*,'Number of depth points?'
 	       read*,n
 	       do i=1,n

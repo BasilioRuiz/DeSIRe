@@ -71,7 +71,7 @@ c                 end do
 c                 atmosr(kred)=sum/float(ntau2)
 c              end if
 
-	      if(i.eq.17)atmosr(kred)=(1.d0-atmosr(kred))/atmosr(kred) !ff
+	      if(i.eq.17)atmosr(kred)=(1.e0-atmosr(kred))/atmosr(kred) !ff
 	      if(i.eq.18)atmosr(kred)=atmosr(kred)/(100.-atmosr(kred)) !%
 c              if(i.eq.6.or.i.eq.14)atmosr(kred)=tan(atmosr(kred)/2.0)
 c	       if(i.eq.7.or.i.eq.15)atmosr(kred)=tan(atmosr(kred)/4.0)

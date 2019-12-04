@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Mon May 21 14:47:40 2018 --
+       Last modified: Mon Jun 11 14:46:13 2018 --
 
        --------------------------                      ----------RH-- */
 
@@ -366,21 +366,19 @@ void setInterpolate_3D(char *value, void *pointer)
 
 void set_S_Interpolation(char *value, void *pointer)
 {
-  const char routineName[] = "setInterpolate_3D";
+  const char routineName[] = "set_S_Interpolation";
 
   enum S_interpol interpolation;
 
-  if (!strcmp(value, "DELO_PARABOLIC"))
-    interpolation = DELO_PARABOLIC;
-  else if (!strcmp(value, "BEZIER"))
-    interpolation = BEZIER;
-  else if (!strcmp(value, "BEZIER3"))
-    interpolation = BEZIER3;
-  else if (!strcmp(value, "CUBIC_HERMITE"))
-    interpolation = CUBIC_HERMITE;
+  if (!strcmp(value, "S_PARABOLIC"))
+    interpolation = S_PARABOLIC;
+  else if (!strcmp(value, "S_LINEAR"))
+    interpolation = S_LINEAR;
+  else if (!strcmp(value, "S_BEZIER3"))
+    interpolation = S_BEZIER3;
   else {
     sprintf(messageStr,
-	    "\n  Invalid value for keyword S_INTERPOLATION: %s", value);
+	    "Invalid value for keyword S_INTERPOLATION: %s\n", value);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
   memcpy(pointer, &interpolation, sizeof(enum S_interpol));
@@ -405,7 +403,7 @@ void set_S_interpolation_stokes(char *value, void *pointer)
 	     "Invalid value for keyword S_INTERPOLATION_STOKES: %s", value);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
-  memcpy(pointer, &interpolation, sizeof(enum S_interpol));
+  memcpy(pointer, &interpolation, sizeof(enum S_interpol_stokes));
 }
 /* ------- end --------------------- set_S_interpolation_stokes.c --- */
 

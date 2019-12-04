@@ -33,7 +33,7 @@ c el vector a deconvolucionar entra por medio del common vobservado
 
 	k=0
 	if(isigno.eq.0.and.ifiltro.eq.0)return
-	if(s.eq.0.and.ifiltro.eq.0)return
+	if(abs(s).lt.1.e-15 .and.ifiltro.eq.0)return
 
 c descomponemos vin en datos para cada linea: v1
 	k1=0
@@ -368,8 +368,7 @@ c ntot=numero de puntos que quiero
 	real*4 ftrans(4*kl,m2)
 	real xa(11),ya(11)
 	integer npas(*)
-        integer ntlpsf,nlipsf,nble(kl),nlinpsf(kl),npaspsf(kl)
-        real*4 dlpsf(kld),StokesIpsf(kld)
+        integer ntlpsf,nlipsf,npaspsf(kl)
         
         character*100 filtro,psfper
 

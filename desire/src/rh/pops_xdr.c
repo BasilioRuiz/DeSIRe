@@ -86,11 +86,12 @@ void writePopulations(Atom *atom)
 {
   const char routineName[] = "writePopulations";
 
-  FILE *fp_out, *f;
+  FILE *fp_out;
   XDR   xdrs;
-  register int i, k;
 
   // 07/06/19 epm: We don't need this anymore.
+  // FILE *f;
+  // register int i, k;
   // char filetxt[strlen(atom->popsoutFile) + 4 + 1];
   // strcpy(filetxt, atom->popsoutFile);
   // strcat(filetxt,".txt");

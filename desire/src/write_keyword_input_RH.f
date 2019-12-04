@@ -1,12 +1,11 @@
 c write_keyword_input_RH.f  writes the RH input file keyword.input ; BRC Jun 19 2017
-c looks for prompt (must be follwed by "=" and then by filename_prompt in keyword.input
+c looks for prompt (must be follwed by "=") and then by icontent in keyword.input
 c then writes keyword2.input changing the content of prompt by the integer icontent
 
         subroutine write_keyword_input_RH(prompt,icontent)
         implicit real*4 (a-h,o-z)
         character*100 nombre,linea,nombre2
         character*(*) prompt
-        character*100 filename_prompt
         integer len_pr,ican,num,nxx,iline,ifi,i,ieq,ieq1,ieq2
         integer icontent
         
@@ -77,14 +76,13 @@ c        print*,'renombro keyword2.input'
         return
         end
 c write_keyword_input_RH.f  writes the RH input file keyword.input ; BRC Jun 19 2017
-c looks for prompt (must be follwed by "=" and then by filename_prompt in keyword.input
-c then writes keyword2.input changing the content of prompt by the integer icontent
+c looks for prompt (must be follwed by "=") and then by stringcontent in keyword.input
+c then writes keyword2.input changing the content of prompt by the string stringcontent
 
         subroutine write_keyword_input_RHstr(prompt,stringcontent)
         implicit real*4 (a-h,o-z)
         character*100 nombre,linea,nombre2
         character*(*) prompt,stringcontent
-        character*100 filename_prompt
         integer len_pr,ican,num,nxx,iline,ifi,i,ieq,ieq1,ieq2
 c        integer icontent
         

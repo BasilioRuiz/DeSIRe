@@ -3,7 +3,7 @@
 
         implicit real*4 (a-h,o-z)
 	include 'PARAMETER'   !por kt
-        parameter (kt16=16*kt, kfac=20, ktnew=kfac*(kt-1)+1)
+        parameter (kt16=16*kt, kfac=10, ktnew=kfac*(kt-1)+1)
         parameter (dl10=2.3025851)
 
 	integer n,nn
@@ -12,9 +12,8 @@
 c internas
         real*4 sol(kt),tau(kt),taue(kt)
         real*4 deltae(kt),deltai(kt),delt2i(kt)
-	real*4 ds(*), detal(kt), etal(kt), etall(*)
-	real*4 etal2(kt)
-	real*4 s(*), den, num, den2
+	real*4 ds(*), etall(*)
+	real*4 s(*)
 	real*4 OO(kt)
         real*4 tk(kt),pk(kt),vk(kt),mk(kt)
 	real*4 bt(kt)
@@ -161,8 +160,8 @@ c-------------------------------------------------------------------
        subroutine numden_c(icontorno,n,kt,tau,deltai,delt2i,etal,s,ds,OO,sol,svec)
        implicit real*4 (a-h,o-z)
               
-       integer icontorno,n,i,ii,jj,k
-       real*4 etal(kt),etal2(kt),ssuma,detal(kt)
+       integer icontorno,n,i
+       real*4 etal(kt),etal2(kt),detal(kt)
        real*4 s(kt), ds(kt),den, num, den2
        real*4 sol(kt),OO(kt),tau(kt)
        real*4 deltai(kt),delt2i(kt),svec

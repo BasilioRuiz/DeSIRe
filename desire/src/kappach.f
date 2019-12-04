@@ -12,7 +12,8 @@ c
 	integer ivar(10)
 
       real mgatom,nair		!,wavelt/0./
-      real*4 dfreq,lnfreq,dobtheta,dobdtheta,lambda
+      real*4 lnfreq,lambda
+      real*8 dobtheta,dobdtheta,h2pluscoeff,dfreq
       logical wrepet
       dimension z3(12)
       real ghel(12)/1.,3.,1.,9.,9.,3.,3.,3.,1.,9.,20.,3./,
@@ -113,9 +114,9 @@ c    *e+01,2.48188080e+01,-3.35147209e+00/
 	pe=ppe
 	wavelt=0.	!lo introduzco nuevo
       theta=5040./t
-	dtheta=-5040./(t*t)
+      dtheta=-5040./(t*t)
       dobtheta=dble(theta)
-	dobdtheta=dble(dtheta)
+      dobdtheta=dble(dtheta)
       temp25=t**2.5
       wrepet=.false.
       if(abs(lambda-wavelt).lt.1.e-8) wrepet=.true.
@@ -125,8 +126,9 @@ c    *e+01,2.48188080e+01,-3.35147209e+00/
       if(x10000.lt.0.18) goto 23
       nair=refrax(x10000,15.,760.,0.)
 23    freq=2.997925e+10/(lambda*nair)
-      dfreq=dble(freq)
-      lnfreq=alog(dfreq)
+c      dfreq=dble(freq)
+      dfreq=0.d0
+      lnfreq=alog(freq)
       z=alog10(freq)
       x10001=lambda**3
       x10002=1.e+8*lambda   ! angstroms
@@ -297,7 +299,8 @@ c	dz2=z2*(dz1/z1-da1/a1)
 	ddhneutr=hneutr*ddpg(1)
 c-----------------------------------------------------------------------
 10    h2min=0. ! *** h2- ***
-
+      dh2min=0.
+      ddh2min=0.
       if(deltak.gt.0.3.or.t.lt.1.5e3.or.t.gt.1.68e4) goto 20
       h2min=x10006*(.88967+t*(-1.4274e-4+t*(1.0879e-8-t*2.5658e-13)))*
      *pe*pg(89)
@@ -306,19 +309,35 @@ c-----------------------------------------------------------------------
 	ddh2min=h2min*(1./pe+ddpg(89))
 c-----------------------------------------------------------------------
 20    h2plus=0. ! *** h2+ ***
-
+      dh2plus=0.
+      ddh2plus=0.
+      
       if(lambda.lt.3.8e-5.or.lambda.gt.3e-4) goto 70
-      h2plus=sngl(dexp(2.30258509d0*dobtheta*(7.342d-3-(-2.409d-15+(1.028d
-     *-30+(-4.23d-46+(1.224d-61-1.351d-77*dfreq)*dfreq)*dfreq)*dfreq)*df
-     *req)-3.0233d3+(3.7797d2+(-1.82496d1+(3.9207d-1-3.1672d-3*lnfreq)*l
-     *nfreq)*lnfreq)*lnfreq)*1.d16)*z1*(pg(1)*pe)*(pg(86)/pg(90))/(1.380
-     *54*t)  ! factor 1.d16 from boltzmann constant
+cc      h2pluscoeff=dexp(2.30258509d0*dobtheta*(7.342d-3-(-2.409d-15+(1.028d
+cc     *-30+(-4.23d-46+(1.224d-61-1.351d-77*dfreq)*dfreq)*dfreq)*dfreq)*df
+cc     *req)-3.0233d3+(3.7797d2+(-1.82496d1+(3.9207d-1-3.1672d-3*lnfreq)*l
+cc     *nfreq)*lnfreq)*lnfreq)*1.d16
+      h2pluscoeff=dexp(2.30258509d0*dobtheta*7.342d-3
+     *-3.0233d3+(3.7797d2+(-1.82496d1+(3.9207d-1-3.1672d-3*lnfreq)*l
+     *nfreq)*lnfreq)*lnfreq)*1.d16
+     
+      h2plus=sngl(h2pluscoeff)*z1*(pg(1)*pe)*(pg(86)/pg(90))/(1.380
+     *54*t)
+c    
+cc      h2plus=sngl(dexp(2.30258509d0*dobtheta*(7.342d-3-(-2.409d-15+(1.028d
+cc     *-30+(-4.23d-46+(1.224d-61-1.351d-77*dfreq)*dfreq)*dfreq)*dfreq)*df
+cc     *req)-3.0233d3+(3.7797d2+(-1.82496d1+(3.9207d-1-3.1672d-3*lnfreq)*l
+cc     *nfreq)*lnfreq)*lnfreq)*1.d16)*z1*(pg(1)*pe)*(pg(86)/pg(90))/(1.380
+cc     *54*t)  ! factor 1.d16 from boltzmann constant
 
-     	d1=sngl(2.30258509d0*dobdtheta*(7.342d-3-(-2.409d-15+(1.028d
-     *-30+(-4.23d-46+(1.224d-61-1.351d-77*dfreq)*dfreq)*dfreq)*dfreq)*df
-     *req))
+cc     	d1=sngl(2.30258509d0*dobdtheta*(7.342d-3-(-2.409d-15+(1.028d
+cc     *-30+(-4.23d-46+(1.224d-61-1.351d-77*dfreq)*dfreq)*dfreq)*dfreq)*df
+cc     *req))
+        d1=sngl(2.30258509d0*dobdtheta*7.342d-3)
+     
 	dh2plus=h2plus*(d1+dz1/z1+dpg(1)+(dpg(86)-dpg(90))-1./t)
 	ddh2plus=h2plus*(ddpg(1)+(ddpg(86)-ddpg(90))+1./pe)
+
 c-----------------------------------------------------------------------
 70    heneut=0. ! *** he ***
 	dheneut=0.
@@ -392,6 +411,8 @@ c-----------------------------------------------------------------------
 	
 c-----------------------------------------------------------------------
       carbon=0. ! *** c ***
+      dcarbon=0.
+      ddcarbon=0.
       if(t.gt.tcatom(1).and.t.lt.tcatom(27)) goto 142
       goto 99999
  142  do 143 i=2,27
@@ -441,7 +462,8 @@ c-----------------------------------------------------------------------
 	ddcarbon=carbon*(ddpg(6))
 c-----------------------------------------------------------------------
   50  sodium=0. ! *** na ***
-
+      dsodium=0.
+      ddsodium=0.
       if(lambda.lt.wsodiu(21)) goto 53
       goto 61
   53  y=fint(t,fsodiu(kksod),fsodiu(ksod),fsodiu(kkksod),tcatom(kksod),
@@ -483,6 +505,8 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 
   61  mgatom=0. ! *** mg ***
+      dmgatom=0.
+      ddmgatom=0.
       if(lambda.gt.wmatom(1).and.lambda.lt.wmatom(20)) goto 62
       goto 52
   62  y=fint(t,fmatom(kksod),fmatom(ksod),fmatom(kkksod),tcatom(kksod),

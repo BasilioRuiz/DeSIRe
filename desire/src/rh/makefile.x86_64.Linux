@@ -5,7 +5,7 @@
 #
 #      Version:       rh2.0
 #      Author:        Han Uitenbroek (huitenbroek@nso.edu)
-#      Last modified: Wed Jan  4 17:36:03 2017 --
+#      Last modified: Thu May 31 09:10:44 2018 --
 #
 ##     --------------------------                      ----------RH-- ##
 
@@ -18,7 +18,7 @@ XARCH  =
 ## --- If no f90 compiler is available comment out -DHAVE_F90
 
 CC       = gcc
-CFLAGS   = -O2 -m64 -DHAVE_F90 ##-Wall
+CFLAGS   = -O2 -m64 -DHAVE_F90 ##-Wall 
 
 
 ## --- Macros for F90 alternative routines --           ------------- ##

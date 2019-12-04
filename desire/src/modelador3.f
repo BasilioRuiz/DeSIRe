@@ -8,8 +8,8 @@ c definiciones
         implicit real*4 (a-h,o-z)
 
 	parameter (np=1000)	!numero maximo de puntos en tau
-	character nombre*20,nomin*20
-        character nombreth*20,nombrethermo*24,chathermo*4
+	character nombre*100,nomin*100
+        character nombreth*100,nombrethermo*104,chathermo*4
 	real*4 ttau(np),tt(np),ppe(np),hh(np),MMIC(NP),VVZ(NP),
      &       GG(NP),FFI(NP),pmu(np)
 	real*4 tau(np),t(np),pe(np),h(np),vz(np),MIC(NP),G(NP),FI(NP)
@@ -80,7 +80,9 @@ c comprobamos si el fichero contiene z,pg,ro
         call mreadr33(ican,tau1i,tauni,pasoi,tau1,taun,paso)
 
         nvtau=0
-        if(tau1.ne.tau1i.or.taun.ne.tauni.or.paso.ne.pasoi)nvtau=1
+c        if(tau1.ne.tau1i.or.taun.ne.tauni.or.paso.ne.pasoi)nvtau=1
+        if(abs(tau1-tau1i).gt.1.e-5.or.abs(taun-tauni).gt.1.e-5
+     $                   .or.abs(paso-pasoi).gt.1.e-5)nvtau=1
         paso=-paso
 
 	ngrado=mreadi3(ican,ici,2) !Degree of the polynomial to be used for 

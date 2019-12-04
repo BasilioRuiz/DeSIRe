@@ -29,7 +29,7 @@ c calculamos los posibles nodos
            nodosposibles(2)=2
            do j=3,ntau
               resto=(ntau-1)-(j-1)*((ntau-1)/(j-1))
-              if(resto.eq.0)then
+              if(abs(resto).lt.1.e-4)then
                  k=k+1
                  nodosposibles(k)=j
               end if

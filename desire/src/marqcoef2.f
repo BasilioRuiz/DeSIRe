@@ -8,7 +8,7 @@
         parameter (mmax=16*kn+2,kld4=4*kld,kldn=mmax*kld4)        
         dimension y(ndata),sig(ndata),alpha(mfitmax,mfitmax),beta(*)
         dimension dyda(mfitmax),a(*),ymod(kld4),ymodobs(kld4),dvcal(kldn)
-        dimension ymodobs_RH(kld4),ynew(kld4),diff_NLTE_LTE(kld4)
+        dimension ymodobs_RH(kld4),diff_NLTE_LTE(kld4)      !,ynew(kld4)
         real*4 scal_RH(kld4)
 	integer m(*),npos(kld4),numberfrec(4),iratio(4)
 	real*4 sigreal(kld4),stokesratio(kld4)
@@ -92,7 +92,7 @@ c escribimos la FR
 c =======================================================================
       if(nciclos .lt. 0)then
 	i=0
-        iratio(1)=0. !no permitimos escribir la FR de I/I 
+        iratio(1)=0 !no permitimos escribir la FR de I/I 
         do ii=1,4
            do iii=1,numberfrec(ii)
               i=i+1

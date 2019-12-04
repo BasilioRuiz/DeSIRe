@@ -56,7 +56,7 @@ c nble :numero de blends de cada linea
 c	      print*,'el indice de la linea es', nlin(jj)
 	    end do
 
-	    npas(numlin)=(difi-dini)/dipa+1
+	    npas(numlin)=int((difi-dini)/dipa)+1
             if(10*( (difi-dini)/dipa+1 -int( (difi-dini)/dipa+1 ) ).gt..5) npas(numlin)=npas(numlin)+1
             if(nli+npas(numlin).gt.kld)then  !comprobamos numero longitudes onda
 	       men1='STOP: The wavelength grid has more points than the current limit kld.'

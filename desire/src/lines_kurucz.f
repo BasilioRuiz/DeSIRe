@@ -9,7 +9,7 @@ c ...................................................................
         integer mult(2),nlow,nup,istage,ist(4),ntau
         integer nlin(kl),npas(kl),ntl,nble(kl)
         real tam(2),loggf,wlengt,zeff,alfa,sigma,energy
-        character design(2)*1,atom*2,linea*100  
+        character design(2)*1,atom*2
         common/responde2/ist,ntau,ntl,nlin,npas,nble
         
 c        print*,'lines_kurucz ntl nlin=',ntl,npas(1),nlin(1),npas(1)
@@ -66,9 +66,9 @@ c              print*,ixx,atom,istage,wlengt,nlow,nup
         
         real*4 eVtocm_1,energy_low,energy_up,hyper
         integer mult(2),istage,atomic_number,iso,nonlteindex
-        character design(2)*1,atom*2,linea*100  
+        character design(2)*1,atom*2
         character*10 label1,label2
-        character*1 code1(21),aString,zero  
+        character*1 aString,zero  
         character*4 nada
         parameter (eVtocm_1=8065.5443)   
 
@@ -84,7 +84,7 @@ c        energy_up=energy_low+1e8/wlengt
         wlengt_air=dble(wlengt)
         wlengt_vac=w_vac(wlengt_air)*1.d-8 ! vacumm ldo in cm 
         
-        energy_up=energy_low+1.e0/wlengt_vac
+        energy_up=energy_low+1.e0/real(wlengt_vac)
                 
         aloggamma_rad=dlog(0.22233d0/wlengt_vac)
         

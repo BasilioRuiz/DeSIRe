@@ -17,9 +17,7 @@ c	...............................................................
         real*4 u0_r4(ncontr),u1_r4(ncontr),u2_r4(ncontr)
         real*4 du0_r4(ncontr),du1_r4(ncontr),du2_r4(ncontr)
 
-        real*8 alfai(ncontr),chi1(ncontr),chi2(ncontr)
-        real*8 u0(ncontr),u1(ncontr),u2(ncontr)
-	real*8 du0(ncontr),du1(ncontr),du2(ncontr)
+        real*8 alfai(ncontr)
 	real*8 p(99),dp(99),ddp(99)
 	real*8 abundance(ncontr),totalbundance,XA(ncontr),weightarr(ncontr)
 	real*8 musuminv,mu,elec_gram,uma,Kboltz,R,ne,rho
@@ -117,7 +115,7 @@ c ahora leo las funciones de particion u0,u1,u2 y sus derivadas
           alfai(i)=alfai_r4(i)*1.d0
 5     end do
 
-6     do 4 i=1,ncontr
+      do 4 i=1,ncontr
       	  iii=i
      	  call nelfctb(iii,t_r4,u0_r4(iii),u1_r4(iii),u2_r4(iii),
      *du0_r4(iii),du1_r4(iii),du2_r4(iii))

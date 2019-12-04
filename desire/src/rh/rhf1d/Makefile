@@ -37,14 +37,14 @@ BACKGROPAC = backgrcontr.o
 
 # 27/05/19 epm: Objects to add to the library ("../librh.a").
 ADDRH_OBJS = anglequad.o \
-             bezier.o \
+             bezier_1D.o \
              conversion.o \
              feautrier.o \
              formal.o \
              hydrostat.o \
              multiatmos.o \
-             piecestokes.o \
-             piecewise.o \
+             piecestokes_1D.o \
+             piecewise_1D.o \
              project.o \
              rh_chrono.o \
              rh_close.o \
@@ -113,8 +113,8 @@ clean:
 anglequad.o:            ../rh.h  ../atom.h  ../atmos.h  \
                         geometry.h
 
-bezier.o:               ../rh.h  ../atom.h  ../atmos.h       \
-                        geometry.h  ../spectrum.h  bezier.h
+bezier_1D.o:            ../rh.h  ../atom.h  ../atmos.h  \
+                        geometry.h  ../spectrum.h  ../bezier.h
 
 backgrcontr.o:          ../rh.h  ../atom.h  ../atmos.h  \
                         geometry.h  ../background.h  \
@@ -140,10 +140,10 @@ multiatmos.o:           ../rh.h  ../atom.h  ../atmos.h  \
                         ../constant.h  ../error.h  ../inputs.h  \
                         ../statistics.h  ../xdr.h
 
-piecestokes.o:          ../rh.h  ../error.h  ../atom.h  ../atmos.h  \
+piecestokes_1D.o:       ../rh.h  ../error.h  ../atom.h  ../atmos.h  \
                         geometry.h  ../spectrum.h
 
-piecewise.o:            ../rh.h  ../error.h  ../atom.h  ../atmos.h  \
+piecewise_1D.o:         ../rh.h  ../error.h  ../atom.h  ../atmos.h  \
                         geometry.h  ../spectrum.h
 
 project.o:              ../rh.h  ../atom.h  ../atmos.h  \

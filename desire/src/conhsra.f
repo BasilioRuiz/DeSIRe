@@ -22,7 +22,7 @@ c     &       7,-2.0462285d-2,1.0018226758d-6,0.,0.,0.,0./
 	data c6/1.61455557e16,-6.544209e12,1.0159316e9
      &       ,-70695.58136,1.852022,0.,0.,0.,0.,0.,0./
 	data c7/7.97805136e14,-1.16906597e11,5.315222e6
-     &       ,-4.57327954,-3.473452d-3,0.,0.,0.,0.,0.,0./
+     &       ,-4.57327954,-3.473452e-3,0.,0.,0.,0.,0.,0./
 
 	if(x.lt.3644.15)then
 	    conhsra=c1(1)+x*(c1(2)+x*(c1(3)+x*(c1(4)+x*c1(5))))
@@ -381,11 +381,11 @@ c------------------------------------------------------------------
 	real*8 function conhsra_RHLTE(x)
 	
 	implicit real*8 (a-h,o-z)
-	real*8 xx,yl,y
+	real*8 xx,yl
 	real*4 x
 	
 	if(x .lt. 1700.)then
-	  print*,'Warning: revise continuum calibration in conhsra_RHNLTE'	  
+	  print*,'Warning: revise continuum calibration in conhsra_RHNLTE'
         else if (x .lt. 2513.5)then	!CORRECTED
             xx=x*1.d0-2.d3
             yl=0.37219930+xx*(0.00014417795+xx*(-6.8141446e-07+xx*(

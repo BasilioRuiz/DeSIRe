@@ -1,18 +1,19 @@
 c read_keyword_input_RH.f  reads the RH input file keyword.input ; BRC Jun 19 2017
 c looks for prompt (must be follwed by "=" and then by filename_prompt in keyword.input
+c ________________________________________________________________________
 
         subroutine read_model_atmos(name,ndepth,depth,temp,Nelec,Vz,Vtur)
         include 'PARAMETER'
         implicit real*4 (a-h,o-z)
         character*(*) name
         character*100 linea
-        integer ndepth,n,ini,ifi,ifound
+        integer ndepth,ini,ifi,ifound
         real*4 depth(kt),temp(kt),Nelec(kt),Vz(kt),Vtur(kt)
-        
+
         ican=50
         open(ican,file=name,status='old',err=997)
-        
-c contamos las lineas
+
+c       Contamos las lineas.
         iline=1
         ifound=0
         ifi=20
@@ -35,7 +36,7 @@ c contamos las lineas
               call buscon('NDEP',4,linea,ini,ifi,ifound)
               iline=iline+1
            end do
-        end if   
+        end if
         if(iline .eq. 100)then 
           print*,'The string Ndep (nor NDEP) does not appear inside file ',name
           print*,'STOP at read_model_atmos'
@@ -66,7 +67,7 @@ c contamos las lineas
               iline=iline+1
            end do
         end if
-        
+
         if(iline .eq. 100)then 
           print*,'The string Temp (nor TEMP) does not appear inside file ',name
           print*,'STOP at read_model_atmos'
@@ -77,7 +78,7 @@ c contamos las lineas
         end do
         close (ican)
         return
-        
+
 997     print*,' '
         print*,'STOP: error reading ',name
         stop

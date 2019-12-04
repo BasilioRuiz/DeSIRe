@@ -9,7 +9,7 @@ c	parameter (zeff=5.)	!semiempirico para el damping gamma6
 	integer mult(2),ji(2),jf(2),np,nl,nr
 	real tam(2),G(2),loggf,wlengt,zeff,alfa,sigma
 	real dlp(mc),dll(mc),dlr(mc),sp(mc),sl(mc),sr(mc)
-	character design(2)*1,atom*2,linea*100	!,multno*6
+	character design(2)*1,atom*2   !,multno*6
 
 	character*100 nomlineas
 	character*100 fichabun

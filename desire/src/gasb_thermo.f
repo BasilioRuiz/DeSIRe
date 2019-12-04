@@ -50,7 +50,7 @@ c	ahora exraigo las f. de particion u0,u1,u2 y sus derivadas
       do 5 i=1,ncontr
       		iii=i
 5     		call neldatb(iii,0.,weight,alfai(i),chi1(i),chi2(i))
-6     do 4 i=1,ncontr
+      do 4 i=1,ncontr
       	  iii=i
 4     	  call nelfctb(iii,t,u0(iii),u1(iii),u2(iii),du0(iii),du1(iii),
      *du2(iii))
@@ -66,7 +66,7 @@ c	ahora exraigo las f. de particion u0,u1,u2 y sus derivadas
       g3=saha(theta,0.754,1.,u0(1),pe)   ! p(h)/p(h-)
 
       call acota(g3,1.e-30,1.e30)
-      g3=1.d0/g3                              ! p(h-)/p(h) 
+      g3=1.0/g3                              ! p(h-)/p(h) 
 	dg3=-1.*dsaha(theta,0.754,0.,du0(1))
 	ddg3=1./pe
       p(93)=g3

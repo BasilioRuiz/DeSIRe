@@ -10,7 +10,7 @@ c _______________________________________________________________
 	real*4 T,Pg,Pe,pesomedio,rho,kappa
     
 	real*4 wgt,abu,ei1,ei2,pp(10),d1(10)
-	real*4 kac,asum,pmsum
+	real*4 kac,asum
         common/constantes/g,avog	!gravedad,n. avogadro/pmu
         common/precisoitera/precitera 
         common/nmaxitera/nmaxitera

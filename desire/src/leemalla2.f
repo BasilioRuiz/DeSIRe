@@ -14,7 +14,7 @@ c nble :numero de blends de cada linea
 	include 'PARAMETER'  !por kl
 	integer npasobs(*),npas(kl),nble(kl),nd(kl),nposi(*),nlin(kl),ndd(kl,kl),nblee(kl)
 	real*4 dlamdaobs(*),dlamda(kld),dini,dipa,difi,dinii(kl),dipaa(kl),difii(kt)
-	integer indice(*),nddd(50),blanco,epsiloni
+	integer indice(*),nddd(50),blanco      !,epsiloni
         character mallaobs*(*),mensajito*31
 	character*80 men1,men2,men3
 	character*100 control
@@ -111,7 +111,7 @@ c                  dipa=pasmin/ntimes
 
 c		  print*,'primero,ultimo,n1,n2,dini,difi',primero,ultimo,n1,n2,dini,difi
 
-	          npas(i)=(difi-dini)/dipa+1
+	          npas(i)=int((difi-dini)/dipa)+1
 		  if(10*( (difi-dini)/dipa+1 -int( (difi-dini)/dipa+1 ) ).gt..5) npas(i)=npas(i)+1
         	  do j=1,npas(i)
 	             nli=nli+1
@@ -126,7 +126,7 @@ c	print*,'en la malla,la serie es',nli,dlamda(nli),dipa
 	      men3='      Check also the wavelength grid for missing : symbols.'
 	      call mensaje(3,men1,men2,men3)
 	   endif 
-9	enddo      !fin del do en i
+	enddo      !fin del do en i
 c		print*,'pasos 1 y 2',npas(1),npas(2)
 
 c        k=1
@@ -167,7 +167,7 @@ c        do i=1,nliobs
 c           print*,'leemalla2 162',i,nposi(i)
 c        end do     
 c        stop
-212	print*,'Number of wavelengths in the wavelength grid  : ',nli
+	print*,'Number of wavelengths in the wavelength grid  : ',nli
 	close(ican)
 
 	return

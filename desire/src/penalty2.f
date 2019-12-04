@@ -20,9 +20,9 @@ c es llamada por marqcoef2 (linea 83)
 	      c=1
 	      c1=abs(atry(kred+1))
 	      c2=c1+abs(atry(kred+2))
-	      if(c1.ne. 0)then
+	      if(c1.gt.1.e-15)then
 	         c=c1                          !lo supondre constante
-	      else if (c2 .ne. 0)then
+	      else if (c2 .gt. 1.e-15)then
                  c=c2/2.
 	      endif
               suma=0.
@@ -48,9 +48,9 @@ c	print*,'castigo total',castigo
 	      c=1
 	      c1=abs(atry(kred+1))
 	      c2=c1+abs(atry(kred+2))
-	      if(c1.ne. 0)then
+	      if(c1.gt.1.e-15)then
 	         c=c1                          !lo supondre constante
-	      else if (c2 .ne. 0)then
+	      else if (c2 .gt. 1.e-15)then
                  c=c2/2.
 	      endif
 

@@ -199,7 +199,7 @@ c ...................................................................
         real*4 function realleido(ini,ifi,linea)
         implicit real*4 (a-h,o-z)
 
-        character linea*100 
+        character linea*(*) 
 	character str*13
    
 	str='             '
@@ -248,7 +248,7 @@ c ...................................................................
         integer*4 function nteroleido(ini,ifi,linea)
         implicit real*4 (a-h,o-z)
 
-        character linea*100 
+        character linea*(*)
 	
    
 c buscamos el primer 'no blanco' siguiente a ini 
@@ -285,15 +285,19 @@ c ................................................................
         subroutine busco(ch,linea,ini,ifi)
         implicit real*4 (a-h,o-z)
 
-        character ch*1,linea*100 
+        character ch*1,linea*(*)
 c        print*,'entro en busco ',ch,linea,ini,ifi
-        i=ini
-        do while(linea(i:i).ne.ch.and.i.lt.100)
-c           print*,'en busco',i,linea(i:i),ch
-           i=i+1
-        end do
-        ifi=i
-c       print*,ifi
+        lon=len(linea)
+        if(ini .lt. 1)ini=1
+        ifi=ini  
+        if(lon .gt. 0)then
+           i=ini
+           do while(linea(i:i).ne.ch.and.i.lt.lon)
+              i=i+1
+           end do
+           ifi=i
+        end if  
+  
         return 
         end
 c _______________________________________________________________
@@ -313,10 +317,14 @@ c ................................................................
         subroutine nobusco(ch,linea,ini,ifi)
         implicit real*4 (a-h,o-z)
 
-        character ch*1,linea*100 
+        character ch*1,linea*(*)
+        lon=len(linea)
 
         i=ini
-        do while(linea(i:i).eq.ch.and.i.lt.100)
+        if(i .lt. 1)i=1
+        if(i .gt. lon)i=lon
+
+        do while(linea(i:i).eq.ch.and.i.lt.lon)
            i=i+1
         end do
         ifi=i
@@ -344,6 +352,8 @@ c        print*,'entro en buscon ',ch,n
         i=ini
         l=ifi
         ifound=0
+        if(i .lt. 1)i=1
+
         do while(linea(i:i+n-1).ne.ch(1:n).and.i.le.l-n)
 c           print*,'en buscon',i,linea(i:i+n-1),ch(1:n)
            i=i+1

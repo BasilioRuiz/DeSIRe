@@ -130,7 +130,7 @@ c           atry(j)=a(ipa22)*(1.+da(j))        !escala con la Pe en el ultimo no
  
         if(chisq.lt.ochisq)then
 
-            if(factorrep.ne.0)then
+            if(abs(factorrep).gt.1.e-3)then
                  if(alamda.gt.1.e-4)then
                     alamda=0.1*alamda
                  else	

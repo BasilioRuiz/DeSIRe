@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Mon May 21 13:19:18 2018 --
+       Last modified: Thu May 24 16:17:36 2018 --
 
        --------------------------                      ----------RH-- */
 
@@ -36,10 +36,10 @@ enum VoigtAlgorithm {ARMSTRONG, RYBICKI, HUI_ETAL, HUMLICEK, LOOKUP};
 #define  LG10  2.30258509299404568402
 
 #ifndef MAX 
-#define  MAX(x, y)    ((x) > (y) ? (x):(y))
+#define  MAX(x, y)    (((x) > (y) ? (x):(y)))
 #endif
 #ifndef MIN
-#define  MIN(x, y)    ((x) < (y) ? (x):(y))
+#define  MIN(x, y)    (((x) < (y) ? (x):(y)))
 #endif
 
 #define SWAPPOINTER(a, b)  {void *tmp;  tmp = a;  a = b;  b = tmp;}

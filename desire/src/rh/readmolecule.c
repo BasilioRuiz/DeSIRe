@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Wed Oct 12 20:00:35 2011 --
+       Last modified: Thu Oct 11 12:54:34 2018 --
 
        --------------------------                      ----------RH-- */
 
@@ -655,7 +655,7 @@ void readMolecularLines(struct Molecule *molecule, char *line_data)
 	Jj = Ji + 1;
 	break;
       default:
-	sprintf(messageStr, "Invalid value of branch stringin file %s: %s\n"
+	sprintf(messageStr, "Invalid value of branch string in file %s: %s\n"
 		" Line: %f [nm]\n  Valid options are P, R and Q",
 		line_data, branchStr, mrt->lambda0);
 	Error(ERROR_LEVEL_2, routineName, messageStr);
@@ -666,7 +666,7 @@ void readMolecularLines(struct Molecule *molecule, char *line_data)
 	(2.0*HPLANCK*CLIGHT) * mrt->Aji;
       mrt->Bij = (mrt->gj / mrt->gi) * mrt->Bji;
     
-      /* --- Temporary measure to accommodate $^13$CO --   ------------ */  
+      /* --- Temporary measure to accommodate $^13$CO --   ---------- */  
 
       switch (isotope) {
       case 12:
@@ -675,9 +675,9 @@ void readMolecularLines(struct Molecule *molecule, char *line_data)
       case 36: mrt->isotope_frac = C_13;        break;
       default: mrt->isotope_frac = 1.0;
       }
+      
+      mrt->polarizable = FALSE;
     }
-    mrt->polarizable = FALSE;
-
   } else if (strstr(format_string, "KURUCZ_CD18") ||
 	     strstr(format_string, "KURUCZ_NEW")  ||
 	     strstr(format_string, "KURUCZ_TIO")) {

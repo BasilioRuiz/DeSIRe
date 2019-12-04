@@ -19,7 +19,7 @@ c es llamada por marqcoef2 (linea 83)
 	do j=1,18            !do en grupos de varibles (1=t,2=p,...etc)
 	   if (mnodos(j) .gt. 2) then
 	      c=1
-	      if(atry(kred+1) .ne. 0)c=atry(kred+1)
+	      if(abs(atry(kred+1)) .gt. 1.e-15)c=atry(kred+1)
               suma=abs(atry(kred+2)-atry(kred+1))
 	      do k=2,mnodos(j)-1
 	         suma=suma+abs(atry(kred+k+1)-atry(kred+k))
@@ -38,7 +38,7 @@ c	print*,'castigo total',castigo
 	   if (mnodos(j) .gt. 2) then
 	      c=1
 	      fac=0  !para anular las derivadas si c=1
-	      if(atry(kred+1) .ne. 0)then
+	      if(abs(atry(kred+1)) .gt. 1.e-15 )then
 	         c=atry(kred+1)
 		 fac=1
 	      end if

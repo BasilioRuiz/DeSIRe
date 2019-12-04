@@ -11,7 +11,8 @@
 
         S=0.
 
-        IF(W(J).NE.0.)THEN
+c        IF(W(J).NE.0.)THEN
+        IF(abs(W(J)).GT.1.e-18)THEN
 
           DO 11 I=1,M
 

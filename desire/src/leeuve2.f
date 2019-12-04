@@ -8,7 +8,7 @@ c leeuve2 lee un fichero de datos de parametros de stokes :vobs
 	integer npas(*),nlin(*),ist(*),idis
 	character*100 vobs
 	character*100 control
-	character*80 men1,men2,men3
+	character*100 men1,men2,men3
 	common/canal/icanal
 	common/nombrecontrol/control
 

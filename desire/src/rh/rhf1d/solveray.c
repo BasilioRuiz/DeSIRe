@@ -154,6 +154,7 @@ int solveray( int argc, char *argv[],
       input.StokesMode == POLARIZATION_FREE) {
     input.StokesMode = FULL_STOKES;
   }
+
   /* --- redefine geometry for just this one ray --    -------------- */
 
   atmos.Nrays = geometry.Nrays = 1;

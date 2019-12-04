@@ -46,22 +46,20 @@ c	real*4 conhsra
 	real*4 rt2(kldt4),rh2(kldt4),rv2(kldt4),rg2(kldt4),rf2(kldt4)
 	real*4 rp2(kldt4),rm2(kldt4)
         real*4 rt1_RH(kldt4)
-	real*4 rt2_RH(kldt4)
 	real*4 rt1_LTE(kldt4)
-	real*4 rt2_LTE(kldt4)
         integer icalerr
-        real*4 tau(kt),t1(kt),p1(kt),t2(kt),p2(kt)
+c       real*4 tau(kt),p1(kt),p2(kt),t1(kt),t2(kt)
         real*4 pg1(kt),z1(kt),ro1(kt)
         real*4 pg2(kt),z2(kt),ro2(kt)
         real*4 stok_RH_1(kld4),stok_RH_2(kld4) !,ImasVfactor(kld4)
         real*4 scal_RH(kld4)
         
-        character*100 RH_model,RH_abundance,RH_magneticfield,label_ID_model !BRC-RH Jun 20 2017
+        character*100 RH_model,RH_magneticfield,label_ID_model !BRC-RH Jun 20 2017
 
 c departure coefficients
         integer nlow_i(kl), nup_i(kl),iRH1,iRH2,linea_nlte(kl)         !,ileoNLTE
-        integer ntotal_lines
-        integer nlte_level(kl),nlte_nlow(kl),nlte_nup(kl),nlow,nup                !BRC 11/01/2018 
+        integer ntotal_lines,store_ntot
+        integer nlow,nup                !BRC 11/01/2018 
         integer atomic_number,atom_arr(kl),istage_arr(kl)
         real*4 alfa_arr(kl),sigma_arr(kl),wave_arr(kl)
         integer icallingRH1,icallingRH2
@@ -142,10 +140,10 @@ c	print*,'fperfil2 103 iprimeravez=',iprimeravez,iRH1,'idiff=',idiff,' &&&&&&&&$
         icallingRH2=iRH2
 
 	if(iprimeravez.eq.0)then  !The first iteration for every cycle iprimeravez=0
-	  if(idiff .eq. 1)then    !Only for the first iteration & first cycle idiff=0
-	     icallingRH1=0        !Not calling RH the first iteration of second,third.....etc cycle  
-	     icallingRH2=0
-	  endif
+c	  if(idiff .eq. 1)then    !Only for the first iteration & first cycle idiff=0
+c	     icallingRH1=0        !Not calling RH the first iteration of second,third.....etc cycle  
+c	     icallingRH2=0
+c	  endif
 c	if(ivezfperfil.eq.1)then
 	  ixx=0
 	  ikk0=0
@@ -884,7 +882,7 @@ c	      dscal(k)=factor*stray(j)  !luz difusa com velo
 	   end do
 	end if
 
-       	if(nciclos.ne.0.)
+       	if(nciclos.ne.0)
      &         call comprime2(ntau,m,atmostry,atmosr) 
      
 	return

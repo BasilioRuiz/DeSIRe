@@ -1,8 +1,8 @@
-/* ------- file: -------------------------- formal.c ----------------
+/* ------- file: -------------------------- formal_1D.c --------------
 
        Version:       rh1.0, 1-D plane-parallel
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Wed May 23 09:48:57 2018 --
+       Last modified: Mon Jun 11 14:59:00 2018 --
 
        --------------------------                      ----------RH-- */
 
@@ -193,25 +193,34 @@ double Formal(int nspect, bool_t eval_operator, bool_t redistribute)
 	  }
 	  /* --- Polarized transfer --                 -------------- */
 	  
-	  if (input.S_interpolation_stokes == DELO_BEZIER3){
-	    PiecewiseStokesBezier3(nspect, mu, to_obs, chi, Spol, Ipol, Psi);
-	  }else {
-	    PiecewiseStokes(nspect, mu, to_obs, chi, Spol, Ipol, Psi);
+	  if (input.S_interpolation_stokes == DELO_BEZIER3) {
+	    Piece_Stokes_Bezier3_1D(nspect, mu, to_obs,
+				    chi, Spol, Ipol, Psi);
+	  } else if (input.S_interpolation_stokes == DELO_PARABOLIC) {
+	    Piece_Stokes_1D(nspect, mu, to_obs, chi, Spol, Ipol, Psi);
+	  } else { sprintf(messageStr,
+		    "Unknown polarization solver: %d",
+		    input.S_interpolation_stokes);
+	    Error(ERROR_LEVEL_1, routineName, messageStr);	    
 	  }
 	} else {
+	  
 	  for (k = 0;  k < Nspace;  k++)
 	    S[k] /= chi[k];
 
 	  /* --- Intensity only --                     -------------- */
 	  
 	  if (input.S_interpolation == S_LINEAR) {
-	      Piecewise_Linear_1D(nspect, mu, to_obs, chi, S, I, Psi);
+	    Piecewise_Linear_1D(nspect, mu, to_obs, chi, S, I, Psi);
 	  } else if (input.S_interpolation == S_PARABOLIC) {
 	    Piecewise_1D(nspect, mu, to_obs, chi, S, I, Psi);
-	  } else if (input.S_interpolation == CUBIC_HERMITE) {
-	    Piecewise_Hermite_1D(nspect, mu, to_obs, chi, S, I, Psi);
-	  } else if (input.S_interpolation == BEZIER3) {
-	    Piecewise_Bezier3(nspect, mu, to_obs, chi, S, I, Psi);
+	  } else if (input.S_interpolation == S_BEZIER3) {
+	    Piecewise_Bezier3_1D(nspect, mu, to_obs, chi, S, I, Psi);
+	  } else {
+	    sprintf(messageStr,
+		    "Unknown radiation solver: %d",
+		    input.S_interpolation);
+	    Error(ERROR_LEVEL_1, routineName, messageStr);
 	  }
 	}
 	

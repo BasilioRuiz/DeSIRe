@@ -169,9 +169,9 @@ void readInput()
     {"XDR_ENDIAN", "TRUE", FALSE, KEYWORD_OPTIONAL,
      &input.xdr_endian, setboolValue},
 
-    {"S_INTERPOLATION", "CUBIC_HERMITE", FALSE, KEYWORD_DEFAULT,
+    {"S_INTERPOLATION", "S_BEZIER3", FALSE, KEYWORD_DEFAULT,
      &input.S_interpolation, set_S_Interpolation},
-    {"S_INTERPOLATION_STOKES", "DELO_BEZIER3", FALSE, KEYWORD_DEFAULT,
+    {"S_INTERPOLATION_STOKES", "DELO_PARABOLIC", FALSE, KEYWORD_DEFAULT,
      &input.S_interpolation_stokes, set_S_interpolation_stokes},
 
     {"INTERPOLATE_3D", "BICUBIC_3D", FALSE, KEYWORD_DEFAULT,

@@ -242,7 +242,7 @@ c ahora calculo los niveles u0,u1,u2 y sus derivadas
       do 5 i=1,ncontr
          iii=i
 5     	 call neldatb(iii,0.,weight,alfai(i),chi1(i),chi2(i))
-6     do 4 i=1,ncontr
+      do 4 i=1,ncontr
       	 iii=i
 4     	 call nelfctb(iii,t,u0(iii),u1(iii),u2(iii),du0,du1,du2)
 
@@ -255,7 +255,7 @@ c      print*,'pe_pg10 2',t,pe,theta,g2,g3
 
       
       call acota(g3,1.e-30,1.e30)
-      g3=1.d0/g3                              ! p(h-)/p(h) 
+      g3=1.0/g3                              ! p(h-)/p(h) 
 c      print*,'pe_pg10 3',t,pe,theta,g2,g3
 
       g1=0.

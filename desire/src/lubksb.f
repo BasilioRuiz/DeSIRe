@@ -21,7 +21,7 @@
 
 11        CONTINUE
 
-        ELSE IF (SUM.NE.0.D0) THEN
+        ELSE IF (abs(SUM).gt.1.e-10) THEN
 
           II=I
 
