@@ -2,7 +2,7 @@
 
        Version:       rh2.0, 1-D plane-parallel
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Mon May 21 14:16:26 2018 --
+       Last modified: Fri Dec  6 10:11:10 2019 --
 
        --------------------------                      ----------RH-- */
 
@@ -119,6 +119,7 @@ void readInput()
      setcharValue},
     {"RLK_SCATTER", "FALSE", FALSE, KEYWORD_DEFAULT, &input.rlkscatter,
      setboolValue},
+    // 09/09/19 epm: Change the default value and make it optional.
     {"KURUCZ_PF_DATA", "../../var/Kurucz/pf_Kurucz.input", FALSE,
      KEYWORD_OPTIONAL, &input.pfData, setcharValue},
     {"SOLVE_NE", "NONE", FALSE, KEYWORD_DEFAULT, &input.solve_ne,
@@ -147,7 +148,7 @@ void readInput()
 
     {"VMICRO_CHAR", "",     FALSE, KEYWORD_REQUIRED, &atmos.vmicro_char,
      setdoubleValue},
-    {"VMACRO_TRESH", "0.1", FALSE, KEYWORD_OPTIONAL, &atmos.vmacro_tresh,
+    {"VMACRO_TRESH", "0.0", FALSE, KEYWORD_OPTIONAL, &atmos.vmacro_tresh,
      setdoubleValue},
     {"LAMBDA_REF",   "500.0", FALSE, KEYWORD_DEFAULT, &atmos.lambda_ref,
      setdoubleValue},

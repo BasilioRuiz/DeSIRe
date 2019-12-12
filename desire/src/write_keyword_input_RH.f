@@ -72,6 +72,7 @@ c        print*,'renombro keyword2.input'
         call system("rm keyword2.input")
         return
 101     FORMAT(A78)
+c       09/09/19 epm: Cambio formato de escritura (antes FORMAT(A8,A2,i3)).
 102     FORMAT(A7,A2,i3)
         return
         end
@@ -150,6 +151,7 @@ c        print*,'renombro keyword2.input'
         call system("rm keyword2.input")
         return
 101     FORMAT(A78)
+c       09/09/19 epm: Cambio formato de escritura (antes FORMAT(A12,A2,A12)).
 102     FORMAT(A12,A3,A12)
         return
         end

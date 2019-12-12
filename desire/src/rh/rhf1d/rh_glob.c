@@ -39,7 +39,7 @@ bool_t new_h2minus_ff;   // for hydrogen.c :: H2minus_ff()
 bool_t new_h2plus_ff;    // for hydrogen.c :: H2plus_ff()
 bool_t new_passive_bb;   // for metal.c :: passive_bb()
 
-// 31/07/19 epm: Structure to pass information from DeSIRe to RH.
+// 10/10/19 epm: Structure to pass information from DeSIRe to RH.
 DesireLines desirelines;
 
 

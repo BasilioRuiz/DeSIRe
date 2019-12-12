@@ -19,7 +19,7 @@ c ________________________________________________________________________
       implicit real*4 (a-h,o-z)
       include 'PARAMETER'   !por kt,kn,kl,kld
       parameter (kt8=8*kt+2,kt16=16*kt+5,kt11=11*kt+2,kld4=4*kld,kt12=11*kt+3) 
-c     03/06/19 epm: Array size for 'departure'.
+c     06/06/19 epm: Array size for 'departure'.
       parameter (kt500=500*kt)
 c     10/06/19 epm: Arrays for the spectrum.
       parameter (n_wave_NLTE=50000)
@@ -93,7 +93,7 @@ c     istatus =system("rm spectrum*")
 
       call write_atmos_RH(label_ID_model,RH_model,RH_magneticfield,atmosLG,ntau)  !BRC-RH Jun 19 2017
 
-c     11/06/19 epm: QUEDA PENDIENTE SUPRIMIR ESTA LLAMADA HASTA COMPROBAR QUE
+c     10/06/19 epm: QUEDA PENDIENTE SUPRIMIR ESTA LLAMADA HASTA COMPROBAR QUE
 c     ES NECESARIA. PARA ESO HAY QUE EJECUTAR CON REDISTRIBUCION PARCIAL.
       istatus = system("rm PRD*.dat")
 
@@ -541,6 +541,7 @@ c ------------------------------------------------------------------------------
         integer nwave,i
         real*8 w_vac(*),w_air(*),refrax,ss,ww
 
+c       12/06/19 epm: 'w_vac' entra en nm.
         do i=1,nwave
            ww=w_vac(i)*10.d0   ! w_vac in nm, ww in Angstrom
            ss=1.d8/ww/ww

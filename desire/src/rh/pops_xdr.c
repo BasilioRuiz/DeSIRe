@@ -151,6 +151,7 @@ void readPopulations(Atom *atom)
          --                                            -------------- */
 
   if ((fp_in = fopen(atom->popsinFile, "r")) == NULL) {
+    // 31/07/19 epm: Write the message with a suggestion.
     sprintf(messageStr,
       "Unable to open input file %s\n"
       " Are chemical symbols in the last column of %s capitalized?",

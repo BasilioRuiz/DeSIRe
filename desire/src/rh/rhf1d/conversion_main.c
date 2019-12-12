@@ -1,6 +1,6 @@
 /* ------- file: --------------------- conversion_main.c ------------ */
 
-/* 13/06/19: Created by Esperanza Paez (epm@iac.es)
+/* 19/06/19: Created by Esperanza Paez (epm@iac.es)
  * Adaptation to the DeSIRe project - Interoperability C/Fortran.
  * Conversion of main() as conversion().
  */

@@ -4,8 +4,7 @@
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
        Last modified: Thu Feb 24 16:40:14 2011 --
 
-       First change:  Mon May 15 2019 by Esperanza Paez (epm@iac.es)
-                      Adaptation to the DeSIRe project.
+       Updates (epm): Adaptation to the DeSIRe project.
                       Interoperability C-Fortran.
                       Conversion of main() as a function for Fortran.
 
@@ -63,7 +62,7 @@ extern bool_t new_passive_bb;   // for metal.c :: passive_bb()
 
 /* ------- begin -------------------------- rhf1d.c ----------------- */
 
-// Function to be called from Fortran.
+// 23/05/19 epm: Function to be called from Fortran.
 int rhf1d_( int *nspace, int *nlevel, int *nsize, double *coefs )
 {
   static char *argv[] = {"rhf1d", NULL};

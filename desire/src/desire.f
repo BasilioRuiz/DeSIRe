@@ -19,6 +19,7 @@ c 1.00 (20/05/19): Version base con llamadas al sistema (2019 = año 1).
 c 1.09 (09/09/19): Primera version con ejecutables convertidos en funciones.
 c 1.10 (10/10/19): Coeficientes de Barklem por argumento desde SIR a RH.
 c 1.11 (11/11/19): Codigo RH nuevo y codigo SIR depurado.
+c 1.12 (12/12/19): Update del codigo RH nuevo.
 c
 c_____________________________________________________________________________
 c
@@ -254,7 +255,7 @@ c     21/06/19 epm: Read the command line.
       print*, ''
       print*, ' __________________________________________________________ '
       print*, '|                                                          |'
-      CARTEL=' |            DeSIRe version 1.11  (11/Nov/2019)            |'
+      CARTEL=' |            DeSIRe version 1.12  (12/Dec/2019)            |'
       print'(a)',CARTEL
       print*, '|__________________________________________________________|'
       print*, ''

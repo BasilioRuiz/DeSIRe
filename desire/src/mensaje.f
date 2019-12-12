@@ -6,7 +6,7 @@
       integer numero
 c     common/canal/icanal
 
-c     10/10/19 epm: Print removing any leading and trailing blanks.
+c     10/10/19 epm: Prints removing any leading and trailing blanks.
 
       print*,''
       print*,trim(mensaje1)

@@ -19,7 +19,7 @@
 #
 # 27/01/04  : primera version.
 # 12/11/15  : el compilador a usar puede entrar por linea de comandos.
-# 15/05/19  : ejecutables de RH convertidos en libreria.
+# 15/05/19  : (epm) ejecutables de RH convertidos en libreria.
 #
 # ****************************************************************************
 

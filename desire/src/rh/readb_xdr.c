@@ -78,6 +78,7 @@ bool_t readB(Atmosphere *atmos)
   } else {
     recordsize = atmos->Nspace;
 
+    // 05/11/19 epm: DeSIRe reads the magnetic field in ASCII format.
     //result &= (fread(atmos->B, sizeof(double), recordsize,
     //                 fp_stokes) == recordsize);
     //result &= (fread(atmos->gamma_B, sizeof(double), recordsize,

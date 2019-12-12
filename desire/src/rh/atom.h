@@ -235,6 +235,7 @@ bool_t readDamping(Atom *atom);
 bool_t writeDamping(Atom *atom);
 
 bool_t readBarklemTable(enum Barklemtype type, Barklemstruct *bs);
+// 02/10/19 epm: getBarklemcross() includes the wavelength (last argument).
 bool_t getBarklemcross(Barklemstruct *bs, RLK_Line *rlk, double lambda_air);
 bool_t getBarklemactivecross(AtomicLine *line);
 

@@ -72,7 +72,7 @@ void Paschen(double L, double S, double *E0, double B, Paschenstruct *ps)
 
   Mindex = 0;
   for (M = -Jmax;  M <=Jmax;  M++) {
-    Ja = MAX(abs(M), Jmin);
+    Ja = MAX(fabs(M), Jmin);
     Jb = Jmax;
     ps[Mindex].Nj = (int)(Jb - Ja) + 1;
 

@@ -162,6 +162,8 @@ bool_t readBarklemTable(enum Barklemtype type, Barklemstruct *bs)
 
 /* ------- begin -------------------------- getBarklemcross.c ------- */
 
+// 02/10/19 epm: getBarklemcross() receives the wavelength (last argument).
+
 bool_t getBarklemcross(Barklemstruct *bs, RLK_Line *rlk, double lambda_air)
 {
   const char routineName[] = "getBarklemcross";

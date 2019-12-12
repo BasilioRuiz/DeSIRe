@@ -19,8 +19,9 @@
 #
 # 27/01/04  : primera version.
 # 12/11/15  : el compilador a usar puede entrar por linea de comandos.
-# 15/05/19  : ejecutables de RH convertidos en libreria.
-# 20/06/19  : reestructuracion de directorios.
+# 15/05/19  : (epm) ejecutables de RH convertidos en libreria.
+# 29/05/19  : (epm) incluyo 'make rhf1d' para compilar todo desde aqui.
+# 20/06/19  : (epm) reestructuracion de directorios.
 #
 # ****************************************************************************
 

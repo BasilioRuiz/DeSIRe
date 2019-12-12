@@ -4,8 +4,7 @@
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
        Last modified: Fri Jan 20 14:51:15 2012 --
 
-       First change:  Wed May 22 2019 by Esperanza Paez (epm@iac.es)
-                      Adaptation to the DeSIRe project.
+       Updates (epm): Adaptation to the DeSIRe project.
                       Interoperability C-Fortran.
                       Conversion of main() as a function for Fortran.
 
@@ -16,7 +15,7 @@
        numbers and angle-averaged radiation field is given.
 
 
-       Expects input file ``ray.input'' containing two lines of the form
+       Expects input file "ray.input" containing two lines of the form
 
          muz
          Nspect  wave_index1  ....   wave_indexNspect
@@ -67,7 +66,7 @@ extern char messageStr[];
 
 /* ------- begin -------------------------- solveray.c -------------- */
 
-// Function to be called from Fortran.
+// 29/05/19 epm: Function to be called from Fortran.
 int solveray_( int *nspect, int *nsize, double *lambda, double *stokes_I,
                double *stokes_Q, double *stokes_U, double *stokes_V )
 {

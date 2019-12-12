@@ -4,8 +4,7 @@
 #      Author:        Han Uitenbroek (huitenbroek@nso.edu)
 #      Last modified: Mon May 21 14:30:59 2018 --
 #
-#      Last modified: Mon May 15 2019 by Esperanza Paez (epm@iac.es)
-#                     Adaptation to the DeSIRe project.
+#      Updates (epm): Adaptation to the DeSIRe project (obsolete).
 #                     Interoperability C-Fortran.
 #                     Conversion of main() as a function for Fortran.
 #                     Creation of a library containing the executables

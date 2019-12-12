@@ -6,7 +6,9 @@ c looks for prompt (must be follwed by "=" and then by filename_prompt in keywor
         character*100 nombre,linea
         character*(*) prompt,filename_prompt
         integer len_pr,ican,num,nxx,iline,ifi,i,ieq,ieq1,ieq2
-        
+
+c       10/10/19 epm: Prints removing any leading and trailing blanks.
+
         nombre="keyword.input"
         ican=50
         open(ican,file=nombre,status='old',err=999)

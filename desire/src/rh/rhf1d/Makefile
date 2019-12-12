@@ -4,8 +4,7 @@
 #      Author:        Han Uitenbroek (huitenbroek@nso.edu)
 #      Last modified: Mon May 21 14:30:59 2018 --
 #
-#      First change:  Mon May 15 2019 by Esperanza Paez (epm@iac.es)
-#                     Adaptation to the DeSIRe project.
+#      Updates (epm): Adaptation to the DeSIRe project.
 #                     Interoperability C-Fortran.
 #                     Conversion of main() as a function for Fortran.
 #                     Addition to the "../librh.a" library of all the
@@ -13,6 +12,7 @@
 #
 ##     --------------------------                      ----------RH-- ##
 
+# 10/10/19 epm: CPU and OS defined with system calls.
 GEOMETRY = ONE_D_PLANE
 CPU := $(shell uname -m)
 OS  := $(shell uname -s)

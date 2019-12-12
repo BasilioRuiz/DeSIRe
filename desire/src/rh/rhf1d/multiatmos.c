@@ -2,7 +2,7 @@
 
        Version:       rh2.0, 1-D plane-parallel
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Mon May 21 13:51:30 2018 --
+       Last modified: Fri Dec  6 10:09:22 2019 --
 
        --------------------------                      ----------RH-- */
 
@@ -69,7 +69,7 @@ void MULTIatmos(Atmosphere *atmos, Geometry *geometry)
  
   readAbundance(atmos);
 
-  /* --- Open the input file for model atmosphere in MULTI format --- */
+  /* --- Open the input file for model atmosphere in MULTI format - - */
 
   if ((atmos->fp_atmos = fopen(input.atmos_input, "r")) == NULL) {
     sprintf(messageStr, "Unable to open inputfile %s", input.atmos_input);
@@ -177,7 +177,7 @@ void MULTIatmos(Atmosphere *atmos, Geometry *geometry)
   }
   atmos->moving = FALSE;
   for (k = 0;  k < Ndep;  k++) {
-    if (fabs(geometry->vel[k]) >= atmos->vmacro_tresh) {
+    if (fabs(geometry->vel[k]) > atmos->vmacro_tresh) {
       atmos->moving = TRUE;
       break;
     }
@@ -313,10 +313,8 @@ void convertScales(Atmosphere *atmos, Geometry *geometry)
     break;
   case GEOMETRIC:
     cmass[0] = (atmos->nHtot[0] * atmos->totalAbund + atmos->ne[0]) *
-               (KBOLTZMANN * atmos->T[0] / atmos->gravity);
-  /*tau_ref[0] =(cmass[0]*as->chi_c[0]) / rho[0];*//* BRC */
+      (KBOLTZMANN * atmos->T[0] / atmos->gravity);
     tau_ref[0] = 0.5 * as->chi_c[0] * (height[0] - height[1]);
-  /*if (tau_ref[0] > 1.0  || tau_ref[0] < 0.0) tau_ref[0] = 1.e-8;*//* BRC */
     if (tau_ref[0] > 1.0) tau_ref[0] = 0.0;
     for (k = 1;  k < Ndep;  k++) {
       cmass[k]  = cmass[k-1]  + 0.5*(rho[k-1] + rho[k]) *

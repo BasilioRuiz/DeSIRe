@@ -6,8 +6,7 @@
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
        Last modified: Thu Feb 24 16:40:14 2011 --
 
-       First change:  Tue Jun 18 2019 by Esperanza Paez (epm@iac.es)
-                      Adaptation to the DeSIRe project.
+       Updates (epm): Adaptation to the DeSIRe project.
                       Interoperability C-Fortran.
                       Conversion of main() as a function for Fortran.
 
@@ -43,7 +42,7 @@ extern Spectrum spectrum;
 
 /* ------- begin -------------------------- conversion.c ------------ */
 
-// Function to be called from Fortran.
+// 17/06/19 epm: Function to be called from Fortran.
 int conversion_( int *nspace, int *nsize, double *tau, double *mass,
                  double *z, double *T, double *ne, double *vel, double *vturb )
 {

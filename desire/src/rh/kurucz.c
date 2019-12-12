@@ -246,19 +246,22 @@ void readKuruczLines(char *inputFile)
 
         /* --- If possible use Barklem formalism --    -------------- */
 
-	useBarklem = FALSE;
-	if (determined) {
-	  if ((rlk->Li == S_ORBIT && rlk->Lj == P_ORBIT) ||
-              (rlk->Li == P_ORBIT && rlk->Lj == S_ORBIT)) {
-	    useBarklem = getBarklemcross(&bs_SP, rlk, lambda_air);
-	  } else if ((rlk->Li == P_ORBIT && rlk->Lj == D_ORBIT) ||
-		     (rlk->Li == D_ORBIT && rlk->Lj == P_ORBIT)) {
-	    useBarklem = getBarklemcross(&bs_PD, rlk, lambda_air);
-	  } else if ((rlk->Li == D_ORBIT && rlk->Lj == F_ORBIT) ||
-		     (rlk->Li == F_ORBIT && rlk->Lj == D_ORBIT)) {
-	    useBarklem = getBarklemcross(&bs_DF, rlk, lambda_air);
-	  }
-	}
+      useBarklem = FALSE;
+      if (determined) {
+        if ((rlk->Li == S_ORBIT && rlk->Lj == P_ORBIT) ||
+            (rlk->Li == P_ORBIT && rlk->Lj == S_ORBIT)) {
+          // 02/10/19 epm: getBarklemcross() passes 'lambda_air'.
+          useBarklem = getBarklemcross(&bs_SP, rlk, lambda_air);
+        } else if ((rlk->Li == P_ORBIT && rlk->Lj == D_ORBIT) ||
+                   (rlk->Li == D_ORBIT && rlk->Lj == P_ORBIT)) {
+          // 02/10/19 epm: getBarklemcross() passes 'lambda_air'.
+          useBarklem = getBarklemcross(&bs_PD, rlk, lambda_air);
+        } else if ((rlk->Li == D_ORBIT && rlk->Lj == F_ORBIT) ||
+                   (rlk->Li == F_ORBIT && rlk->Lj == D_ORBIT)) {
+          // 02/10/19 epm: getBarklemcross() passes 'lambda_air'.
+          useBarklem = getBarklemcross(&bs_DF, rlk, lambda_air);
+        }
+      }
 	/* --- Else use good old Unsoeld --            -------------- */
 
         if (!useBarklem) {

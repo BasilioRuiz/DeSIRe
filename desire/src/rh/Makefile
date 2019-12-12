@@ -6,6 +6,7 @@
 #
 ##     --------------------------                      ----------RH-- ##
 
+# 10/10/19 epm: CPU and OS defined with system calls.
 CPU := $(shell uname -m)
 OS  := $(shell uname -s)
 
@@ -130,7 +131,8 @@ clean:
 
 ## --- Explicit dependencies on include files --       -------------- ##
 
-
+# 21/06/19 epm: "barklem.o" depends on "inputs.h".
+# 31/07/19 epm: "barklem.o" depends on "desire.h".
 librh.a(abundance.o):     rh.h  atom.h  atmos.h  constant.h  error.h  inputs.h  xdr.h  atomweights.h
 librh.a(accelerate.o):    rh.h  accelerate.h  error.h  statistics.h
 librh.a(backgropac_xdr.o):rh.h  atom.h  atmos.h  spectrum.h  background.h  error.h  inputs.h  xdr.h

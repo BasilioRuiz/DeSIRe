@@ -12,6 +12,8 @@ c el formato es el mismo que el de los perfiles observados
 	common/canal/icanal
 	common/nombrecontrol/control
 
+c     10/10/19 epm: Prints removing any leading and trailing blanks.
+
 	ican=56
 	open(ican,file=vobs,status='old',err=991)
 	print*,'Reading weights from file: ',trim(vobs)
