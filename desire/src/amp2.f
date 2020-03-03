@@ -94,8 +94,9 @@ c precision equilibrio hidrostatico en tanto por uno (necesaria para equisubmu)
         kamp=ntau	!indice ampliado (los ntau puntos de tau1)
         cota=.5
         cotapres=.1
-c        cotafi=.395      !pi/8  
-        cotafi=.395*2      !pi/4  
+        cotafi=.395      !pi/8  
+        
+c        cotafi=.395*2      !pi/4  
 
         do i=1,18	!do en grupos de varibles (1=t,2=p,...etc)
            ntau2=ntau
@@ -106,13 +107,13 @@ c        cotafi=.395      !pi/8
               if(i.eq.6.or.i.eq.14)then
                  y1=atmosr(kred)-pert(kred)
 c                 print*,'amp2 1',pert(kred),atmosr(kred),y1
-c		         if(y1.lt.0. .and. atmosr(kred). lt.0)then
-c		           y1=-pert(kred)/2. 
-c		         endif
-c		         if(atmosr(kred). gt. pi)then
-c		            y1=(pi-pert(kred))/2. 
-c		         endif
-		     if(y1.lt.-cotafi)y1=-cotafi   !acoto inferiormente
+		         if(y1.lt.0. .and. atmosr(kred). lt.0)then
+		           y1=-pert(kred)/2. 
+		         endif
+		         if(atmosr(kred). gt. pi)then
+		            y1=(pi-pert(kred))/2. 
+		         endif
+		         if(y1.lt.-cotafi)y1=-cotafi   !acoto inferiormente
 	             if(y1.gt.cotafi)y1=cotafi     !acoto superiormente
 c	        print*,'amp2 2',pert(kred),atmosr(kred),y1
 
@@ -155,6 +156,7 @@ c                    print*,'presion final en amp2=',j,atmos(kamp+j)/y1,atmos(ka
                 end do
               end if 
 
+
            else if(m(i).gt.1)then
               mm=(ntau-1)/(m(i)-1)   !espaciado entre nodos 
 c              kred1=kred+m(i)           !indice del ultimo nodo de cada variable
@@ -164,30 +166,30 @@ c              kred1=kred+m(i)           !indice del ultimo nodo de cada variabl
               	 x(j)=atmos(jj)	               !tau en los nodos 
                  if(i.eq.7.or.i.eq.15)then
                     y(j)=atmosr(kred)-pert(kred)
-c  	                if(y(j).lt.-cotafi)y(j)=-cotafi   !acoto inferiormente
-c	                if(y(j).gt.cotafi)y(j)=cotafi     !acoto superiormente
+  	                if(y(j).lt.-cotafi)y(j)=-cotafi   !acoto inferiormente
+	                if(y(j).gt.cotafi)y(j)=cotafi     !acoto superiormente
 		         else if(i.eq.6.or.i.eq.14)then
                     y1=atmosr(kred)-pert(kred)
-c		            if(y1.lt.0. .and. atmosr(kred). lt.0)then
-c		               y1=-pert(kred)/2. 
-c		            endif
-c		            if(atmosr(kred). gt. pi)then
-c		              y1=(pi-pert(kred))/2.
-c		            endif	    
-c  	                if(y1.lt.-cotafi)y1=-cotafi   !acoto inferiormente
-c	                if(y1.gt.cotafi)y1=cotafi     !acoto superiormente
+		            if(y1.lt.0. .and. atmosr(kred). lt.0)then
+		               y1=-pert(kred)/2. 
+		            endif
+		            if(atmosr(kred). gt. pi)then
+		              y1=(pi-pert(kred))/2.
+		            endif	    
+ 	                if(y1.lt.-cotafi)y1=-cotafi   !acoto inferiormente
+	                if(y1.gt.cotafi)y1=cotafi     !acoto superiormente
 		            y(j)=y1	
 		        else if (i.eq.2.or.i.eq.10) then
 		            y1=(atmosr(kred)/pert(kred))-1.  !pert. multiplicativa
-c                            if(y1.lt.-0.25)y1=-0.250 !acoto inferiormente
-c                            if(y1.gt.0.25)y1=0.250  !acoto superiormente
+                    if(y1.lt.-0.25)y1=-0.250 !acoto inferiormente
+                    if(y1.gt.0.25)y1=0.250  !acoto superiormente
 c		            print*,'perturbacion presion en amp2=',kred,y1,pert(kred),atmosr(kred)
 		            y(j)=y1
                 else
 	                y1=(atmosr(kred)/pert(kred))-1.  !pert. multiplicativa
 c	                print*,'amp2 ',y1
-c	                if(y1.lt.1-5.e-1)y1=1-5.e-1 !acoto inferiormente
-c	                if(y1.gt.1.5)y1=1.5  !acoto superiormente
+	                if(y1.lt.-0.5)y1=-0.5 !acoto inferiormente
+	                if(y1.gt.1.5)y1=1.5  !acoto superiormente
 	                
 	                y(j)=y1*pert(kred)     !perturb. aditiva en los nodos
 c	                print*,'amp2 2',pert(kred),y1,y(j)
@@ -203,8 +205,8 @@ c	                print*,'amp2 2',pert(kred),y1,y(j)
  
              if(i.eq.2.or.i.eq.10)then
                  do j=1,ntau2
-c                    if(yy(j) .gt.  0.25)yy(j)=0.25
-c                    if(yy(j) .lt.  -0.25)yy(j)=-0.05
+                    if(yy(j) .gt.  0.25)yy(j)=0.25
+                    if(yy(j) .lt.  -0.25)yy(j)=-0.05
                     presionelec=atmos(kamp+j)*exp(yy(j))
 c                    print*,'amp2 203 atmos(kamp+j) yy presionelec',j,atmos(kamp+j),yy(j),presionelec
 c                   if(presionelec .lt. atmos(kamp+j)*.25)print*,'amp2 204 atmos(kamp+j) yy presionelec',atmos(kamp+j),yy(j),presionelec
@@ -288,16 +290,16 @@ c We do not allow negative values of B, Gamma nor Micro
                if(atmos(i+12*ntau).le.1.)atmos(i+12*ntau)=1.
             end do
         end if
-        if(m(6).gt.0)then        ! gamma first commponent
-            do i=1,ntau
-               if(atmos(i+6*ntau).le.0.)atmos(i+6*ntau)=0.
-            end do
-        end if
-        if(m(14).gt.0)then        ! gamma second commponent
-            do i=1,ntau
-               if(atmos(i+14*ntau).le.0.)atmos(i+14*ntau)=0.
-            end do
-        end if
+c        if(m(6).gt.0)then        ! gamma first commponent
+c            do i=1,ntau
+c               if(atmos(i+6*ntau).le.0.)atmos(i+6*ntau)=0.
+c            end do
+c        end if
+c        if(m(14).gt.0)then        ! gamma second commponent
+c            do i=1,ntau
+c               if(atmos(i+14*ntau).le.0.)atmos(i+14*ntau)=0.
+c            end do
+c        end if
 
  
 c suavizo la variacion de la presion si es muy fuerte (mayor del 40%)

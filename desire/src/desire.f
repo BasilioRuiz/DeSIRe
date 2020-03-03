@@ -13,13 +13,14 @@ c Creation date _______ : 22/05/18
 c Author        _______ : Basilio Ruiz Cobo (brc@iac.es)
 c                         Han Uytenbroek, Carlos Quintero, David Orozco
 c
-c Versions:
+c Versiones <n.mes> donde n aumenta con el anyo empezando en 1 para 2019:
 c
 c 1.00 (20/05/19): Version base con llamadas al sistema (2019 = año 1).
 c 1.09 (09/09/19): Primera version con ejecutables convertidos en funciones.
 c 1.10 (10/10/19): Coeficientes de Barklem por argumento desde SIR a RH.
 c 1.11 (11/11/19): Codigo RH nuevo y codigo SIR depurado.
 c 1.12 (12/12/19): Update del codigo RH nuevo.
+c 2.03 (03/03/20): Cambio en amp2.f (modificacion de las cotas del azimut).
 c
 c_____________________________________________________________________________
 c
@@ -255,7 +256,7 @@ c     21/06/19 epm: Read the command line.
       print*, ''
       print*, ' __________________________________________________________ '
       print*, '|                                                          |'
-      CARTEL=' |            DeSIRe version 1.12  (12/Dec/2019)            |'
+      CARTEL=' |            DeSIRe version 2.03  (03/Mar/2020)            |'
       print'(a)',CARTEL
       print*, '|__________________________________________________________|'
       print*, ''
@@ -2490,11 +2491,11 @@ c             if(yc .ge. 0.)yc=0.0001
 c          endif
           call LatLonfromXcYc(Xc,Yc,deglat,deglon)
           return
-770       print*,'Incorrect format in the coordinates file',trim(coorfile)
+770       print*,'Incorrect format in the coordinates file ',trim(coorfile)
           print*,'STOP'  
           stop
        else  
-          print*,'Incorrect format in the coordinates file',trim(coorfile)
+          print*,'Incorrect format in the coordinates file ',trim(coorfile)
           print*,'STOP'
           stop
        end if  
@@ -2530,11 +2531,11 @@ c     Vx, Vy velocity in cm/s
           read(ican,*,err=870,END=870)Xc,Yc,P,B0     !Xc, Yc=position/Rsun, P, B0 solar parameters in degrees
           call LatLonfromXcYcPB(Xc,Yc,P,B0,deglat,deglon,Vx,Vy)
           return
-870       print*,'Incorrect format in the coordinates file',trim(coorfile)
+870       print*,'Incorrect format in the coordinates file ',trim(coorfile)
           print*,'STOP'  
           stop
        else  
-          print*,'Incorrect format in the coordinates file',trim(coorfile)
+          print*,'Incorrect format in the coordinates file ',trim(coorfile)
           print*,'STOP'
           stop
        end if  
