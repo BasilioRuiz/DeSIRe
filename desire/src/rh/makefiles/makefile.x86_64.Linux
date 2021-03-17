@@ -1,5 +1,5 @@
 ## --- Machine dependent defs --                       -------------- ##
-#     
+#
 #      CPU = x86_64
 #      OS  = Linux
 #
@@ -19,6 +19,10 @@ XARCH  =
 CC       = gcc
 CFLAGS   = -O2 -m64 -I../
 
+ifneq ("$(wildcard /usr/include/tirpc)","")
+    CFLAGS += -I/usr/include/tirpc
+endif
+
 
 ## --- If f90 compiler is not available replace loader with cc (LD = cc)
 
@@ -30,6 +34,6 @@ LDFLAGS  = -O2 -m64 -L../
 
 ARFLAGS  = rvsU
 ARCHLIBS = -lm -lpthread
-ARCHINC  = 
+ARCHINC  =
 
 ## ---                                                 -------------- ##
