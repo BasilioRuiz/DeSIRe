@@ -4,13 +4,20 @@
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
        Last modified: Fri Dec  6 09:35:11 2019 --
 
-       Modifications by Chris Osborne (CMO), Glasgow University,
-        to prevent interpolation problems at ACTIVE Bound-free edges.
-
        --------------------------                      ----------RH-- */
 
 /* --- Sorts wavelengths and determines what transitions are active at
-       which wavelength. --                            -------------- */
+       which wavelength.
+
+  Modifications:
+
+       - By Chris Osborne (CMO), Glasgow University,
+         to prevent interpolation problems at ACTIVE Bound-free edges.
+
+       - 10/10/20 epm:
+         We supply the wavetable from SIR.
+
+       --                                              -------------- */
 
 #include <math.h>
 #include <stdlib.h>
@@ -26,8 +33,11 @@
 #include "error.h"
 #include "statistics.h"
 #include "xdr.h"
+#include "desire.h"
+
 
 /* --- Function prototypes --                          -------------- */
+
 
 /* --- Global variables --                             -------------- */
 
@@ -36,6 +46,10 @@ extern Spectrum spectrum;
 extern InputData input;
 extern CommandLine commandline;
 extern char messageStr[];
+
+// 10/10/20 epm: New struct to load the wavetable from SIR.
+extern SIRwave sirwave;
+
 
 /* ------- begin -------------------------- SortLambda.c ------------ */
 
@@ -59,34 +73,39 @@ void SortLambda()
   getCPU(2, TIME_START, NULL);
 
   /* --- First read the wavelength table if specified -- ------------ */
+  //
+  // result = TRUE;
+  //
+  // if (strcmp(input.wavetable_input, "none"))
+  // {
+  //   if ((fp_wavetable = fopen(input.wavetable_input, "r")) == NULL)
+  //   {
+  //     sprintf(messageStr, "Unable to open input file %s",
+  //             input.wavetable_input);
+  //     Error(ERROR_LEVEL_2, routineName, messageStr);
+  //   }
+  //   xdrstdio_create(&xdrs, fp_wavetable, XDR_DECODE);
+  //
+  //   result &= xdr_int(&xdrs, &Nwave);
+  //   wavetable = (double *)malloc(Nwave * sizeof(double));
+  //   result &= xdr_vector(&xdrs, (char *)wavetable, Nwave,
+  //                        sizeof(double), (xdrproc_t)xdr_double);
+  //   if (!result)
+  //   {
+  //     sprintf(messageStr, "Unable to read from input file %s",
+  //             input.wavetable_input);
+  //     Error(ERROR_LEVEL_2, routineName, messageStr);
+  //   }
+  //   xdr_destroy(&xdrs);
+  //   fclose(fp_wavetable);
+  // }
+  // else
+  //   Nwave = 0;
 
-  result = TRUE;
+  /* --- 10/10/20 epm: We supply the wavetable from SIR --  --------- */
 
-  if (strcmp(input.wavetable_input, "none"))
-  {
-    if ((fp_wavetable = fopen(input.wavetable_input, "r")) == NULL)
-    {
-      sprintf(messageStr, "Unable to open input file %s",
-              input.wavetable_input);
-      Error(ERROR_LEVEL_2, routineName, messageStr);
-    }
-    xdrstdio_create(&xdrs, fp_wavetable, XDR_DECODE);
-
-    result &= xdr_int(&xdrs, &Nwave);
-    wavetable = (double *)malloc(Nwave * sizeof(double));
-    result &= xdr_vector(&xdrs, (char *)wavetable, Nwave,
-                         sizeof(double), (xdrproc_t)xdr_double);
-    if (!result)
-    {
-      sprintf(messageStr, "Unable to read from input file %s",
-              input.wavetable_input);
-      Error(ERROR_LEVEL_2, routineName, messageStr);
-    }
-    xdr_destroy(&xdrs);
-    fclose(fp_wavetable);
-  }
-  else
-    Nwave = 0;
+  Nwave = sirwave.nwave;
+  wavetable = sirwave.wavetable;
 
   /* --- Add reference wavelength if necessary --      -------------- */
 
@@ -107,7 +126,7 @@ void SortLambda()
 	
 	/* --- Add one more for edge wavelength (CMO) -- ------------ */
       
-        Nspectrum ++;
+        Nspectrum++;
       }
       for (kr = 0; kr < atom->Nline; kr++)
         Nspectrum += atom->line[kr].Nlambda;
@@ -121,8 +140,10 @@ void SortLambda()
 
   if (atmos.Nactiveatom > 0)
   {
-    atmos.activeatoms = (Atom **)malloc(atmos.Nactiveatom *
-                                        sizeof(Atom *));
+    // 04/04/20 epm: Allocate memory only once.
+    if (atmos.activeatoms == NULL)
+      atmos.activeatoms = (Atom **) malloc(atmos.Nactiveatom *
+                                           sizeof(Atom *));
     for (n = 0; n < atmos.Natom; n++)
     {
       atom = &atmos.atoms[n];
@@ -238,15 +259,17 @@ void SortLambda()
       spectrum.Nspect++;
     }
   }
-  sprintf(messageStr, "\n %s: Found %d unique wavelengths\n",
+  sprintf(messageStr, " %s: Found %d unique wavelengths\n",
           routineName, spectrum.Nspect);
   Error(MESSAGE, routineName, messageStr);
   if (spectrum.Nspect < Nspectrum)
   {
-    sprintf(messageStr, " %s: Eliminated %d duplicate wavelengths\n\n",
+    sprintf(messageStr, " %s: Eliminated %d duplicate wavelengths\n",
             routineName, Nspectrum - spectrum.Nspect);
     Error(MESSAGE, routineName, messageStr);
   }
+  Error(MESSAGE, routineName, "\n");
+
   /* --- Allocate space for wavelength array and active sets -- ----- */
 
   spectrum.lambda = (double *)realloc(spectrum.lambda,
@@ -350,8 +373,8 @@ void SortLambda()
         if (as->Nactiveatomrt[nact] == N_MAX_OVERLAP)
         {
           sprintf(messageStr,
-                  "\n Too many overlapping transitions (> %d) "
-                  "for atom %s and nspect = %d\n",
+                  "Too many overlapping transitions (> %d) "
+                  "for atom %s and nspect = %d",
                   as->Nactiveatomrt[nact], atom->ID, nspect);
           Error(ERROR_LEVEL_2, routineName, messageStr);
         }
@@ -431,8 +454,8 @@ void SortLambda()
         if (as->Nactiveatomrt[nact] == N_MAX_OVERLAP)
         {
           sprintf(messageStr,
-                  "\n Too many overlapping transitions (> %d) "
-                  "for atom %s and nspect = %d\n",
+                  "Too many overlapping transitions (> %d) "
+                  "for atom %s and nspect = %d",
                   as->Nactiveatomrt[nact], atom->ID, nspect);
           Error(ERROR_LEVEL_2, routineName, messageStr);
         }
@@ -484,8 +507,8 @@ void SortLambda()
         if (as->Nactivemolrt[nact] == N_MAX_OVERLAP)
         {
           sprintf(messageStr,
-                  "\n Too many overlapping transitions (> %d) "
-                  "for molecule %s and nspect = %d\n",
+                  "Too many overlapping transitions (> %d) "
+                  "for molecule %s and nspect = %d",
                   as->Nactivemolrt[nact], molecule->ID, nspect);
           Error(ERROR_LEVEL_2, routineName, messageStr);
         }

@@ -7,7 +7,16 @@
        --------------------------                      ----------RH-- */
 
 /* --- Routines for reading and writing populations from and to file.
-       XDR (external data representation) version. --  -------------- */
+       XDR (external data representation) version.
+
+       Modifications:
+
+       - 04/04/20 epm:
+         Disk access is avoided as much as possible.
+         Populations are saved in memory rather than disk.
+         'popsinFile' and 'popsoutFile' are ignored.
+
+       --                                              -------------- */
 
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +36,8 @@
 extern Atmosphere atmos;
 extern InputData input;
 extern char messageStr[];
+
+static void **pmem = NULL;
 
 
 /* ------- begin -------------------------- xdr_populations.c ------- */
@@ -50,11 +61,13 @@ bool_t xdr_populations(XDR *xdrs, char *atmosID, int Nlevel, int Nspace,
     result &= xdr_int(xdrs, &Nspace);
   } else {
     result &= xdr_counted_string(xdrs, &ID);
-    if (!strstr(ID, atmosID)) {
-      sprintf(messageStr, "Populations were computed with different"
-                          " atmosphere (%s) than current one", ID);
-      Error(WARNING, routineName, messageStr);
-    }
+    // 04/04/20 epm: Do not compare these two variables because, if we have
+    // OLD_POPULATIONS, 'ID' is delayed respect to 'atmosID' but it's right.
+    // if (!strstr(ID, atmosID)) {
+    //   sprintf(messageStr, "Populations were computed with different"
+    //                       " atmosphere (%s) than the current one", ID);
+    //   Error(WARNING, routineName, messageStr);
+    // }
     free(ID);
 
     result &= xdr_int(xdrs, &Nl);
@@ -82,7 +95,62 @@ bool_t xdr_populations(XDR *xdrs, char *atmosID, int Nlevel, int Nspace,
 
 /* ------- begin -------------------------- writePopulations.c ------ */
 
-void writePopulations(Atom *atom)
+void writePopulations( Atom *atom )
+{
+   const char routineName[] = "writePopulations";
+
+   char  *id         = (char *) atmos.ID;
+   int    nlevel     = atom->Nlevel;
+   int    nspace     = atmos.Nspace;
+   off_t  offset     = 0;
+   size_t npop       = atom->Nlevel * atmos.Nspace * sizeof(double);
+   size_t recordsize = sizeof(atmos.ID) + sizeof(atom->Nlevel) +
+                       sizeof(atmos.Nspace) + npop + npop;
+   int   i;
+   void *tmp;   // avoid memory leak
+
+   if (pmem == NULL)
+   {
+     pmem = (void **) realloc(pmem, atmos.Nactiveatom * sizeof(void *));
+     for (i = 0; i < atmos.Nactiveatom; i++) pmem[i] = NULL;
+   }
+
+   if ((tmp = realloc(pmem[atom->activeindex], recordsize)) != NULL)
+   {
+      pmem[atom->activeindex] = tmp;
+      memcpy(pmem[atom->activeindex] + offset, id, sizeof(atmos.ID));
+      offset += sizeof(atmos.ID);
+      memcpy(pmem[atom->activeindex] + offset, &nlevel, sizeof(atom->Nlevel));
+      offset += sizeof(atom->Nlevel);
+      memcpy(pmem[atom->activeindex] + offset, &nspace, sizeof(atmos.Nspace));
+      offset += sizeof(atmos.Nspace);
+      if (atom->n[0] != NULL)
+      {
+         memcpy(pmem[atom->activeindex] + offset, atom->n[0], npop);
+         offset += npop;
+      }
+      else   // exit if true populations do not exist
+      {
+         sprintf(messageStr,
+                 "Error writing populations: true populations do not exist");
+         Error(ERROR_LEVEL_1, routineName, messageStr);
+      }
+      if (atom->nstar[0] != NULL)   // but we can live without LTE values
+      {
+         memcpy(pmem[atom->activeindex] + offset, atom->nstar[0], npop);
+         offset += npop;
+      }
+   }
+   else
+   {
+      sprintf(messageStr, "Pointer null writing populations for"
+              " atom %s (offset %lld, size %zu)",
+              atom->ID, (long long) offset, recordsize);
+      Error(ERROR_LEVEL_1, routineName, messageStr);
+   }
+}
+
+void writePopulations_OLD(Atom *atom)
 {
   const char routineName[] = "writePopulations";
 
@@ -136,7 +204,74 @@ void writePopulations(Atom *atom)
 
 /* ------- begin -------------------------- readPopulations.c ------- */
 
-void readPopulations(Atom *atom)
+void readPopulations( Atom *atom )
+{
+   const char routineName[] = "readPopulations";
+
+   char   id[sizeof(atmos.ID)];
+   int    nlevel;
+   int    nspace;
+   off_t  offset     = 0;
+   size_t npop       = atom->Nlevel * atmos.Nspace * sizeof(double);
+   size_t recordsize = sizeof(atmos.ID) + sizeof(atom->Nlevel) +
+                       sizeof(atmos.Nspace) + npop + npop;
+
+   if (pmem != NULL && pmem[atom->activeindex] != NULL)
+   {
+      memcpy(id, pmem[atom->activeindex] + offset, sizeof(atmos.ID));
+      offset += sizeof(atmos.ID);
+      memcpy(&nlevel, pmem[atom->activeindex] + offset, sizeof(atom->Nlevel));
+      offset += sizeof(atom->Nlevel);
+      memcpy(&nspace, pmem[atom->activeindex] + offset, sizeof(atmos.Nspace));
+      offset += sizeof(atmos.Nspace);
+      if (atom->n[0] != NULL)
+      {
+         memcpy(atom->n[0], pmem[atom->activeindex] + offset, npop);
+         offset += npop;
+      }
+      else   // exit if true populations do not exist
+      {
+         sprintf(messageStr,
+                 "Error reading populations: true populations do not exist");
+         Error(ERROR_LEVEL_2, routineName, messageStr);
+      }
+      if (atom->nstar[0] != NULL)   // but we can live without LTE values
+      {
+         memcpy(atom->nstar[0], pmem[atom->activeindex] + offset, npop);
+         offset += npop;
+      }
+
+      // 04/04/20 epm: Do not compare these two variables because, if we have
+      // OLD_POPULATIONS, 'ID' is delayed respect to 'atmosID' but it's right.
+      // if (memcmp(id, atmos.ID, strlen(atmos.ID)) != 0)
+      // {
+      //    sprintf(messageStr, "Populations were computed with different"
+      //                        " atmosphere (%s) than the current one", id);
+      //    Error(WARNING, routineName, messageStr);
+      // }
+      if (nlevel != atom->Nlevel)
+      {
+         sprintf(messageStr, "Populations were computed with different"
+                             " nlevel (%d) than the current one", nlevel);
+         Error(ERROR_LEVEL_2, routineName, messageStr);
+      }
+      if (nspace != atmos.Nspace)
+      {
+         sprintf(messageStr, "Populations were computed with different"
+                             " nspace (%d) than the current one", nspace);
+         Error(ERROR_LEVEL_2, routineName, messageStr);
+      }
+   }
+   else
+   {
+      sprintf(messageStr, "Pointer null reading populations for"
+              " atom %s (offset %lld, size %zu)",
+              atom->ID, (long long) offset, recordsize);
+      Error(ERROR_LEVEL_2, routineName, messageStr);
+   }
+}
+
+void readPopulations_OLD(Atom *atom)
 {
   const char routineName[] = "readPopulations";
 
@@ -145,9 +280,9 @@ void readPopulations(Atom *atom)
 
   /* --- Read populations from file.
 
-   Note: readPopulations only reads the true populations and not
-         the LTE populations. To this effect it passes a NULL pointer
-         to xdr_populations as its last argument.
+   Note: readPopulations could read the true populations and not
+         the LTE populations. To this effect it should pass a NULL
+         pointer to xdr_populations as its last argument.
          --                                            -------------- */
 
   if ((fp_in = fopen(atom->popsinFile, "r")) == NULL) {
@@ -166,6 +301,7 @@ void readPopulations(Atom *atom)
 	    atom->popsinFile);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
+
   xdr_destroy(&xdrs);
   fclose(fp_in);
 }

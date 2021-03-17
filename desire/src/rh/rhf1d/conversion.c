@@ -12,7 +12,6 @@
 
        --------------------------                      ----------RH-- */
 
-
 #include "rh.h"
 #include "atom.h"
 #include "atmos.h"
@@ -87,10 +86,10 @@ int conversion( int argc, char *argv[],
   //
   // El caso es que al convertir 'conversion' en rutina, las excepciones
   // se habilitan tambien en el codigo Fortran y este no esta preparado para
-  // ello. Es decir, el codigo de DeSIRe admite que se produzcan operaciones
+  // ello. Es decir, el codigo de SIR admite que se produzcan operaciones
   // invalidas sin lanzar ningun aviso porque simplemente la solucion en
-  // cuestion no convergera. Para evitar que el codigo Fortran aborte con una
-  // floating point exception, debemos dejarlas inhabilitadas en C.
+  // cuestion no convergera. Para evitar que este codigo Fortran aborte con
+  // una floating point exception, debemos dejarlas inhabilitadas en C.
   //
   // Trap floating point exceptions on various machines.
   // SetFPEtraps();

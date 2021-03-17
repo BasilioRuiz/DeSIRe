@@ -39,8 +39,31 @@ bool_t new_h2minus_ff;   // for hydrogen.c :: H2minus_ff()
 bool_t new_h2plus_ff;    // for hydrogen.c :: H2plus_ff()
 bool_t new_passive_bb;   // for metal.c :: passive_bb()
 
-// 10/10/19 epm: Structure to pass information from DeSIRe to RH.
-DesireLines desirelines;
+// 10/10/19 epm: Structure to pass Barklem data from SIR to RH.
+SIRBarklem sirbarklem;
+// 04/04/20 epm: Structure to pass some command line flags from SIR to RH.
+SIRflags sirflags;
+// 07/07/20 epm: Structure to pass Kurucz data from SIR to RH.
+SIRKurucz sirkurucz;
+// 08/08/20 epm: Structure to pass abundance values from SIR to RH.
+SIRabun sirabun = {0,
+                   NULL,
+                   {"H","HE","LI","BE","B","C","N","O","F","NE","NA","MG",
+                    "AL","SI","P","S","CL","AR","K","CA","SC","TI","V","CR",
+                    "MN","FE","CO","NI","CU","ZN","GA","GE","AS","SE","BR",
+                    "KR","RB","SR","Y","ZR","NB","MO","TC","RU","RH","PD",
+                    "AG","CD","IN","SN","SB","TE","I","XE","CS","BA","LA",
+                    "CE","PR","ND","PM","SM","EU","GD","TB","DY","HO","ER",
+                    "TM","YB","LU","HF","TA","W","RE","OS","IR","PT","AU",
+                    "HG","TL","PB","BI","PO","AT","RN","FR","RA","AC","TH",
+                    "PA","U","NP","PU","AM","CM","BK","CF","ES"}
+                  };
+// 10/10/20 epm: Structure to pass the wavetable from SIR to RH.
+SIRwave sirwave;
+// 10/10/20 epm: Structure to pass some keywords from SIR to RH.
+SIRkeywords sirkeywords;
+// 11/11/20 epm: Structure to pass atmospheric models from SIR to RH.
+SIRatmos siratmos;
 
 
 //____________________________________________________________________________

@@ -5,14 +5,14 @@ c il=1 :transforma una atmosfera en la linea de vision a una atmosfera
 c       en direccion z
 c ntau : numero de puntos en tau
 c tau  : log10(tau)
-	subroutine taulinea(il,cth,ihe,vx,atmos,ntau)
+        subroutine taulinea(il,cth,ihe,vx,atmos,ntau)
 
-	include 'PARAMETER'  !por kt
-	implicit real*4 (a-h,o-z)
-	real*4 atmos(*),sqrtb
-	real tau(kt),t(kt),p(kt),vmic(kt),h(kt),vz(kt),gamma(kt),phi(kt)
-	real ttau(kt)
-	integer il,ihe
+        implicit real*4 (a-h,o-z)
+        include 'PARAMETER'  !por kt
+        real*4 atmos(*),sqrtb
+        real tau(kt),t(kt),p(kt),vmic(kt),h(kt),vz(kt),gamma(kt),phi(kt)
+        real ttau(kt)
+        integer il,ihe
 
 	pi=3.14159265
 	pi180=pi/180.
@@ -62,7 +62,6 @@ c        if(cth.eq.1.) return
 	      sfiz=sin(phi(i)*pi/180.)
 	      cga=-sth*cfiz*sgaz+cth*cgaz
 	      if(abs(cga).ge.1.)then
-                  print*,'coseno de gamma mayor que uno'
 		  cga=1.-epsilon/100.
 	      endif
 	      sga=sqrtb(1.e0-cga*cga)
@@ -153,11 +152,15 @@ c_____________________________________________________________________
 c sqrtb funcion que calcula la raiz cuadrada
 	real*4 function sqrtb(x)
 	implicit real*4 (a-h,o-z)
+        include 'PARAMETER'
+        character*40 msg
 
 	if(x.gt.0.e0)then
 	   sqrtb=sqrt(x)
 	else if(x.lt.-1.e-2)then
-	   stop "raiz de algo menor que 0"
+           write(msg,*)x
+	   call error(KSTOP,'sqrtb','Square root of a negative number'
+     &     //         ' (x = '//trim(msg)//')')
 	else
 	   sqrtb=0.e0
         end if

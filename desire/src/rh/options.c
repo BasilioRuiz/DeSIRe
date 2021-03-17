@@ -11,8 +11,9 @@
 #include <string.h>
 
 #include "rh.h"
-#include "error.h"
 #include "inputs.h"
+#include "error.h"
+#include "desire.h"
 
 
 /* --- Function prototypes --                          -------------- */
@@ -22,6 +23,9 @@
 
 extern CommandLine commandline;
 extern char messageStr[];
+
+// 04/04/20 epm: Structure to pass some command line flags to RH.
+extern SIRflags sirflags;
 
 
 /* ------- begin -------------------------- setOptions.c ------------ */
@@ -68,9 +72,13 @@ void setOptions(int argc, char *argv[])
   }
   else
   {
-    commandline.logfile = stderr;
+    // 04/04/20 epm: Change to separate outputs on screen from logfile.
+    // commandline.logfile = stderr;
   }
-
   commandline.wavetable = (strlen(wavetable) > 0) ? wavetable : NULL;
+
+  // 04/04/20 epm: Overwrite with SIR command line verbose flag.
+  if (sirflags.flagv == 1) commandline.quiet = FALSE;
+  else commandline.quiet = TRUE;
 }
 /* ------- end ---------------------------- setOptions.c ------------ */

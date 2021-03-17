@@ -1,10 +1,10 @@
       subroutine ludcmp(a,n,np,indx,d)
 
-	implicit real*4 (a-h,o-z)
+      implicit real*4 (a-h,o-z)
 
       include 'PARAMETER'  !por nmax==kn
-c      parameter (nmax=100,tiny=1.0d-20)
-c      dimension a(np,np),indx(n),vv(nmax)
+c     parameter (nmax=100,tiny=1.0d-20)
+c     dimension a(np,np),indx(n),vv(nmax)
 
       parameter (tiny=1.0e-20)
       dimension a(np,np),indx(n),vv(kn)
@@ -21,7 +21,7 @@ c      dimension a(np,np),indx(n),vv(nmax)
 
 11      continue
 
-C        if (aamax.eq.0.d0) pause 'singular matrix.'
+C       if (aamax.eq.0.d0) pause 'singular matrix.'
         if (aamax.lt.1.e-6) aamax=1.e-6
 
 
@@ -124,4 +124,3 @@ C        if (aamax.eq.0.d0) pause 'singular matrix.'
       return
 
       end
-

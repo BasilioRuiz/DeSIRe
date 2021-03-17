@@ -1,3 +1,6 @@
+c Funciones Respuesta numericas - de momento no esta implementado
+c (esta dentro de un if en fperfil2 en el cual nunca entra).
+c
 c numerical
 c calls RH to evaluate RF numerically
 c Basilio 19/06/2019
@@ -18,20 +21,16 @@ c ________________________________________________________________________
         integer istatus,system
 
         real*4 tau(kt),T(kt),Pe(kt),Pg(kt),z(kt),ro(kt)
-        character*100 vprint,ruta,ruta2,ruta3,filewavename
         
 c para la atmosfera
         real*4 atmosLG(kt12),atmosLGpert(kt12)
         integer nlin(kl),npas(kl),ist(4),nble(kl),nfrecuencies
         data ivez/0/
         
-        common/vprint/vprint
-        common/ruta/ruta,ruta2,ruta3,filewavename
         common/istatus12/istatus1,istatus2
         common/numero_LTE/nlam_LTE
        	common/responde2/ist,ntau,ntl,nlin,npas,nble
        	common/ldeo/dlamda,dlamda0
-
 
         ivez=ivez+1
         bol=1.3806488d-16  !erg/s
@@ -71,11 +70,10 @@ c We perturb the atmospheres at the nodes and run RH for each perturbed model
 	   atmosLGpert(11*ntau+2+3)=atmosLG(11*ntau+2+3)
 	   
            call write_atmos_RH(label_ID_model,RH_model,RH_magneticfield,atmosLGpert,ntau)
-c           istatus = system("rm PRD*.dat")
-           print*,'$ CALLING RH from  ',ruta    !(1:40)
-           istatus1 =system(ruta)
-           print*,'$ CALLING solveray from  ',ruta2 
-           istatus2 =system(ruta2)
+           print*,'$ CALLING RH'
+           istatus1 =system('../../bin/rhf1d')
+           print*,'$ CALLING solveray'
+           istatus2 =system('../../bin/solveray')
       	   call read_spectrum(stok_RH)
       	   
       	   if(vmac1.gt.0. .or. ifiltro.ge.1)then

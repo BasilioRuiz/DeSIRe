@@ -57,7 +57,7 @@ extern char messageStr[];
 
 void Solve_ne(double *ne, bool_t fromscratch)
 {
-  const char routineName[] = "Solvene";
+  const char routineName[] = "Solve_ne";
   register int k, n, j;
 
   int     Nmaxstage, niter;
@@ -136,7 +136,7 @@ void Solve_ne(double *ne, bool_t fromscratch)
     if (dne > MAX_ELECTRON_ERROR) {
       sprintf(messageStr, "Electron density iteration not converged:\n"
 	      " spatial location: %d, temperature: %6.1f [K], \n"
-	      " density: %9.3E [m^-3],\n dnemax: %9.3E\n",
+	      " density: %9.3E [m^-3],\n dnemax: %9.3E",
 	      k, atmos.T[k], atmos.nHtot[k], dne);
       Error(WARNING, routineName, messageStr);
     }

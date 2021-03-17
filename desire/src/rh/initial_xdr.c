@@ -22,8 +22,16 @@
          OLD_J              -- Use mean intensities from previous solution
                                (Only implemented for wavelength_table).
 
-       --                                              -------------- */
+       Modifications:
 
+       - 04/04/20 epm:
+         Disk access is avoided as much as possible.
+         J_FILE is saved in memory rather than disk.
+         The keyword LIMIT_MEMORY has to be set to FALSE.
+         Be aware that 'rhf1d' and 'solveray' need the keyword
+         STARTING_J to be set to NEW_J as J_FILE is missing.
+
+       --                                              -------------- */
 
 #include <fcntl.h>
 #include <math.h>
@@ -157,12 +165,13 @@ void initSolution(Atom *atom, Molecule *molecule)
     }
   }
   if (openJfile) {
-    if ((spectrum.fd_J = open(input.JFile, oflag, PERMISSIONS)) == -1) {
-      sprintf(messageStr,
-	      "Unable to open input file %s with permission %s",
-	      input.JFile, permission);
-      Error(ERROR_LEVEL_2, routineName, messageStr);
-    }
+    // 04/04/20 epm: From now on, we save J in memory rather than disk.
+    // if ((spectrum.fd_J = open(input.JFile, oflag, PERMISSIONS)) == -1) {
+    //   sprintf(messageStr,
+    //           "Unable to open input file %s with permission %s",
+    //           input.JFile, permission);
+    //   Error(ERROR_LEVEL_2, routineName, messageStr);
+    // }
     if (input.backgr_pol) {
       if ((spectrum.fd_J20 = open(J20_DOT_OUT, oflag,
 				  PERMISSIONS)) == -1) {
@@ -200,17 +209,18 @@ void initSolution(Atom *atom, Molecule *molecule)
       /* --- Fill matrix J with old values from previous run ----- -- */
 
       for (nspect = 0;  nspect < spectrum.Nspect;  nspect++)
-	readJlambda(nspect, spectrum.J[nspect]);
-    
-      close(spectrum.fd_J);
+        readJlambda(nspect, spectrum.J[nspect]);
+
+      // 04/04/20 epm: From now on, we save J in memory rather than disk.
+      // close(spectrum.fd_J);
       spectrum.fd_J = -1;
 
       if (input.backgr_pol) {
-	for (nspect = 0;  nspect < spectrum.Nspect;  nspect++)
-	  readJ20lambda(nspect, spectrum.J20[nspect]);
-    
-	close(spectrum.fd_J20);
-	spectrum.fd_J20 = -1;
+        for (nspect = 0;  nspect < spectrum.Nspect;  nspect++)
+          readJ20lambda(nspect, spectrum.J20[nspect]);
+
+        close(spectrum.fd_J20);
+        spectrum.fd_J20 = -1;
       }
     }
   }
@@ -393,7 +403,7 @@ void initSolution(Atom *atom, Molecule *molecule)
     else if (strstr(molecule->ID, "H2"))
       H2collisions(molecule);
     else {
-      sprintf(messageStr, "Collisions for molecule %s not implemented\n",
+      sprintf(messageStr, "Collisions for molecule %s not implemented",
 	      molecule->ID);
       Error(ERROR_LEVEL_2, routineName, messageStr);
     }

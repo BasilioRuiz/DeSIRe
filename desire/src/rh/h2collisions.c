@@ -15,7 +15,6 @@
   See: Ayres, T.R., Wiedemann, G., 1989, ApJ 338, 1033
        --                                              -------------- */
 
-
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
@@ -61,7 +60,7 @@ void H2collisions(struct Molecule *molecule)
   double hcomega_k, *beta, C_0;
 
   if (!strstr(molecule->ID, "H2")) {
-    sprintf(messageStr, "Molecule is not H2: %s\n", molecule->ID);
+    sprintf(messageStr, "Molecule is not H2: %s", molecule->ID);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
 

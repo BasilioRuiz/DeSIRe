@@ -37,8 +37,10 @@ void parse(int argc, char *argv[], int Noption, Option *theOptions)
 
   /* --- Break down the command line in option/value pairs -- ------- */
 
-  options = (char **) malloc(Narg * sizeof(char *));
-  values  = (char **) malloc(Narg * sizeof(char *));
+  if (Narg > 0) {
+    options = (char **) malloc(Narg * sizeof(char *));
+    values  = (char **) malloc(Narg * sizeof(char *));
+  }
 
   Nset = 0;
   for (n = 1;  n <= Narg;  n++) {
@@ -104,7 +106,9 @@ void parse(int argc, char *argv[], int Noption, Option *theOptions)
 				   theOptions[nopt].pointer);
   }
 
-  free(options);  free(values);
+  if (Narg > 0) {
+    free(options);  free(values);
+  }
 }
 /* ------- end ---------------------------- parse.c ----------------- */
 

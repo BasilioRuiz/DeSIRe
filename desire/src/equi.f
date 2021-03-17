@@ -3,10 +3,11 @@ c equi rutina que evalua la presion en equilibrio hidrostatico
 	subroutine equi(ntau,tau,t,pe)
 
 	implicit real*4 (a-h,o-z)
-	include 'PARAMETER'  !solo por kt
+	include 'PARAMETER'
 	parameter (nex=28)
 	real*4 tau(*),t(*),pe(*),x(kt),kap(kt),pg(kt),pgold,kac,d2,d3
 	real*4 wgt,abu,ei1,ei2,pp(10),tsi,psi,psg,d1(10)
+        character*100 msg
         common/constantes/g,avog	!gravedad,n. avogadro/pmu
 	common/mu/cth
         common/preciso/prec      
@@ -92,12 +93,13 @@ c          kap(i+1)=kap(i)
               kap(i+1)=kac*avog
               pg(i+1)=pg(i)+2.*g*paso/ (kap(i+1)+kap(i))
               dif=abs(pgold/pg(i+1)-1.)
-c              print*,'i+1=',i+1,' n=',n,' dif=',dif,' pg=',pg(i+1)
            end do
            if(n.gt.50)then 
-                print*,'WARNING: The maximum number of iterations for computing the electronic pressure'
-                print*,'         from hydrostatic equilibrium has been reached.'
-                print*,'         The error at tau(',i+1,') >=',dif*100.,' %.'
+                write(msg,*)'The error at tau(',i+1,') >=',dif*100.,' %'
+                call error(KWARN,'equi','The maximum number of iterations for'
+     &          //         ' computing the electronic\n pressure from'
+     &          //         ' hydrostatic equilibrium has been reached\n'
+     &          //         msg)
 	   endif
         end do
 
@@ -124,9 +126,11 @@ c          kap(i-1)=kap(i)
 c              print*,'i=',i,' n=',n,' dif=',dif,' pg=',pg(i-1)
            end do
            if(n.gt.50)then 
-                print*,'WARNING: The maximum number of iterations for computing the electronic pressure'
-                print*,'         from hydrostatic equilibrium has been reached.'
-                print*,'         The error at tau(',i+1,') >=',dif*100.,' %.'
+                write(msg,*)'The error at tau(',i+1,') >=',dif*100.,' %'
+                call error(KWARN,'equi','The maximum number of iterations for'
+     &          //         ' computing the electronic\n pressure from'
+     &          //         ' hydrostatic equilibrium has been reached\n'
+     &          //         msg)
 	   endif
        end do
        return
@@ -137,11 +141,12 @@ c _______________________________________________________________
 	subroutine equi2(ntau,tau,t,pe)
 
 	implicit real*4 (a-h,o-z)
-	include 'PARAMETER'   !solo por kt
+	include 'PARAMETER'
 
 	parameter (nex=28)
 	real*4 tau(*),t(*),pe(*),x(kt),kap(kt),pg(kt),pgold,kac,d2,d3
 	real wgt,abu,ei1,ei2,pp(10),tsi,psi,psg,d1(10)
+        character*100 msg
         common/constantes/g,avog	!gravedad,n. avogadro/pmu
 	common/mu/cth
         common/preciso/prec      
@@ -224,9 +229,11 @@ c              pgold=pg(i-1)
 c              print*,'i=',i-1,' n=',n,' dif=',dif,' pg=',pg(i-1),'pe=',pe(i-1)
            end do
            if(n.gt.50)then 
-                print*,'WARNING: The maximum number of iterations for computing the electronic pressure'
-                print*,'         from hydrostatic equilibrium has been reached.'
-                print*,'         The error at tau(',i+1,') >=',dif*100.,' %.'
+                write(msg,*)'The error at tau(',i+1,') >=',dif*100.,' %'
+                call error(KWARN,'equi2','The maximum number of iterations for'
+     &          //         ' computing the electronic\n pressure from'
+     &          //         ' hydrostatic equilibrium has been reached\n'
+     &          //         msg)
 	   endif
        end do
        return
@@ -239,7 +246,6 @@ c pefrompg1 evalua la presion electonica p correspondiente a t1 y pg
 	subroutine pefrompg1(t,pg,p)
 
 	implicit real*4 (a-h,o-z)
-
 	include 'PARAMETER' !solo por kt
         parameter (nex=28) 
         common/preciso/prec      
@@ -262,16 +268,17 @@ c calcula la presion electronica a partir de la pg y de una estimacion de la pe
 
       subroutine pe_pg1(t,pe,pg)
 
+      implicit real*4 (a-h,o-z)
+      include 'PARAMETER'
       parameter (ncontr=28)
       dimension cmol(91),alfai(ncontr),chi1(ncontr),chi2(ncontr),
      *u0(ncontr),u1(ncontr),u2(ncontr)
-	real du0,du1,du2,dcmol(91)
+      real du0,du1,du2,dcmol(91)
 
       if(t.lt.500)then
-         print*,'pe_pg1: temperature < 500 K '
-	 print*,'temperature = 500 K'
-	 t=500.
-      end if	 
+         call error(KWARN,'pe_pg1','Changing T < 500 to T = 500 K')
+         t=500.
+      end if
  
       theta=5040./t
       g4=0.

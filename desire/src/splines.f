@@ -1,12 +1,13 @@
-	subroutine splines(x,y,no,ntau,tau,yy,f)
+        subroutine splines(x,y,no,ntau,tau,yy,f)
 
-	include 'PARAMETER'   !por kt
-	parameter (kt2=kt*kn)
-	implicit real*4 (a-h,o-z)
-	real*4 a(kt,kt),x(*),y(*),tau(*),yy(*),f(kt,kt),ff(kt2)
-	real*4 taure(kt)
-	COMMON/FACTORSPLIN/FF
- 	common/cambio/ncambno,ncambpre  !si 0,0 cambio nodos, cambio prec
+        implicit real*4 (a-h,o-z)
+        include 'PARAMETER'   !por kt
+        parameter (kt2=kt*kn)
+        real*4 a(kt,kt),x(*),y(*),tau(*),yy(*),f(kt,kt),ff(kt2)
+        real*4 taure(kt)
+        COMMON/FACTORSPLIN/FF
+        common/cambio/ncambno,ncambpre  !si 0,0 cambio nodos, cambio prec
+
 c ncambno vale 0 la primera vez que se corre un ciclo
 c      "       "   1 las restantes
 	data iset/0/

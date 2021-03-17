@@ -1,12 +1,15 @@
       subroutine matinx ( a )
 
-c	'exact' inversion of 4 X 4 matrix
+c     'exact' inversion of 4 X 4 matrix
 
       implicit real*4 ( a-h, o-z )
+      include 'PARAMETER'
 
       real*4 a ( 4 , 4 ) , b ( 4 , 4 )
-c      dimension c(4,4)
+c     dimension c(4,4)
       integer i , j
+      character*100 msg
+
       tiny=1.e-25
       
       absmax = 0.
@@ -20,11 +23,13 @@ c          c(i,j)=a(i,j)
        if ( absmax .lt. tiny )then
           do i=1,4
             do j=1,4
-              print*,'MATINX ',i,j,a ( i , j )
+              write(msg,'(a,i1,a,i1,a,1pe12.4)') 'matinx(',i,',',j,') = ',
+     &              a(i,j)
+              call error(KLINE,'',msg)
             end do  
           end do
+          call error(KSTOP,'matinx','Singularity problem in the matrix')
        end if   
-      if ( absmax .lt. tiny ) stop 'singularity problem in matinx'
 
 
       fabsmx = 1.00 / absmax

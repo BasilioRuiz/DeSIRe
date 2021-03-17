@@ -86,7 +86,7 @@ void getLambda(AtomicLine *line)
 
     /* --- In this case use a linear scale out to qwing -- ---------- */
 
-    sprintf(messageStr, "Ratio of qwing / (2*qcore) is less than one.\n"
+    sprintf(messageStr, "Ratio of qwing / (2*qcore) is less than one\n"
                         " Using linear spacing for transition: %d->%d",
 	    line->j, line->i);
     Error(WARNING, routineName, messageStr);

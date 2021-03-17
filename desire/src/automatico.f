@@ -1,23 +1,19 @@
+        subroutine automatico(mi,mp,ntotal4,difer,npos,rt,t)
 
-
-
-	subroutine automatico(mi,mp,ntotal4,difer,npos,rt,t)
-
-	implicit real*4 (a-h,o-z) 
-	include 'PARAMETER' !por kt,kn,kl y kld
-	parameter (kld4=4*kld)
+        implicit real*4 (a-h,o-z) 
+        include 'PARAMETER'
+        parameter (kld4=4*kld)
 
         integer npos(*),ntotal4,nodosposibles(kt),icalerr
         real*4 difer(*),rt(*),derivada(kt),t(*)
         real*4 x(kt),z(kt),f(kt,kt),tau(kt)
-
 
         common/nodosposibles/nummax,nodosposibles
         common/ndata/ndata !para fperfil2 y automatico
         common/tau/tau
         common/calerr/icalerr !si calculo errores=1 else =0
 
-	data iprimeraveza/0/
+        data iprimeraveza/0/
 
 c calculamos los posibles nodos 
        ntau=mi
@@ -37,7 +33,6 @@ c calculamos los posibles nodos
         end if
 
 c calculamos la derivada de la chi^2
-c        print*,'automatico nmax ',mi
         do i=1,mi
            s=0.
            do j=1,ndata
@@ -45,7 +40,6 @@ c        print*,'automatico nmax ',mi
               s=s+difer(j)*rt(k)
            end do
            derivada(i)=s
-c           print*,i,derivada(i)
         end do
 
 c buscamos el numero de nodos optimo
@@ -55,41 +49,37 @@ c buscamos el numero de nodos optimo
            else
              mi=1
            end if
-        else
-           print*,'nodos (aut) para errores',mi
         end if
 
-c        print*,'cuantos pongo'
-c        read*,mi
-
         if(mi.gt.1)then
-	    m=(ntau-1)/(mi-1)   !n es el numero de taus
-                            !m es el numero de pasos en cada subintervalo
-	    do i=1,mi        !mi es el numero de nodos total i el indice del nodo
-	       j=(i-1)*m+1   !j el indice en tau
-	       x(i)=tau(j)   !x(i) es el valor de tau en el nodo
+            m=(ntau-1)/(mi-1) !n es el numero de taus
+                              !m es el numero de pasos en cada subintervalo
+            do i=1,mi         !mi es el numero de nodos total i el indice del nodo
+               j=(i-1)*m+1    !j el indice en tau
+               x(i)=tau(j)    !x(i) es el valor de tau en el nodo
             end do
 
-	    call splines22(x,x,mi-2,ntau,tau,z,f)
+            call splines22(x,x,mi-2,ntau,tau,z,f)
         end if
            
         call nodos_sub(rt,ntau,mi,f,ntotal4,t)
   
-	return
+        return
         end
-c _____________________________________________________
-	subroutine nodos_sub(rt,n,no,f,ntotal4,t)
 
-	implicit real*4 (a-h,o-z) 
-	include 'PARAMETER' !por kt,kn,kl y kld
+c_____________________________________________________________________________
+
+        subroutine nodos_sub(rt,n,no,f,ntotal4,t)
+
+        implicit real*4 (a-h,o-z) 
+        include 'PARAMETER'
 
         integer no
         real*4 rt(*),f(kt,kt),gr(kt),t(*),y(kt)
 
+        if(no.le.0)return
 
-	if(no.le.0)return
-
-	if(no.eq.1)then   !si perturbacion constante
+        if(no.eq.1)then   !si perturbacion constante
            ymedio=0
            do i=1,n
               ymedio=ymedio+t(i)
@@ -97,59 +87,55 @@ c _____________________________________________________
            ymedio=ymedio/float(n)
 
            do ilam=1,ntotal4
-	      sumart=0.
+              sumart=0.
               do i=1,n
                  kk=(i-1)*ntotal4+ilam
                  sumart=sumart+rt(kk)
               end do
               rt(ilam)=sumart*ymedio 
            end do
-	else
-c          do j=1,n
-c            print*,'automatico ',j,t(j)
-c          end do
+        else
 
-	   m=(n-1)/(no-1)   !n es el numero de taus
-                            !m es el numero de pasos en cada subintervalo
-	   do i=1,no        !no es el numero de nodos total i el indice del nodo
-	      j=(i-1)*m+1   !j el indice en tau
-	      y(i)=t(j)    !y(i) es el valor del parametro en el nodo
-c              print*,'automatico n no i j y',n,no,i,j,y(i)
+           m=(n-1)/(no-1)  !n es el numero de taus
+                           !m es el numero de pasos en cada subintervalo
+           do i=1,no       !no es el numero de nodos total i el indice del nodo
+              j=(i-1)*m+1  !j el indice en tau
+              y(i)=t(j)    !y(i) es el valor del parametro en el nodo
            end do
 
            do ilam=1,ntotal4
-	      do i=1,no
-	         ggg=0.
-	         do j=1,n
+              do i=1,no
+                 ggg=0.
+                 do j=1,n
                     kk=(j-1)*ntotal4+ilam
-	            ggg=ggg+rt(kk)*f(j,i)
+                    ggg=ggg+rt(kk)*f(j,i)
                  end do
-	         gr(i)=ggg
-	      end do
-	      do i=1,no
+                 gr(i)=ggg
+              end do
+              do i=1,no
                  kk=(i-1)*ntotal4+ilam
- 	         rt(kk)=gr(i)*y(i)
-	      end do
+                 rt(kk)=gr(i)*y(i)
+              end do
            end do
-c           print*,'automatico rt(',kk,')=',rt(kk)
-	end if 
-	return
-	end
+        end if
+
+        return
+        end
         
-c _________________________________________________________________
+c_____________________________________________________________________________
 
-	subroutine criterio(ntau,derivada,mi,mp)
+        subroutine criterio(ntau,derivada,mi,mp)
 
-	implicit real*4 (a-h,o-z) 
-	include 'PARAMETER' !por kt,kn,kl y kld
-	parameter (kld4=4*kld)
+        implicit real*4 (a-h,o-z) 
+        include 'PARAMETER'
+        parameter (kld4=4*kld)
 
         integer nodosposibles(kt),paso
         real*4 derivada(*)
 
         common/nodosposibles/nummax,nodosposibles
 
-c        data sesgo1/10./
+c       data sesgo1/10./
 
         a0=abs(derivada(1))/2.
         a1=derivada(1)/2.
@@ -160,8 +146,6 @@ c        data sesgo1/10./
         a0=a0+abs(derivada(ntau))/2.
         a1=a1+derivada(ntau)/2.
 
-c        print*,'criterio area abs neto',a0,a1/a0
-
         a1=a1/a0
 
         if(abs(a1-1.) .lt. 1.e-4)then
@@ -171,11 +155,10 @@ c        print*,'criterio area abs neto',a0,a1/a0
 
         amax=abs(a1)
         imax=1
-c        sesgo1=10. !factor para penalizar un numero elevado de nodos
-c        sesgo1=sesgo1*.9 !factor para penalizar un numero elevado de nodos
+c       sesgo1=10. !factor para penalizar un numero elevado de nodos
+c       sesgo1=sesgo1*.9 !factor para penalizar un numero elevado de nodos
         sesgo1=0. 
         sesgo2=1.0 !factor para penalizar un numero elevado de nodos
-
 
         nummax2=1
         i=2  
@@ -183,7 +166,6 @@ c        sesgo1=sesgo1*.9 !factor para penalizar un numero elevado de nodos
            nummax2=i
            i=i+1 
         end do   
-c        print*,'criterio nodmax= ', nodosposibles(nummax2),mp
 
 c nuevo criterio (refuerzo el caso 2) integrando desde la parte significativa
 c distinta de cero y poniendo el nodo en la mitad
@@ -226,18 +208,16 @@ c al caso de los 2 nodos le echamos de comer a parte
           aij=aij+derivada(j)
         end do
         aij=(aij+derivada(i11)/2.)/a0
-        if(aij.ge.aijmax)aijmax=aij              	
-	if(aij.le.aijmin)aijmin=aij
+        if(aij.ge.aijmax)aijmax=aij                     
+        if(aij.le.aijmin)aijmin=aij
         aij=derivada(i11+1)/2.
         do j=i11+2,ntau-1
            aij=aij+derivada(j)
         end do
         aij=(aij+derivada(ntau)/2.)/a0
-        if(aij.ge.aijmax)aijmax=aij              	
-	if(aij.le.aijmin)aijmin=aij
+        if(aij.ge.aijmax)aijmax=aij                     
+        if(aij.le.aijmin)aijmin=aij
         a=abs(aijmax-aijmin)*sesgo1
-c        print*,'area criterio new',2,a
-c        if(a.eq.amax)then
         if(abs(a-amax) .lt. abs(amax)*1.e-5)then
            mi=2
            return
@@ -259,11 +239,10 @@ c        if(a.eq.amax)then
               end do
               aij=aij+derivada(j*paso)/2.
               aij=aij/a0
-              if(aij.ge.aijmax)aijmax=aij              	
-	      if(aij.le.aijmin)aijmin=aij
+              if(aij.ge.aijmax)aijmax=aij               
+              if(aij.le.aijmin)aijmin=aij
            end do
            a=abs(aijmax-aijmin)
-c           print*,'area criterio ',nod,a
            if(a.gt.sesgo2*amax)then !!!!!!!!!!!!!!!!!!!!!!
               amax=a
               imax=i
@@ -271,12 +250,6 @@ c           print*,'area criterio ',nod,a
         end do  
 
         mi=nodosposibles(imax)
-c        print*,'criterio nummax2=',nummax2
-c        do k=1,nummax2
-c           print*,'nodosposibles en crit aut ',nodosposibles(k)
-c        end do
 
-c        print*,'nodos en criterio automatico ',mi
         return
         end
-

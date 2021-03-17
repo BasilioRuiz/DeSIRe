@@ -1,0 +1,10 @@
+IMPORTANT: a) All items must be separated by commas.
+           b) The first six characters of the last line
+              in the header (if any) must contain the symbol ---
+
+Line and blends indices :   Initial lambda     Step       Final lambda
+(in this order)                  (mA)          (mA)          (mA)
+----------------------------------------------------------------------
+23,24                   :      -500.00,        10.0,         1500.00
+29,3,30,31,32           :     -4000.00,        20.0,         7000.00
+33,34,35,4,36,37        :     -2000.00,        20.0,        13500.00

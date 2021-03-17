@@ -2,10 +2,10 @@ IMPORTANT: a) All items must be separated by commas.
            b) The first six characters of the last line              
               in the header (if any) must contain the symbol ---     
                                                                      
-Line and blends indices  :  Initial lambda     Step     Final lambda 
-(in this order)                   (mA)         (mA)         (mA)     
----------------------------------------------------------------------
-4                        :      -1750.,        70.,        1750.
-22                       :       -225.,        25.,         525.
-23                       :       -225.,        25.,         525.
-24                       :       -225.,        25.,         525.
+Line and blends indices :   Initial lambda     Step       Final lambda 
+(in this order)                  (mA)          (mA)          (mA)     
+----------------------------------------------------------------------
+4                       :     -1750.00,        70.0,        1750.00
+22                      :      -225.00,        25.0,         525.00
+23                      :      -225.00,        25.0,         525.00
+24                      :      -225.00,        25.0,         525.00

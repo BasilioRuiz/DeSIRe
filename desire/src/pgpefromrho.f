@@ -6,8 +6,9 @@ c _______________________________________________________________
 	subroutine pgpefromrho(t,ro,pe,pg)
 
 	implicit real*4 (a-h,o-z)
-        real*4 t,ro,pe,pg,pmusum,asum,pp(10),change
+        include 'PARAMETER'
         parameter (nex=28,cgases=83145100.,avog=6.023e23)
+        real*4 t,ro,pe,pg,pmusum,asum,pp(10),change
         common/precisoitera/precitera      
         common/nmaxitera/nmaxitera
         precitera=1.e-5
@@ -51,11 +52,10 @@ c            print*,pg,pe,change,pe/pg
            if(pg .lt. 1.e-8)pg=1.e-8
            change=abs(1.-pg/pgold)*100.
         end do
-        if(pg. lt. 1.1e-8 .or. iv. eq. 30)then 
-           print*,'Bad boundary condition in density'
-           print*,'We chose pg=',500.
+        if(pg. lt. 1.1e-8 .or. iv. eq. 30)then
+           call error(KWARN,'pgpefromrho','Bad boundary condition in density.'
+     &     //         ' We chose pg = 500')
            pg=500.
-c           stop
         endif  
 c        print*,iv,pesomedio,ro,pg,pe,change,pe/pg
 c        print*,pg,pe,change,pe/pg

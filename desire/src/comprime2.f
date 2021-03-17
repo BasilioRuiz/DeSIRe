@@ -21,13 +21,13 @@ c Basilio y Jose Carlos 9-1-95 pertu. aditiva para fi (no mult. a tan(fi))
 c Basilio y Jose Carlos 6-2-95 pertu. aditiva para gamma (no mult. a tan(gamma))
 c
 c _____________________________________________________________
-	subroutine comprime2(ntau,m,atmos,atmosr)
+        subroutine comprime2(ntau,m,atmos,atmosr)
 
-	include 'PARAMETER'
+        implicit real*4 (a-h,o-z)
+        include 'PARAMETER'
 
-	implicit real*4 (a-h,o-z)
-	real*4 atmos(*),atmosr(*)
-	integer m(*)
+        real*4 atmos(*),atmosr(*)
+        integer m(*)
         common/offset/voffset  !para respuestas
         common/ivez/ivez
 

@@ -83,22 +83,22 @@ c se calcula donde poner el contorno
                   xa(k)=tau(n3+k)
 	          ya(k)=s(n3+k)	               
 	       enddo
-	       call polint(xa,ya,ngrado+1,taunewi,snew(i),error)
+	       call polint(xa,ya,ngrado+1,taunewi,snew(i),dy)
 	       
 	       do k=1,ngrado+1
 	          ya(k)=ds(n3+k)	               
 	       enddo
-	       call polint(xa,ya,ngrado+1,taunewi,dsnew(i),error)
+	       call polint(xa,ya,ngrado+1,taunewi,dsnew(i),dy)
                do k=1,ngrado+1
 	          ya(k)=etall(n3+k)	               
 	       enddo
-	       call polint(xa,ya,ngrado+1,taunewi,yyy,error)
+	       call polint(xa,ya,ngrado+1,taunewi,yyy,dy)
 	       etallnew(i)=yyy
 	       etalnew(i)=yyy*tauenewxxi
 	       do k=1,ngrado+1
 	          ya(k)=oo(n3+k)	               
 	       enddo
-	       call polint(xa,ya,ngrado+1,taunewi,yyy,error)
+	       call polint(xa,ya,ngrado+1,taunewi,yyy,dy)
 	       oonew(i)=yyy
 	    enddo   
          endif 

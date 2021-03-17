@@ -6,13 +6,15 @@ c n es el numero de puntos
 c el vector a deconvolucionar entra por medio del common vobservado
 
       subroutine deconv(vin,isigno,nlins,npass,dlamda0s,dlamdas,s)
+      
       implicit real*4 (a-h,o-z)
-      parameter(m1=1024)   !m1 MUST be an integer power of 2!!!
+      include 'PARAMETER'
 
       real*4 vin(*),dlamda0s(*),dlamdas(*)
       real*4 frec,ex,cota,paso,sigma,pi,c,s
       real*4 v1(m1),v2(m1),expo(m1)
       integer npass(*),ifiltro,nlins,isigno,linea
+      character*100 msg
       common/ifiltro/ifiltro
       data ivez/0/
 
@@ -40,23 +42,20 @@ c descomponemos vin en datos para cada linea: v1
 	kk=0
    
 c rellenamos hasta 'ntot' con ceros
-c        print*,'deconv 44',nlins,npass(1),npass(2) 
-c        stop
 	do j=1,nlins
 	  n2=npass(j)
 	  i1=(ntot-n2)/2
 	  i2=i1+n2
 
           if(n2.gt.ntot)then
-            print*,'in DECONV: line ',j,' has more than ',ntot,' frecuencies'
-            stop
+             write(msg,'(a,i5,a,i5,a)') 'Line ',j,' has more than ',
+     &             ntot,' frecuencies'
+             call error(KSTOP,'deconv',msg)
           end if
 
 	  if(n2.gt.1)then
 	    sigma=1.e3*dlamda0s(j)*s/c
 	    paso=abs((dlamdas(k1+2)-dlamdas(k1+1)))
-c	    print*,'deconv: npass(',j,')=',npass(j),' sigma=',sigma,' paso=',paso
-c	   print*,'_____: dlamda0s(',j,')=',dlamda0s(j),' sigma=',sigma,' paso=',paso
 	    if(paso.lt.1.e-20)paso=1.
 	    do i=1,n2
 		k1=k1+1
@@ -91,7 +90,6 @@ c	   print*,'_____: dlamda0s(',j,')=',dlamda0s(j),' sigma=',sigma,' paso=',paso
 
 	    linea=j     
 c	    if(n2.gt.1)call deconvsub2(v2,ntot,expo,linea)
-c            print*,'decon 94 n2=',n2,' ifiltro=', ifiltro,'"""""""""""""""""""""'
 	    if(n2.gt.1 .and.ifiltro.ne.1)call deconvsub2(v2,ntot,expo,linea)
 	    if(n2.gt.1 .and.ifiltro.eq.1)call deconvsub2(v2,ntot,expo,1)
 	    
@@ -120,11 +118,11 @@ c num=numero de puntos del fichero filtro
 c ntot=numero de puntos que quiero
 
 	subroutine psf(ntot,nlin,npas,dlamda0,dlamda)
-        implicit real*4 (a-h,o-z)
 
-	include 'PARAMETER'  !solo por kl
+	implicit real*4 (a-h,o-z)
+	include 'PARAMETER'
 
-	parameter (m1=1024,m2=2*m1,nmx=401)
+        parameter (m2=2*m1,nmx=m1)
 	real*4 dlamda0(*),dlamda(*)
 	real x(nmx),y(nmx)
 	
@@ -133,11 +131,9 @@ c ntot=numero de puntos que quiero
 	real xa(11),ya(11)
 	integer npas(*)
 
-        character*100 filtro,control
+        character*100 filtro
 
 	common/filtro/filtro
-	common/canal/icanal
-	common/nombrecontrol/control
 	common/ftransformada/ftrans
 
         ngrado=2        !interpolo con parabolas
@@ -150,7 +146,10 @@ c leemos el fichero filtro
 	end do
 127	num=ii-1
 
-	if(num.eq.nmx-1)print*,'The psf file is being truncated (it has more than 401 wavelengths!)'
+        if(num.eq.nmx-1)then
+           call error(KWARN,'psf','The PSF file is being truncated (it has'
+     &     //         ' more than 401 wavelengths)')
+        end if
 
 
 c interpolamos
@@ -184,13 +183,10 @@ c interpolamos
 	         do k=1,ngrado+1
 		    ya(k)=y(n3+k)
 	         end do
-	         call polint(xa,ya,ngrado+1,x0,salida,error)
+	         call polint(xa,ya,ngrado+1,x0,salida,dy)
                  entrada(2*i-1)=salida
 	      end if
            end do
-c           do ii=1,ntot
-c              print*,'deconv 190 entrada(',ii,')=',entrada(ii)
-c           end do   
 	   
  	   call four1(entrada,ntot,1)
 
@@ -201,26 +197,16 @@ c           end do
  
 	end do !do en lineas
         close(55)      
-	
 
-	return
+        return
 
-100	print*,' '
-	print*,'STOP: The file containing the PSF does NOT exist:'
-        print*,filtro
-        print*,'_______________________________________________________________________________'
+100     call error(KSTOP,'psf','The file containing the PSF does not exist\n'
+     &  //         ' File: '//filtro)
 
-	stop
+101     call error(KSTOP,'psf','The file containing the PSF is not written'
+     &  //         ' properly\n File: '//filtro)
 
-101     print*,' '
-	print*,'STOP: The file containing the PSF is not written correctly:'
-        print*,filtro
-        print*,'_______________________________________________________________________________'
-
-	stop
- 
-
-	end
+        end
 c_______________________________________________________________________
 c DECONVSUB2 (incluida en DECONV) multiplica las transformadas de
 c Fourier de la gaussiana, de la PSF y del perfil y anti-transforma
@@ -231,11 +217,11 @@ c data : vector a convolucionar
 c datb : transformada del vector con/deconvolucionador
 
 	subroutine deconvsub2(data,n,datb,linea)
+	
         implicit real*4 (a-h,o-z)
-
 	include 'PARAMETER'
-	parameter(m1=1024,m2=2*m1)
 
+	parameter(m2=2*m1)
 	real*4 data(*),datb(*),entrada(m2)
 	real*4 ftrans(4*kl,m2)
 	integer ifiltro,n,linea
@@ -243,7 +229,9 @@ c datb : transformada del vector con/deconvolucionador
 	common/ifiltro/ifiltro
 
 	if(n.le.1)return
-	if(n.ne.m1) stop 'n not equal to m1 in deconvsub2'
+	if(n.ne.m1)then
+	   call error(KSTOP,'deconvsub2','Error: n not equal to m1')
+	end if
         
         do i=1,n
            entrada(2*i-1)=data(i)
@@ -356,11 +344,11 @@ c num=numero de puntos del fichero filtro
 c ntot=numero de puntos que quiero
 
 	subroutine psf_variablePSF(ntot,nlin,npas,dlamda0,dlamda)
+	
         implicit real*4 (a-h,o-z)
+	include 'PARAMETER'
 
-	include 'PARAMETER'  !solo por kl
-
-	parameter (m1=1024,m2=2*m1,nmx=4*kld)
+        parameter (m2=2*m1,nmx=4*kld)
 	real*4 dlamda0(*),dlamda(*)
 	real x(nmx),y(nmx),xx(nmx),yy(nmx)
 	
@@ -371,6 +359,7 @@ c ntot=numero de puntos que quiero
         integer ntlpsf,nlipsf,npaspsf(kl)
         
         character*100 filtro,psfper
+        character*200 msg
 
 	common/filtro/filtro
 	common/ftransformada/ftrans
@@ -380,7 +369,7 @@ c ntot=numero de puntos que quiero
 	n2=int(ngrado/2)
 
 c leemos el fichero filtro
-        call leeI(psfper,ntlpsf,nlipsf,npaspsf,xx,yy)!subroutine in leeuveobs
+        call leeI(psfper,ntlpsf,nlipsf,npaspsf,xx,yy)!subroutine in leeuveobsindic
                                                      !the PSF files should contain indx,lam, psf
                                                      !ntlpsf total number of lines (no Stokes)
                                                      !nlipsf total number of frecuencies
@@ -389,8 +378,9 @@ c leemos el fichero filtro
 
         if( nstokes .ne.1 .and. nstokes .ne.2 .and. 
      &      nstokes .ne.3 .and. nstokes .ne.4 )then
-          print*,'STOP: PSF file should have the same number ',ntlpsf,' of spectral lines than the .per file ',nlin
-          stop
+          write(msg,'(a,i5,a,i5,a)') 'PSF file should have the same number (',
+     &          ntlpsf,') of spectral lines\n than the .per file (',nlin,')'
+          call error(KSTOP,'psf_variablePSF',msg)
         end if
         
 c interpolating
@@ -401,7 +391,6 @@ c interpolating
         kk=0
 	do ji=1,ntlpsf
 	   j=j+1
-c	   print*,'deconv ',j,ji,istokes,npaspsf(ji),npas(j)
 	   num=npaspsf(ji)
 	   
 	   do ii=1,num
@@ -434,7 +423,7 @@ c	   print*,'deconv ',j,ji,istokes,npaspsf(ji),npas(j)
 	         do k=1,ngrado+1
 		    ya(k)=y(n3+k)
 	         end do
-	         call polint(xa,ya,ngrado+1,x0,salida,error)
+	         call polint(xa,ya,ngrado+1,x0,salida,dy)
                  entrada(2*i-1)=salida
 	      end if
            end do
@@ -444,7 +433,6 @@ c	   print*,'deconv ',j,ji,istokes,npaspsf(ji),npas(j)
            area=entrada(1)
 	   do i=1,2*ntot
 	      ftrans(j,i)=entrada(i)/area
-c	      print*,'deconv 442 ',j,i,ftrans(j,i)
 	   end do 
         end do !do in lines
 	end do !do in stokes

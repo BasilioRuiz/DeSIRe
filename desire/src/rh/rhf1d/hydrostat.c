@@ -173,7 +173,7 @@ void Hydrostatic(int NmaxIter, double iterLimit)
 
       Accelerate(Nghse, n_k);
       sprintf(messageStr,
-              "\n%s-- Hydrostatic equilibrium: depth %3.3d, iteration %d",
+              "\n %s-- Hydrostatic equilibrium: depth %3.3d, iteration %d",
               (niter == 1) ? "\n" : "", k, niter);
 
       if ((dnmax = MaxChange(Nghse, messageStr, quiet=TRUE)) <= iterLimit)
@@ -182,9 +182,9 @@ void Hydrostatic(int NmaxIter, double iterLimit)
     }
     if (dnmax > iterLimit) {
       sprintf(messageStr,
-	      "Hydrostatic equilibrium iteration not converged:\n"
+              "Hydrostatic equilibrium iteration not converged:\n"
               " temperature: %6.1f [K], \n"
-              " hydrogen density: %9.3E [m^-3],\n dnmax: %9.3E\n",
+              " hydrogen density: %9.3E [m^-3],\n dnmax: %9.3E",
               atmos.T[k], atmos.nHtot[k], dnmax);
       Error(WARNING, routineName, messageStr);
     }

@@ -25,12 +25,7 @@ c definiciones
 	common/mu/cth
         common/anguloheliocent/xmu    
         common/fichabun/fichabun
-        common/preciso/prec 
-        
-
-c       EXTERNAS
-	external mreadi2,mreadr2,mreadc2,meves,mreadi3,mreadr3
-
+        common/preciso/prec         
 c	________________________________________________________________
 
 	pi=3.1415916
@@ -157,44 +152,44 @@ c	      print*,'nueva red en tau ',tau(i)
 		  xa(k)=ttau(n3+k)
 		  ya(k)=tt(n3+k)
 	       end do
-	       call polint(xa,ya,ngrado+1,tau(i),t(i),error)
+	       call polint(xa,ya,ngrado+1,tau(i),t(i),dy)
 	       do k=1,ngrado+1
 		  ya(k)=ppe(n3+k)
 	       end do
-	       call polint(xa,ya,ngrado+1,tau(i),pe(i),error)
+	       call polint(xa,ya,ngrado+1,tau(i),pe(i),dy)
 	       do k=1,ngrado+1
 		  ya(k)=hh(n3+k)
 	       end do
-	       call polint(xa,ya,ngrado+1,tau(i),h(i),error)
+	       call polint(xa,ya,ngrado+1,tau(i),h(i),dy)
 	       do k=1,ngrado+1
 	          ya(k)=vvz(n3+k)
 	       end do
-	       call polint(xa,ya,ngrado+1,tau(i),vz(i),error)
+	       call polint(xa,ya,ngrado+1,tau(i),vz(i),dy)
 	       do k=1,ngrado+1
 		  ya(k)=mmic(n3+k)
 	       end do
-	       call polint(xa,ya,ngrado+1,tau(i),mic(i),error)
+	       call polint(xa,ya,ngrado+1,tau(i),mic(i),dy)
 	       do k=1,ngrado+1
 		  ya(k)=gg(n3+k)
 	       end do
-	       call polint(xa,ya,ngrado+1,tau(i),g(i),error)
+	       call polint(xa,ya,ngrado+1,tau(i),g(i),dy)
 	       do k=1,ngrado+1
 		  ya(k)=ffi(n3+k)
 	       end do
-	       call polint(xa,ya,ngrado+1,tau(i),fi(i),error)
+	       call polint(xa,ya,ngrado+1,tau(i),fi(i),dy)
 	       if(longversion.eq.1)then
 	          do k=1,ngrado+1
 		     ya(k)=zz(n3+k)
 	          end do
-	          call polint(xa,ya,ngrado+1,tau(i),z(i),error)
+	          call polint(xa,ya,ngrado+1,tau(i),z(i),dy)
 	          do k=1,ngrado+1
 		     ya(k)=ppg(n3+k)
 	          end do
-	          call polint(xa,ya,ngrado+1,tau(i),pg(i),error)
+	          call polint(xa,ya,ngrado+1,tau(i),pg(i),dy)
 	          do k=1,ngrado+1
 		     ya(k)=rro(n3+k)
 	          end do
-	          call polint(xa,ya,ngrado+1,tau(i),ro(i),error)
+	          call polint(xa,ya,ngrado+1,tau(i),ro(i),dy)
                end if
 	    end do
 	    do i=1,n
@@ -247,7 +242,6 @@ c calculamos el equilibrio hidrostatico?
 
         fichabun=mreadc2(ican,ici)   !Abundance file?
 
-c        xmu=mreadr3(ican,ici,1.0)
         cth=mreadr3(ican,ici,1.0)
         xmu=cth
 

@@ -2,7 +2,7 @@
 
        Version:       rh1.0, 1-D plane-parallel
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Mon Jun 11 14:59:00 2018 --
+       Last modified: Thu Apr 30 21:59:17 2020 --
 
        --------------------------                      ----------RH-- */
 
@@ -89,10 +89,10 @@ double Formal(int nspect, bool_t eval_operator, bool_t redistribute)
   /* --- Determine if we have to do angle-dependent opacity and
          emissivity --                                 -------------- */
 
-  angle_dep     = (polarized_as || polarized_c || PRD_angle_dep ||
-		   (input.backgr_pol && input.StokesMode == FULL_STOKES) ||
-		   (atmos.moving &&
-		    (boundbound || atmos.backgrflags[nspect].hasline)));
+  angle_dep     = (polarized_as || polarized_c
+                   || PRD_angle_dep || input.backgr_pol ||
+                   (atmos.moving &&
+                    (boundbound || atmos.backgrflags[nspect].hasline)));
 
   /* --- Allocate temporary space --                   -------------- */
 
@@ -164,6 +164,11 @@ double Formal(int nspect, bool_t eval_operator, bool_t redistribute)
 	  chi[k] = as->chi[k] + as->chi_c[k];
 	  S[k]   = as->eta[k] + as->eta_c[k] + as->sca_c[k]*Jdag[k];
 	}
+        if (input.backgr_pol) {
+          for (k = 0;  k < Nspace;  k++) {
+            S[k] += threemu1 * as->sca_c[k]*J20dag[k];
+          }
+        } 
 	if (solveStokes) {
 	  for (k = Nspace;  k < 4*Nspace;  k++) Spol[0][k] = 0.0;
 
@@ -181,12 +186,11 @@ double Formal(int nspect, bool_t eval_operator, bool_t redistribute)
 	  }
 	  /* --- Add emissivity due to background scattering -- ----- */
 
-          if (input.backgr_pol && input.StokesMode == FULL_STOKES) {
+          if (input.backgr_pol) {
             for (k = 0;  k < Nspace;  k++) {
-	      Spol[0][k] += threemu1 * as->sca_c[k]*J20dag[k];
               Spol[1][k] += threemu2 * as->sca_c[k]*J20dag[k];
-	    }
-	  }
+            }
+          }
 	  for (n = 0;  n < 4;  n++) {
 	    for (k = 0;  k < Nspace;  k++)
 	      Spol[n][k] /= chi[k];
@@ -239,12 +243,18 @@ double Formal(int nspect, bool_t eval_operator, bool_t redistribute)
 
 	  /* --- Accumulate anisotropy --            -------------- */
 
-	  if (input.backgr_pol) {
-	    for (k = 0;  k < Nspace;  k++)
-	      J20[k] +=
-		(threemu1 * Ipol[0][k] + threemu2 * Ipol[1][k]) * wmu;
-	  }
-
+          if (input.backgr_pol) {
+            if (solveStokes) {
+              for (k = 0;  k < Nspace;  k++) {
+                J20[k] += (threemu1 * Ipol[0][k] +
+                           threemu2 * Ipol[1][k]) * wmu;
+              }
+            } else {
+              for (k = 0;  k < Nspace;  k++) {
+                J20[k] += threemu1 * I[k] * wmu;
+              }
+            }
+          }
 	  if (PRD_angle_dep) writeImu(nspect, mu, to_obs, I);
 	}
       }
@@ -294,7 +304,8 @@ double Formal(int nspect, bool_t eval_operator, bool_t redistribute)
     }
     if (input.limit_memory) {
       writeJlambda(nspect, J);
-      if (input.backgr_pol) writeJ20lambda(nspect, J20);
+      if (input.backgr_pol)
+	writeJ20lambda(nspect, J20);
     }
   }
   /* --- Clean up --                                 ---------------- */

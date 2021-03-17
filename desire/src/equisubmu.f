@@ -8,21 +8,20 @@ c _______________________________________________________________
 	subroutine equisubmu(ntau,tau1,t,pe,pg,z,ro)
 
 	implicit real*4 (a-h,o-z)
-
-	include 'PARAMETER'   !solo por kt, que era igual a 1000
+	include 'PARAMETER'
 	parameter (nex=28,cgases=83145100.)
         real*4 tau1(kt)
 	real*4 tau(kt),t(*),pe(*),pg(kt),kac,d2,x(kt),kappa(kt),taue(kt)
         real*4 z1(kt),z(kt),ro(kt),y(kt)
 	real*4 mu
-	integer*4 nmaxitera
-    
+	integer*4 nmaxitera   
 	real*4 wgt,abu,ei1,ei2,pp(10),tsi,psi,d1(10)
         common/constantes/g,avog	!gravedad,n. avogadro/pmu
 	common/mu/cth                   !esto esta deshabilitado (entra 1)
         common/precisoitera/precitera      
         common/anguloheliocent/mu
         common/nmaxitera/nmaxitera
+
         precitera=1.e-5
         nmaxitera=250
         
@@ -113,8 +112,10 @@ c           print*,'equisubmu 2',i,tsi,psi,pp(1),pp(2),pp(7),pp(8)
               dif=2.*abs((pg(i)-pgpr))/(pg(i)+pgpr)
             end do
 
-            if(dif.gt.0.1)print*,'WARNING: 
-     & Hydrostatic equilibrium results in inaccurate electron pressures '
+            if(dif.gt.0.1)then
+               call error(KWARN,'equisubmu','Hydrostatic equilibrium'
+     &         //         ' results in inaccurate electron pressures')
+            end if
             call pefrompg11(tsi,pg(i),psi)
             pe(i)=psi
             ro(i)=pesomedio*pg(i)/tsi/cgases
@@ -203,8 +204,9 @@ c la presion gaseosa y una estimacion de la presion electronica
 c calcula la presion electronica a partir de la pg y de una estimacion de la pe
 
       subroutine pe_pg10(t,pe,pg)
-      implicit real*4 (a-h,o-z)
 
+      implicit real*4 (a-h,o-z)
+      include 'PARAMETER'
       parameter (ncontr=28)
       real*4 cmol(91),alfai(ncontr),chi1(ncontr),chi2(ncontr),
      *u0(ncontr),u1(ncontr),u2(ncontr)
@@ -213,12 +215,10 @@ c calcula la presion electronica a partir de la pg y de una estimacion de la pe
       real*8 a_db,b_db,c_db,d_db,e_db
       real*8 c1_db,c2_db,c3_db
 
-    
       if(t.lt.500)then
-         print*,'pe_pg10: temperature < 500 K '
-	 print*,'temperature = 500 K'
-	 t=500.
-      end if	 
+         call error(KWARN,'pe_pg10','Changing T < 500 to T = 500 K')
+         t=500.
+      end if
       theta=5040./t
       
       g4=0.
@@ -312,8 +312,6 @@ c        c2=2.*a*e-d*b+a*b*g1
 	c2_db=2.*a_db*e_db-d_db*b_db+a_db*b_db*g1
 c        c3=-(e+b*g1)
         c3_db=-(e_db+b_db*g1)
-
-c        print*,'pe_pg10 6',c_db*b_db**2,a_db*d_db*b_db,b_db,(c_db*b_db+a_db*d_db),(c_db*b_db+a_db*d_db)*b_db
 
 c        f1=0.5*real(c2/c1)
         f1=0.5*real(c2_db/c1_db)

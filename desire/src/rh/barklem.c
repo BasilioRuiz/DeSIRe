@@ -15,18 +15,20 @@
        - Barklem, O'Mara 1998, MNRAS 300, 863-871
 
   Modifications:
-       - 05/11/16 JdlCR: The tables from Barklem do not work with ionized
-         species like Ca II or Mg II. Added the possibility to provide the
+
+       - 05/11/16 JdlCR:
+         The tables from Barklem do not work with ionized species
+         like Ca II or Mg II. Added the possibility to provide the
          cross-sections in the atom file.
 
-       - 21/06/19 epm: The directory holding Barklem files is now an input
-         from "keyword.input".
+       - 21/06/19 epm:
+         The directory holding Barklem files is now an input from
+         "keyword.input".
 
-       - 31/07/19 epm: We supply collisional broadening for some lines
-         from DeSIRe.
+       - 31/07/19 epm:
+         We supply collisional broadening for some lines from SIR.
 
        --                                              -------------- */
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,8 +77,8 @@ extern Atmosphere atmos;
 extern InputData input;
 extern char messageStr[];
 
-// 31/07/19 epm: New struct to load information about DeSIRe lines.
-extern DesireLines desirelines;
+// 31/07/19 epm: New struct to load information about SIR lines.
+extern SIRBarklem sirbarklem;
 
 
 /* ------- begin -------------------------- readBarklemTable.c ------ */
@@ -177,30 +179,30 @@ bool_t getBarklemcross(Barklemstruct *bs, RLK_Line *rlk, double lambda_air)
   element = &atmos.elements[rlk->pt_index - 1];
 
   /* --- 30/09/19 epm:
-   *     We supply collisional broadening for some lines from DeSIRe. ----- */
+   *     We supply collisional broadening for some lines from SIR --- */
 
-  for (k = 0; k < desirelines.nlines; k++)
+  for (k = 0; k < sirbarklem.nlines; k++)
   {
-    diff = fabs(desirelines.wave[k] * 100 - lambda_air * 1000);
+    diff = fabs(sirbarklem.wave[k] * 100 - lambda_air * 1000);
     if (diff < 2.0)   // 20 miliAngstrom
     {
-      if (desirelines.alpha[k] > 1e-20 && desirelines.sigma[k] > 1e-20)
+      if (sirbarklem.alpha[k] > 1e-20 && sirbarklem.sigma[k] > 1e-20)
       {
-        rlk->alpha = desirelines.alpha[k];
-        rlk->cross = desirelines.sigma[k]/BOHR_RADIUS_SQUARED;
+        rlk->alpha = sirbarklem.alpha[k];
+        rlk->cross = sirbarklem.sigma[k]/BOHR_RADIUS_SQUARED;
         break;
       }
       else
       {
         sprintf(messageStr,
-                "%s %.3lf: Taking UNSOLD collisional broadening\n",
-                element->ID, desirelines.wave[k]);
+                "%s %.3lf: Taking UNSOLD collisional broadening",
+                element->ID, sirbarklem.wave[k]);
         Error(WARNING, routineName, messageStr);
         return(FALSE);
       }
     }
   }
-  if (k == desirelines.nlines)   // if the line is not a DeSIRe line
+  if (k == sirbarklem.nlines)   // if the line is not a SIR line
   {
      return(FALSE);   // use UNSOLD
   }
@@ -236,7 +238,7 @@ bool_t getBarklemcross(Barklemstruct *bs, RLK_Line *rlk, double lambda_air)
   // findex2 =
   //   (double) index + (neff2 - bs->neff2[index]) / BARKLEM_DELTA_NEFF;
   //
-  // /* --- Find interpolation in table --                -------------- */
+  // /* --- Find interpolation in table --             -------------- */
   //
   // rlk->cross = cubeconvol(bs->N2, bs->N1,
   //                         bs->cross[0], findex2, findex1);
@@ -274,19 +276,22 @@ bool_t getBarklemactivecross(AtomicLine *line)
   i = line->i;
 
   /* --- 31/07/19 epm:
-   *     We supply collisional broadening for some lines from DeSIRe. ----- */
+   *     We supply collisional broadening for some lines from SIR --- */
 
-  for (k = 0; k < desirelines.nlines; k++)
+  for (k = 0; k < sirbarklem.nlines; k++)
   {
-    if (desirelines.anumber[k] == (atom->periodic_table+1) &&
-        desirelines.stage[k]   == (atom->stage[i]+1)       &&
-        desirelines.low[k]     == i                        &&
-        desirelines.up[k]      == j                         )
+    // 31/07/19 epm: In NLTE use SIR values (if not null) written
+    // in SIR atomic file when Barklem is on in the RH atomic file.
+
+    if (sirbarklem.anumber[k] == (atom->periodic_table+1) &&
+        sirbarklem.stage[k]   == (atom->stage[i]+1)       &&
+        sirbarklem.low[k]     == i                        &&
+        sirbarklem.up[k]      == j                         )
     {
-      if (desirelines.alpha[k] > 1e-20 && desirelines.sigma[k] > 1e-20)
+      if (sirbarklem.alpha[k] > 1e-20 && sirbarklem.sigma[k] > 1e-20)
       {
-        line->cvdWaals[1] = desirelines.alpha[k];
-        line->cvdWaals[0] = desirelines.sigma[k]/BOHR_RADIUS_SQUARED;
+        line->cvdWaals[1] = sirbarklem.alpha[k];
+        line->cvdWaals[0] = sirbarklem.sigma[k]/BOHR_RADIUS_SQUARED;
         break;
       }
       else

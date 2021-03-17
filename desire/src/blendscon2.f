@@ -9,262 +9,218 @@ c ______________________________________________________________
 c
 c ist=1 (i); =2 (q); =3 (u); =4 (v)
 
-	subroutine blendscon2(atmos,inten,rt,rp,rv,rm,mnodos,beta1,beta2)
-	implicit real*4 (a-h,o-z)
-	include 'PARAMETER'
+         subroutine blendscon2(atmos,inten,rt,rp,rv,rm,mnodos,beta1,beta2)
+         implicit real*4 (a-h,o-z)
+         include 'PARAMETER'
 
 c para las funciones respuesta
-	real*4 rt(*),rp(*),rv(*),rm(*)
-	real*4 grt(kt),grp(kt),grv(kt),grm(kt)
-	real*4 x(kt)
+         real*4 rt(*),rp(*),rv(*),rm(*)
+         real*4 grt(kt),grp(kt),grv(kt),grm(kt)
+         real*4 x(kt)
 
 c para los perfiles 
-	real*4 atmos(*),inten(*),icont      !,con_i(kl)
-        real*4 con_i1(kl),con_i2(kl),wcon_i1(kl),wcon_i2(kl),continuoharr(kld)
+         real*4 atmos(*),inten(*),icont,con_i(kl)
+         real*4 wcon_i1(kl),wcon_i2(kl)
 
 c para la atmosfera
-	real*4 tau(kt),t(kt),pe(kt),vtur(kt),vz(kt),bp(kt),bt(kt)
-	real*4 taue(kt),dbp(kt),vof(kt),logpe(kt)
-	real*4 continuoh,conhsra      !,dplnck,dtplanck
-	real*8 conhsra_RHLTE      !,cc_RH,conhsra_RH
-	integer mnodos(*)
+         real*4 tau(kt),t(kt),pe(kt),vtur(kt),vz(kt)
+         real*4 taue(kt),vof(kt),logpe(kt)
+	     real*4 continuoh    
+         integer mnodos(*)
 
 c para la matriz de absorcion y sus derivadas
-	real*4 dab(kt),tk(kt),pk(kt),vk(kt),mk(kt)
-	real*4 dabtot(kt,kld)
-	real*4 tktot(kt,kld),pktot(kt,kld),mktot(kt,kld),vktot(kt,kld)
-        real*4 www,dyt(kt),dyp(kt),alpha(kt)
+         real*4 dab(kt),tk(kt),pk(kt),vk(kt),mk(kt)
+         real*4 dabtot(kt,kld)
+         real*4 tktot(kt,kld),pktot(kt,kld),mktot(kt,kld),vktot(kt,kld)
+         real*4 www,dyt(kt),dyp(kt),alpha(kt)
  
 c para la malla
-	real*4 dlongd(kld),dlamda0(kl)
-	real*4 wlengt,wlengt1,lambda,dlamda,wvac,wc,c
-	integer nlin(kl),npas(kl),ist(4),nble(kl)
+         real*4 dlongd(kld),dlamda0(kl)
+         real*4 wlengt,wlengt1,lambda,dlamda,wvac,wc,c
+         integer nlin(kl),npas(kl),ist(4),nble(kl)
 
 c para los parametros atomicos y coeficientes de absorcion
-	real loggf,nair,mvdop,meta0,ma
-	real*4 y(kt),table(kt,16)
-	real*4 ck5(kt),dk5(kt),ddk5(kt),zeff
-	real*4 ckappa,ckappa5,dkappa,dkappa5,ddkappa,ddkappa5
-        real*4 beta1(kl,kt),beta2(kl,kt),alfa,sigma
-        integer nlow,nup
-c para el patron zeeman
+         integer atomic_number,atom_arr(kl),istage_arr(kl)
+         real*4 alfa_arr(kl),sigma_arr(kl),wave_arr(kl)
+         real*8 wavedbl_arr(kl),wlengtdbl,wlengt1dbl
+         real*4 wlengt1_arr(kl),gf_arr(kl),energy_arr(kl)
+         real*4 chi10_arr(kl),chi20_arr(kl),abu_arr(kl)
+         integer*4 nel_arr(kl)         
+         real*4 lambda_arr(kl),croot_arr(kl),wvac_arr(kl),weight_arr(kl)
+	     real loggf,nair,mvdop,meta0,ma
+	     real*4 y(kt),table(kt,16)
+	     real*4 ck5(kt),dk5(kt),ddk5(kt),zeff
+	     real*4 ckappa,ckappa5,dkappa,dkappa5,ddkappa,ddkappa5
+         real*4 alfa,sigma 
+         integer nlow,nup
 
-	character atom*2
-	integer mult(2)
-	real tam(2),abu,piis
-
+c para el damping        
+         real*4 chydro_arr(kl),xmu1_arr(kl),xmu2_arr(kl),xmu3_arr(kl)
+         real*4 vv_arr(kl),beta_arr(kl)         
+         
+c para la emisividad y la funcion fuente
+         real*8 beta1(kl,kt),beta2(kl,kt),blow,bup,bratio
+         real*8 wwwdbl,a_plck,c_plck,exalfa_plck,bpdob
+         real*4 emisividad(kt,kld),emisividad_dt(kt,kld)
+         real*4 bp(kt),bt(kt),bp0(kt),bt0(kt),dbp(kt)
+         real*4 source(kt),source_dt(kt)
+         
 c para las presiones parciales
-	integer ivar(10)
-	real pg(99),dpg(99),ddpg(99),pi(10),dpi(10),ddpi(10)
-	real pt(kt,10),dpt(kt,10),ddpt(kt,10)
-        real*4 pgas(kt),dpgas(kt),ddpgas(kt)      !,ro(kt),ck5_ro(kt)
+         integer ivar(10)
+         real pg(99),dpg(99),ddpg(99),pi(10),dpi(10),ddpi(10)
+         real pt(kt,10),dpt(kt,10),ddpt(kt,10),abu,piis
+         real*4 pgas(kt),dpgas(kt),ddpgas(kt)      
 
 c para la inclusion de RP en RT
-        real*4 ax(kt),bx(kt),cx(kt),dx(kt),d1x(kt),d2x(kt),fx(kt)
-        real*4 px(kt),qx(kt),rx(kt),sx(kt),tx(kt),wx(kt,kt)
-        real*4 kac,kat,kap
+         real*4 ax(kt),bx(kt),cx(kt),dx(kt),d1x(kt),d2x(kt),fx(kt)
+         real*4 px(kt),qx(kt),rx(kt),sx(kt),tx(kt),wx(kt,kt)
+         real*4 kac,kat,kap
 
 c para hermite_c
-	real*4 deltae(kt),deltai(kt),delt2i(kt)
+         real*4 deltae(kt),deltai(kt),delt2i(kt)
 
 c para barklem
-        real*4 bol,pir,v0,melectron,mhidrogeno,xmasaproton,avo,uma
-	real*4 gas,coc2,coc3
-	
-	real*8 saha_db,dsaha_db
-        real*8 u12_db,u23_db,u33_db
-        real*8 du12_db,du23_db,du33_db
-        real*8 ddu12_db,ddu23_db,ddu33_db
+         real*4 bol,pir,v0,melectron,mhidrogeno,xmasaproton,avo,uma
+         real*4 gas,coc2,coc3
+	     real*8 saha_db,dsaha_db
+         real*8 u12_db,u23_db,u33_db
+         real*8 du12_db,du23_db,du33_db
+         real*8 ddu12_db,ddu23_db,ddu33_db
 
 c lugares comunes de memoria
-	common/responde2/ist,ntau,ntl,nlin,npas,nble
-	common/ldeo/dlongd,dlamda0
-c	common/nlte/nlte  
-	common/piis/piis
-	common/yder/y,dyt,dyp,alpha  !coef. de abs. del continuo y su der. t,p
-     
-        common/segunda/tau,taue,deltae,deltai,delt2i
-        common/offset/voffset  !para respuestas
-        common/iautomatico/iautomatico
+         common/responde2/ist,ntau,ntl,nlin,npas,nble
+         common/ldeo/dlongd,dlamda0
+         common/brklm/ntotal_lines,atom_arr,istage_arr,alfa_arr,sigma_arr,wave_arr
+         common/wavearrdble/wavedbl_arr
+         common/datosatom/wvac_arr,weight_arr,croot_arr,wlengt1_arr,lambda_arr
+         common/datosdamping/chydro_arr,xmu1_arr,xmu2_arr,xmu3_arr,vv_arr,beta_arr
+         common/loggfarr/gf_arr,energy_arr
+         common/pot_ion/chi10_arr,chi20_arr,nel_arr,abu_arr
+	     common/piis/piis
+         common/yder/y,dyt,dyp,alpha  !coef. de abs. del continuo y su der. t,p
+         common/segunda/tau,taue,deltae,deltai,delt2i
+         common/offset/voffset  !para respuestas
+         common/iautomatico/iautomatico
 c        common/mu/cth                              !esto esta puesto a 1 en sir
-        common/anguloheliocent/xmu 
-c        common/departcoef/beta1,beta2 
-c        common/continuos/con_i
-        common/continuos/con_i1,con_i2,wcon_i1,wcon_i2
-
-	data iprimera/0/
+         common/anguloheliocent/xmu 
+         common/continuos/con_i
+         
+         data iprimera/0/
 
 c nble es el numero de componentes de cada linea
-	c=2.99792458e+10 	!vel. de la luz en cm/seg
-	piis=1./sqrt(3.1415926)
+	     c=2.99792458e+10 	!vel. de la luz en cm/seg
+	     piis=1./sqrt(3.1415926)
+	     g=xmu*2.7414e+4	 !gravedad cm/s^2 en fotosfera solar   
+         avog=6.023e23
+         bol=1.3807e-16         !erg/s
+         pir=3.1415926
+         v0=1e6                 !cm/s
+         melectron=9.1094e-24
+         mhidrogeno=1.67442e-24
+         xmasaproton=1.6526e-24
+         avo=6.023e23
+         bohr=0.0529177249e-7   !cm
+         uma=1.660540e-24
+         gas=8.31451e7         !constante de los gases en cgs
+         coc3=1.212121          ! cociente polarizabilidad del H2 con HI
+         coc2=.3181818          ! idem para el He
 
-	g=xmu*2.7414e+4	 !gravedad cm/s^2 en fotosfera solar   
-       	avog=6.023e23
-
-
-        bol=1.3807e-16         !erg/s
-        pir=3.1415926
-        v0=1e6                 !cm/s
-        melectron=9.1094e-24
-        mhidrogeno=1.67442e-24
-        xmasaproton=1.6526e-24
-        avo=6.023e23
-        bohr=0.0529177249e-7   !cm
-        uma=1.660540e-24
-        gas=8.31451e7         !constante de los gases en cgs
-
-c       polh=6.6e-25           ! polarizabilidad de HI
-        coc3=1.212121          ! cociente polarizabilidad del H2 con HI
-        coc2=.3181818          ! idem para el He
-
-	ntotal=0
-	do i=1,ntl
-	   do j=1,npas(i)
-		ntotal=ntotal+1
-	   end do
-	end do
-
-	if(iprimera.eq.0)then
-	   do i=1,ntau
-	      tau(i)=atmos(i)
-	      taue(i)=10.**(tau(i))
-	   end do
-	   do i=1,ntau-1
-              deltae(i)=taue(i)-taue(i+1)
-           end do 
-	   do i=2,ntau
-              deltai(i)=(tau(i)-tau(i-1))/2.0
-	      delt2i(i)=deltai(i)*deltai(i)/3.0
+         ntotal=0
+         do i=1,ntl
+           do j=1,npas(i)
+		      ntotal=ntotal+1
            end do
+	     end do
 
-	   paso=tau(1)-tau(2)
+	     if(iprimera.eq.0)then
+	        do i=1,ntau
+	           tau(i)=atmos(i)
+	           taue(i)=10.**(tau(i))
+	        end do
+	        do i=1,ntau-1
+              deltae(i)=taue(i)-taue(i+1)
+            end do 
+	        do i=2,ntau
+              deltai(i)=(tau(i)-tau(i-1))/2.0
+	          delt2i(i)=deltai(i)*deltai(i)/3.0
+            end do
+	        paso=tau(1)-tau(2)
+        end if
 
-	end if
-c        print*,'blendscon2 iprimera=',iprimera
         iprimera=iprimera+1
         
-        x(1)=g*(tau(1)-tau(2))*2.3025851          !AQUI BRC
-        do i=1,ntau-1                             !AQUI BRC
-           x(i+1)=g*(tau(i)-tau(i+1))*2.3025851   !AQUI BRC
-        end do                                    !AQUI BRC
+        x(1)=g*(tau(1)-tau(2))*2.3025851         
+        do i=1,ntau-1                             
+           x(i+1)=g*(tau(i)-tau(i+1))*2.3025851   
+        end do                                    
         
-        
-        if(iprimera.eq.1)then
-c           open(43,file='barklem.desire')
-c           ntotblends=0
-c           do iln=1,ntl
-c              do ible=1,nble(iln)
-c                ntotblends=ntotblends+1
-c              end do
-c           end do
-c           write(43,*)ntotblends
-           ixx=0
-           ikk0=0
-           do iln=1,ntl        !iln=numero de la linea,ntl num.total
-              do ible=1,nble(iln)
-                 ixx=ixx+1
-                 nxx=nlin(ixx) 
-                 call leelineasiii(nxx,atom,istage,wlengt,zeff,energy,          
-     &                         loggf,mult,design,tam,alfa,sigma,nlow,nup) 
-                 if(ible.eq.1)wlengt1=wlengt
-c                 write(43,*)atom,nlow,nup,alfa,sigma             
-                 do i=1,npas(iln)
-                    ikk=ikk0+i
-                    if(ible.eq.nble(iln).and.i.eq.npas(iln))ikk0=ikk0+npas(iln)
-                    if(ible.eq.1 .and. i.eq.1)then
-                        wcon=wlengt1+dlongd(ikk)*1.e-3
-                        con_i1(iln)=conhsra(wcon)*real(conhsra_RHLTE(wcon))
-                        wcon_i1(iln)=wcon
-                    end if
-                    if(ible.eq.nble(iln) .and. i.eq.npas(iln))then
-                        wcon=wlengt1+dlongd(ikk)*1.e-3
-                        con_i2(iln)=conhsra(wcon)*real(conhsra_RHLTE(wcon))
-                        wcon_i2(iln)=wcon
-                    end if
-                 end do
-                 
-              end do 
-            end do  
-          endif
-          
 c leemos la atmosfera
-	do i=1,ntau
-	   t(i)=atmos(i+ntau)
-	   pe(i)=atmos(i+2*ntau)
-	   logpe(i)=alog(pe(i))
-	   vtur(i)=atmos(i+3*ntau)
+        do i=1,ntau
+	       t(i)=atmos(i+ntau)
+	       pe(i)=atmos(i+2*ntau)
+	       logpe(i)=alog(pe(i))
+	       vtur(i)=atmos(i+3*ntau)
            vz(i) =atmos(i+5*ntau)       !velocidad lines de vision
            vof(i)=vz(i)-voffset
-	end do
+        end do
 
 c calculamos el peso molecular medio pmu
-	pmusum=0.0
+	    pmusum=0.0
         asum=0.0
-	do i=1,92
-  	   ii=i
-	   call neldatb(ii,0.,wgt,abu,ei1,ei2)
-	   pmusum=pmusum+wgt*abu
+        do i=1,92
+  	       ii=i
+	       call neldatb(ii,0.,wgt,abu,ei1,ei2)
+	       pmusum=pmusum+wgt*abu
            asum=asum+abu
-	end do
+        end do
 
 c calculo las presiones parciales (pg) y las derivadas de sus logaritmos
 c con respecto a la t (dpg) y, con pe (ddpg)
-
-	ivar(1)=1
-	ivar(2)=2
-	ivar(3)=6
-	ivar(4)=11
-	ivar(5)=12
-	ivar(6)=86
-	ivar(7)=89
-	ivar(8)=90
-	ivar(9)=91
-	ivar(10)=93
+        ivar(1)=1
+        ivar(2)=2
+        ivar(3)=6
+        ivar(4)=11
+        ivar(5)=12
+        ivar(6)=86
+        ivar(7)=89
+        ivar(8)=90
+        ivar(9)=91
+        ivar(10)=93
 	
-	do i=1,ntau
-	    ps=pe(i)
-	    ts=t(i)
-	    theta=5040./ts
-c	    call gasb(theta,ps,pg,dpg,ddpg)
-	    call gasb_db(theta,ps,pg,dpg,ddpg)
-c	    print*,'blendscon2 desire 193',ps,ts,pg(93)
+        do i=1,ntau
+           ps=pe(i)
+           ts=t(i)
+           theta=5040./ts
+           call gasb_db(theta,ps,pg,dpg,ddpg)
 	    
-	    do j=1,10
-	       k=ivar(j)
-	       pt(i,j)=pg(k)
-               dpt(i,j)=dpg(k)
-               ddpt(i,j)=ddpg(k)
-	       pi(j)=pg(k)
-	       dpi(j)=dpg(k)
-	       ddpi(j)=ddpg(k)
-	    end do
-c	    print*,'blendscon2 desire 231',pt(i,10)
-	    
-	    
-            pgas(i)=pg(84)      !presion gaseosa
-            dpgas(i)=dpg(84)    !der. log(presion gaseosa) respectp a T
-            ddpgas(i)=ddpg(84)  !der. log(presion gaseosa) respectp a pe
-	    call kappach(5.e-5,ts,ps,pi,dpi,ddpi,ck5(i),dk5(i),ddk5(i))
-            cc=avog/pmusum
-            kac=ck5(i)*cc
-            kat=dk5(i)*cc
-            kap=ddk5(i)*cc
-            tauk=taue(i)/2./kac/kac
+           do j=1,10
+              k=ivar(j)
+              pt(i,j)=pg(k)
+              dpt(i,j)=dpg(k)
+              ddpt(i,j)=ddpg(k)
+              pi(j)=pg(k)
+              dpi(j)=dpg(k)
+              ddpi(j)=ddpg(k)
+           end do
 
-            fx(i)=dpg(84)*pg(84)
-            cx(i)=1./(ddpg(84)*pg(84))
-            bx(i)=kap/(ddpg(84)*pg(84))
-            ax(i)=kat-kap*dpg(84)/ddpg(84)
-C       AQUI!!!!!!!  LA X ESTA SIN DEFINIR. LA SENTENCIA X(I)=0 LA PONGO YO.
-C            x(i)=0.                                !AQUI BRC
-c            d1x(i)=x(i+1)*tauk
-            d1x(i)=x(i)*tauk
-C       HASTA AQUI!!!! Y ADEMAS X(I+1) SE SALE DE LIMITES CUANDO I=NTAU Y LO SUTITUYO
-C                        ARBITRARIAMNENTE POR X(I).
-            d2x(i)=x(i)*tauk
-            dx(i)=1.+d1x(i)*bx(i)
+           pgas(i)=pg(84)      !presion gaseosa
+           dpgas(i)=dpg(84)    !der. log(presion gaseosa) respectp a T
+           ddpgas(i)=ddpg(84)  !der. log(presion gaseosa) respectp a pe
+           call kappach(5.e-5,ts,ps,pi,dpi,ddpi,ck5(i),dk5(i),ddk5(i))
+           cc=avog/pmusum
+           kac=ck5(i)*cc
+           kat=dk5(i)*cc
+           kap=ddk5(i)*cc
+           tauk=taue(i)/2./kac/kac
 
-	end do
+           fx(i)=dpg(84)*pg(84)
+           cx(i)=1./(ddpg(84)*pg(84))
+           bx(i)=kap/(ddpg(84)*pg(84))
+           ax(i)=kat-kap*dpg(84)/ddpg(84)
+           d1x(i)=x(i)*tauk
+           d2x(i)=x(i)*tauk
+           dx(i)=1.+d1x(i)*bx(i)
+        end do
 
         rx(ntau)=0. 
         sx(ntau)=0. 
@@ -282,7 +238,6 @@ C                        ARBITRARIAMNENTE POR X(I).
         qx(1)=0.
 
         do i=1,ntau-1
-c          deltapei=px(i)*deltat(i)+qx(i+1)*deltat(i+1)
            do j=1,i+1
               wx(i,j)=0.
            end do
@@ -301,156 +256,107 @@ c          deltapei=px(i)*deltat(i)+qx(i+1)*deltat(i+1)
         end do
 
 c datos de la linea
-	ikk0=0
-	ikk1=0
+        ikk0=0
+        ikk1=0
         ixx=0
-	do 999 iln=1,ntl	!iln=numero de la linea,ntl num.total
-	   do i=1,npas(iln)
-	      do k=1,ntau
-	           dabtot(k,i)=0.
-	           tktot(k,i)=0.
-	           pktot(k,i)=0.
-	           vktot(k,i)=0.
-	           mktot(k,i)=0.
-	       end do
-	    end do
-	    do ible=1,nble(iln)
-	       ixx=ixx+1
-	       nxx=nlin(ixx)
-	       if(nxx.eq.0)then
-                  nxx=nlin(ixx-1)                    
-	          call leelineasiii(nxx,atom,istage,wlengt,zeff,energy,
-     &                         loggf,mult,design,tam,alfa,sigma,nlow,nup)
-                  loggf=-20.
-                  wlengt=5000.
-               else  
-	          call leelineasiii(nxx,atom,istage,wlengt,zeff,energy,
-     &                         loggf,mult,design,tam,alfa,sigma,nlow,nup)
-	       end if   
-	       gf=1.e1**(loggf)
-	       if(ible.eq.1)wlengt1=wlengt
-	       dlamda0(iln)=wlengt
-	       
-c 	       if(iprimera.eq.1 .and. ible.eq.1)then
-c                 con_i(iln)=conhsra(wlengt1)*real(conhsra_RHLTE(wlengt1))
-c                 ccc=conhsra(wlengt1) 
-c                 cc_RH=conhsra_RH(wlengt1)
-c                 con_i(iln)=ccc/real(cc_RH)
-c               end if
-c                      
-c              continuoh=con_i(iln)
- 	       
+        do 999 iln=1,ntl	!iln=numero de la linea,ntl num.total
+           do i=1,npas(iln)
+               do k=1,ntau
+                  dabtot(k,i)=0.
+                  tktot(k,i)=0.
+                  pktot(k,i)=0.
+                  vktot(k,i)=0.
+                  mktot(k,i)=0.
+               end do
+           end do
+           do ible=1,nble(iln)
+              ixx=ixx+1
+              nxx=nlin(ixx) 
+
+              energy=energy_arr(ixx)
+              gf=gf_arr(ixx)
+              istage=istage_arr(ixx)
+              alfa=alfa_arr(ixx)
+              sigma=sigma_arr(ixx)
+              wlengt=wave_arr(ixx)
+              wlengtdbl=wavedbl_arr(ixx)
+              
+              if(ible.eq.1)wlengt1=wlengt
+              if(ible.eq.1)wlengt1dbl=wlengtdbl
+              dlamda0(iln)=wlengt1
+              continuoh=con_i(iln) 
 
 c parametros atomicos
-c llamo a atmdat que devuelve weight (peso molecular),abu (abunda
-c cia), chi1,chi2 (pot.de ionizacion del atomo neutro e ion),
-c u1,u2,u3 (funciones de particion atomo neutro,ion,ion2).
+             chi10=chi10_arr(ixx)
+             chi20=chi20_arr(ixx)
+             nel=nel_arr(ixx)
+             abu=abu_arr(ixx)
 
-	call atmdatb(atom,0.,nel,weight,abu,chi10,chi20,u1,u2,u3,
-     &		     du1,du2,du3)
-
-c constantes y parametros
-c calculo la l.d.o. en el vacio (wvac), con la function refrax
-        nair=1.0004
-	if(wlengt.ge.1800.)nair=refrax(wlengt*1.e-4,15.,760.,0.)
-	lambda=wlengt*1.e-8	!l.d.o. en el aire en cm.
-	wvac=nair*lambda        !l.d.o. en el vacio en cm.
-	wc=wvac/c		!inverso de la frecuekta (segundos)
+             wvac=wvac_arr(ixx)     
+             weight=weight_arr(ixx)   
+             croot= croot_arr(ixx) 
+             wc=wvac/c               !inverso de la frecuencia (segundos)
 
 c calculo de terminos constantes.
-	weinv=1./weight
-	croot=1.66286e+8*weinv  !2r/m  para anchura doppler(cm**2/s**2)
-	dlo=4.6686e-5*wvac*wvac !separac.de l.d.o=dlo*h*(m1*g1-m2*g2)
-	crad=.22233/wvac        !(l.d.o.*coef.clasico ensanch. natural)
-	eta00=1.49736e-2*gf*abu*wvac !para el coef. de absor.de la linea
+             weinv=1./weight
+             dlo=4.6686e-5*wvac*wvac !separac.de l.d.o=dlo*h*(m1*g1-m2*g2)
+             crad=.22233/wvac        !(l.d.o.*coef.clasico ensanch. natural)
+             eta00=1.49736e-2*gf*abu*wvac !para el coef. de absor.de la linea
 
-c calculo chydro (gamma6)coef.van der waals ensanch.colisional
-c corregido con zeff (termino 'semiempirico' caca de la vaca)
-c (se supone despreciable el debido a stark)
-c si el damping asi calculado es mayor que 3 lo reescalaremos
-
-        if(abs(alfa).lt.1.e-25.or.abs(sigma).lt.1.e-25)then
-
-	chi1=chi10
-	if(istage.eq.2)chi1=chi20
-	eupper=energy+1.2398539e-4/wvac	
-	ediff1=amax1(chi1-eupper-chi10*float(istage-1),1.0)
-
-	ediff2=amax1(chi1-energy-chi10*float(istage-1),3.0)
-	chydro=lambda*1.e1**(+.4*alog10(1./
-     &	ediff1**2-1./ediff2**2)-12.213)*5.34784e+3
-
-	chydro=chydro*zeff
-
-	if(istage.eq.2)chydro=chydro*1.741
-
-       else
-
-c xmu1 es la masa reducida del hidrogeno y el atomo.Los indices 2 y 3 hacen
-c referencia al helio neutro y al hidrogeno molecular.
-   
-           xmu1=uma*(1.008*weight)/(1.008+weight)
-           xmu2=uma*(4.0026*weight)/(4.0026+weight)
-           xmu3=uma*(2.016*weight)/(2.016+weight)
-
-           arr=2.-alfa*.5-1.
-           gammaf=1.+(-.5748646+(.9512363+(-.6998588+(.4245549-
-     &              .1010678*arr)*arr)*arr)*arr)*arr
-           vv=(1.-alfa)/2.
-
-           beta=lambda*2*(4./pir)**(alfa/2.)*gammaf*(v0**alfa)*sigma*
-     &          ((8.*bol/pir)**vv)
-
-        endif    
+c chydro (gamma6)coef.van der waals ensanch.colisional
+             chydro=chydro_arr(ixx)
+             xmu1=xmu1_arr(ixx)
+             xmu2=xmu2_arr(ixx)
+             xmu3=xmu3_arr(ixx)  
+             vv=vv_arr(ixx)
+             beta=beta_arr(ixx)        
 
 c estratificacion en tau 5000
 c genero una tabla lineal en logaritmo de tau a l.d.o.=5000.angs.
 c desde tauini a taufin, con ntau valores.
+             lambda=lambda_arr(ixx)           !igual que  wwwdbl pero en real*4 (para kappach)
+             wwwdbl=wlengtdbl*1.d-8           !Atencion cojo la ldo central de cada linea
+             a_plck=1.43880/wwwdbl            !for Planck function
+             c_plck=1.1910627d-5/(wwwdbl**5)  !for Planck function
 
-	do 71 i=1,ntau
-	    ps=pe(i)
-	    ts=t(i)
-	    theta=5040./ts
-c            print*,'blendscon2 403',ivar(10),pt(i,10)
-	    do j=1,10
-	       k=ivar(j)
-	       pi(j)=pt(i,j)
-               dpi(j)=dpt(i,j)
-               ddpi(j)=ddpt(i,j)
-	       pg(k)=pi(j)
-	       dpg(k)=dpi(j)
-	       ddpg(k)=ddpi(j)
-	    end do
+             do 71 i=1,ntau
+                ps=pe(i)
+                ts=t(i)
+                theta=5040./ts
+                do j=1,10
+                   k=ivar(j)
+                   pi(j)=pt(i,j)
+                   dpi(j)=dpt(i,j)
+                   ddpi(j)=ddpt(i,j)
+                   pg(k)=pi(j)
+                   dpg(k)=dpi(j)
+                   ddpg(k)=ddpi(j)
+                end do
 
 c calculo el coeficiente de absorcion del continuo por cm**3
 c (ckappa) y sus derivadas con respecto a t y pe:dkappa,
 c ddkappa y lo divido por dicho coef. evaluado a 5000.a
 c calculo el ckappa para lambda=(5000 a=5.e-5 cm),(ckappa5)
+               call kappach(lambda,ts,ps,pi,dpi,ddpi,ckappa,
+     &                   dkappa,ddkappa)
+     
+               ckappa5=ck5(i)
+               dkappa5=dk5(i)
+               ddkappa5=ddk5(i)
 
-	    call kappach(lambda,ts,ps,pi,dpi,ddpi,ckappa,
-     &                       dkappa,ddkappa)
-	    ckappa5=ck5(i)
-            dkappa5=dk5(i)
-            ddkappa5=ddk5(i)
+               ckappa=ckappa/ckappa5
+               dkappa=(dkappa-ckappa*dkappa5)/ckappa5
+               ddkappa=(ddkappa-ckappa*ddkappa5)/ckappa5
+               dkappa5=dkappa5/ckappa5
+               ddkappa5=ddkappa5/ckappa5
 
-            ckappa=ckappa/ckappa5
-	    dkappa=(dkappa-ckappa*dkappa5)/ckappa5
-	    ddkappa=(ddkappa-ckappa*ddkappa5)/ckappa5
-	    dkappa5=dkappa5/ckappa5
-	    ddkappa5=ddkappa5/ckappa5
+c calculo vdop=(delta doppler*c/l.d.o.) y su derivada
+               vdop=sqrt(croot*ts+vtur(i)**2) !cm/seg.
+               vdop2=sqrt((2.*gas*ts)/weight+vtur(i)**2)
+               dvdop=croot/vdop/2.
+               dvdop2=gas/(vdop2*weight)
+               mvdop=vtur(i)/vdop
 
-c	calculo vdop=(delta doppler*c/l.d.o.) y su derivada
-c	    vdop=sqrt(croot*ts+vtur(i)**2) !cm/seg.
-c            dvdop=croot/vdop/2.
-c	    mvdop=vtur(i)/vdop
-
-            vdop=sqrt(croot*ts+vtur(i)**2) !cm/seg.
-            vdop2=sqrt((2.*gas*ts)/weight+vtur(i)**2)
-            dvdop=croot/vdop/2.
-            dvdop2=gas/(vdop2*weight)
-            mvdop=vtur(i)/vdop
-
-c            print*,'blendscon2 442 ',ckappa5,pi(9),pi(10),lambda
 c calculo el coeficiente absorcion linea en cada tau y sus derivadas	      
 c calculo eta0=(coef.absorcion linea/coef. absorcion continuo)
 c necesito calcular la fraccion de atomos del elemento en el
@@ -462,68 +368,52 @@ c cion 1 (neutro) y 2.igualmente u23 entre los iones 2 y 3
 c necesito llamar a nelfctb (definida en atmdatb con un 'entry')
 c para calcular las funciones de particion y sus derivadas a cada
 c temperatura
-	   call nelfctb(nel,ts,u1,u2,u3,du1,du2,du3)
+               call nelfctb(nel,ts,u1,u2,u3,du1,du2,du3)
 
 c corrijo los potenciales de ionizacion chi10 y chi20 con
 c un termino proporcional a la raiz cubica de la densidad de e-
+               rcu=(pg(91))**(1./3.)
+               chi1=chi10-6.96e-7*rcu
+               chi2=chi20-1.1048e-6*rcu
 
-	   rcu=(pg(91))**(1./3.)
-	   chi1=chi10-6.96e-7*rcu
-	   chi2=chi20-1.1048e-6*rcu
-
-c	   u12=saha(theta,chi1,u1,u2,ps)      !n2/n1
-c	   du12=u12*dsaha(theta,chi1,du1,du2) !derivada de u12 con t
-c	   ddu12=-1.*u12/ps        !    "    "   "  con pe
-c	   u23=saha(theta,chi2,u2,u3,ps)      !n3/n2
-c	   du23=u23*dsaha(theta,chi2,du2,du3) !derivada de u23 con t
-c	   ddu23=-1.*u23/ps                !    "    "   "  con pe
-c	   u33=1.+u12*(1.+u23)                !(n1+n2+n3)/n1
-c	   du33=du12*(1.+u23)+u12*du23
-c	   ddu33=ddu12*(1.+u23)+u12*ddu23
-
-c    	   eta0=eta00*1.e1**(-theta*energy)/(u1*vdop*u33*ckappa5)
-c	   deta0=eta0*(alog(10.)*theta/ts*energy-du1-dvdop/vdop-du33/u33)
-c	   deta0=deta0-eta0*dkappa5
-c	   ddeta0=eta0*(-ddu33/u33)
-c	   ddeta0=ddeta0-eta0*ddkappa5
-
-c	   if(istage.eq.2)then
-c		eta0=eta0*u1/u2*u12
-c		deta0=deta0*u1/u2*u12+eta0*(du1-du2+du12/u12)
-c		ddeta0=ddeta0*u1/u2*u12+eta0*(ddu12/u12)
-c	   end if
-	   
-	   u12_db=saha_db(theta,chi1,u1,u2,ps)          
-           du12_db=u12_db*dsaha_db(theta,chi1,du1,du2) !derivada de u12 con t
-           ddu12_db=-1.*u12_db/ps        !    "    "   "  con pe
-           u23_db=saha_db(theta,chi2,u2,u3,ps)      !n3/n2
-           du23_db=u23_db*dsaha_db(theta,chi2,du2,du3) !derivada de u23 con t
-           ddu23_db=-1.*u23_db/ps                !    "    "   "  con pe
-           u33_db=1.+u12_db*(1.+u23_db)                !(n1+n2+n3)/n1
-           du33_db=du12_db*(1.+u23_db)+u12_db*du23_db
-           ddu33_db=ddu12_db*(1.+u23_db)+u12_db*ddu23_db
-           u12=real(u12_db)
-           du12=real(du12_db)
-           ddu12=real(ddu12_db)
-           u23=real(u23_db)
-           du23=real(du23_db)
-           ddu23=real(ddu23_db)
-           u33=real(u33_db)
-           du33=real(du33_db)
-           ddu33=real(ddu33_db)
+               u12_db=saha_db(theta,chi1,u1,u2,ps)        
+               du12_db=u12_db*dsaha_db(theta,chi1,du1,du2) !derivada de u12 con t
+               ddu12_db=-1.*u12_db/ps        !    "    "   "  con pe
+               u23_db=saha_db(theta,chi2,u2,u3,ps)      !n3/n2
+               du23_db=u23_db*dsaha_db(theta,chi2,du2,du3) !derivada de u23 con t
+               ddu23_db=-1.*u23_db/ps                !    "    "   "  con pe
+               u33_db=1.+u12_db*(1.+u23_db)                !(n1+n2+n3)/n1
+               du33_db=du12_db*(1.+u23_db)+u12_db*du23_db
+               ddu33_db=ddu12_db*(1.+u23_db)+u12_db*ddu23_db
+               u12=real(u12_db)
+               du12=real(du12_db)
+               ddu12=real(ddu12_db)
+               u23=real(u23_db)
+               du23=real(du23_db)
+               ddu23=real(ddu23_db)
+               u33=real(u33_db)
+               du33=real(du33_db)
+               ddu33=real(ddu33_db)
            
-           eta0=eta00*1.e1**(-theta*energy)/(u1*vdop*u33*ckappa5)
-           deta0=eta0*(alog(10.)*theta/ts*energy-real(du1_db)-dvdop/vdop-real(du33_db/u33_db))
-           deta0=deta0-eta0*dkappa5
-           ddeta0=eta0*real(-ddu33_db/u33_db)
-           ddeta0=ddeta0-eta0*ddkappa5	   	   
+               eta0=eta00*1.e1**(-theta*energy)/(u1*vdop*u33*ckappa5)
+               deta0=eta0*(alog(10.)*theta/ts*energy-real(du1_db)-dvdop/vdop-real(du33_db/u33_db))
+               deta0=deta0-eta0*dkappa5
+               ddeta0=eta0*real(-ddu33_db/u33_db)
+               ddeta0=ddeta0-eta0*ddkappa5	  
+ 
+               if(istage.eq.2)then
+                  eta0=eta0*u1/u2*u12
+                  deta0=deta0*u1/u2*u12+eta0*(du1-du2+du12/u12)
+                  ddeta0=ddeta0*u1/u2*u12+eta0*(ddu12/u12)
+               end if
 
 c introduzco la correccion por emision estimulada
-	   corre=1.-exp(-1.4388/(ts*wvac))
-	   dcorre=(corre-1.)*(1.4388/(ts*ts*wvac))
-	   deta0=deta0*corre+eta0*dcorre
-	   eta0=eta0*corre
-	   meta0=-eta0*mvdop/vdop
+               corre=1.-exp(-1.4388/(ts*wvac))
+               dcorre=(corre-1.)*(1.4388/(ts*ts*wvac))
+               deta0=deta0*corre+eta0*dcorre
+               ddeta0=ddeta0*corre
+               eta0=eta0*corre
+               meta0=-eta0*mvdop/vdop
 
 c calculo el damping 'a' mediante Unsold
 c despreciaremos la dependencia del damping con t o pe en el calcu
@@ -533,153 +423,146 @@ c pg(2)=p(he)/p(h'),pg(89)=p(h2)/p(h')
 c   a=(chydro*(pg(1)/pg(90)*pg(91))*t(i)**0.3*((.992093+weinv)**.3
 c  &  +.6325*pg(2)/pg(1)*(.2498376+weinv)**.3+.48485*pg(89)/pg(1)*
 c  &  (.4960465+weinv)**.3)+crad)/(12.5663706*vdop)
+               if(abs(alfa).lt.1.e-25.or.abs(sigma).lt.1.e-25)then
+                  if(pg(1).gt.1.e-20)then !EVITAMOS DAMPING NULO POR PG(1)=0
+	                 aj=chydro*(pg(1)/pg(90)*pg(91))*ts**0.3
+     	             ai=(.992093+weinv)**.3+.6325*pg(2)/pg(1)*(.2498376+weinv)**.3+
+     &	                 .48485*pg(89)/pg(1)*(.4960465+weinv)**.3
+	                 a=(aj*ai+crad)/(12.5663706*vdop)
+                     ma=-a*mvdop/vdop
+	                 daj=aj*(dpg(1)-dpg(90)+dpg(91)+.3/ts) !derivada de aj cont
+	                 ddaj=aj*(ddpg(1)-ddpg(90)+ddpg(91))  !derivada de aj con p
+	                 dai=.6325*pg(2)/pg(1)*(.2498376+weinv)**.3*(dpg(2)-dpg(1))+
+     &	                 .48485*pg(89)/pg(1)*(.4960465+weinv)**.3*(dpg(89)-dpg(1))
+	                 ddai=.6325*pg(2)/pg(1)*(.2498376+weinv)**.3*(ddpg(2)-ddpg(1))+
+     &	                 .48485*pg(89)/pg(1)*(.4960465+weinv)**.3*(ddpg(89)-ddpg(1))
+
+	                 da=(ai*daj+aj*dai)/(12.5663706*vdop)-a*dvdop/vdop
+	                 dda=(ai*ddaj+aj*ddai)/(12.5663706*vdop)
+                  else  !CORRECCION PARA EVITAR DAMPING NULO POR PG(1)=0
+                     aj=chydro*(1./pg(90)*pg(91))*ts**0.3
+                     ai=.6325*pg(2)*(.2498376+weinv)**.3+
+     &	                .48485*pg(89)*(.4960465+weinv)**.3
+	                 a=(aj*ai+crad)/(12.5663706*vdop)
+	                 ma=-a*mvdop/vdop
 	
-        if(abs(alfa).lt.1.e-25.or.abs(sigma).lt.1.e-25)then
+	                 daj=aj*(-dpg(90)+dpg(91)+.3/ts) !derivada de aj cont
+	                 ddaj=aj*(-ddpg(90)+ddpg(91))  !derivada de aj con p
+                     dai=.6325*pg(2)*(.2498376+weinv)**.3*dpg(2)+
+     &	                 .48485*pg(89)*(.4960465+weinv)**.3*dpg(89)
+	                 ddai=.6325*pg(2)*(.2498376+weinv)**.3*ddpg(2)+
+     &	                .48485*pg(89)*(.4960465+weinv)**.3*ddpg(89)
 
-            if(pg(1).gt.1.e-20)then !EVITAMOS DAMPING NULO POR PG(1)=0
-	
-	    aj=chydro*(pg(1)/pg(90)*pg(91))*ts**0.3
-	    ai=(.992093+weinv)**.3+.6325*pg(2)/pg(1)*(.2498376+weinv)**.3+
-     &	    .48485*pg(89)/pg(1)*(.4960465+weinv)**.3
-	    a=(aj*ai+crad)/(12.5663706*vdop)
-	    ma=-a*mvdop/vdop
-	
-	    daj=aj*(dpg(1)-dpg(90)+dpg(91)+.3/ts) !derivada de aj cont
-	    ddaj=aj*(ddpg(1)-ddpg(90)+ddpg(91))  !derivada de aj con p
-
-	    dai=.6325*pg(2)/pg(1)*(.2498376+weinv)**.3*(dpg(2)-dpg(1))+
-     &	    .48485*pg(89)/pg(1)*(.4960465+weinv)**.3*(dpg(89)-dpg(1))
-	    ddai=.6325*pg(2)/pg(1)*(.2498376+weinv)**.3*(ddpg(2)-ddpg(1))+
-     &	     .48485*pg(89)/pg(1)*(.4960465+weinv)**.3*(ddpg(89)-ddpg(1))
-
-	    da=(ai*daj+aj*dai)/(12.5663706*vdop)-a*dvdop/vdop
-	    dda=(ai*ddaj+aj*ddai)/(12.5663706*vdop)
-
-            else  !CORRECCION PARA EVITAR DAMPING NULO POR PG(1)=0
-
-
-            aj=chydro*(1./pg(90)*pg(91))*ts**0.3
-            ai=.6325*pg(2)*(.2498376+weinv)**.3+
-     &	      .48485*pg(89)*(.4960465+weinv)**.3
-	    a=(aj*ai+crad)/(12.5663706*vdop)
-	    ma=-a*mvdop/vdop
-	
-	    daj=aj*(-dpg(90)+dpg(91)+.3/ts) !derivada de aj cont
-	    ddaj=aj*(-ddpg(90)+ddpg(91))  !derivada de aj con p
-	    dai=.6325*pg(2)*(.2498376+weinv)**.3*dpg(2)+
-     &	    .48485*pg(89)*(.4960465+weinv)**.3*dpg(89)
-	    ddai=.6325*pg(2)*(.2498376+weinv)**.3*ddpg(2)+
-     &	     .48485*pg(89)*(.4960465+weinv)**.3*ddpg(89)
-
-c              AQUI!!! CREO QUE FALTAN ESTAS DOS SENTENCIAS
-	    da=(ai*daj+aj*dai)/(12.5663706*vdop)-a*dvdop/vdop
-	    dda=(ai*ddaj+aj*ddai)/(12.5663706*vdop)
-c              HASTA AQUI!!! 
-
-            end if !CORRECCION PARA EVITAR DAMPING NULO POR PG(1)=0
-
-	else
+	                 da=(ai*daj+aj*dai)/(12.5663706*vdop)-a*dvdop/vdop
+	                 dda=(ai*ddaj+aj*ddai)/(12.5663706*vdop)
+                  end if !CORRECCION PARA EVITAR DAMPING NULO POR PG(1)=0
+               else
 
 c       calculo del damping 'a' mediante BARKLEM.       
 c       d son las derivadas totales respecto a la temperatura.
 c       dd son las derivadas totales respecto a la presion.
-
-           dam=beta*(pg(91)/pg(90))*(pg(1)*xmu1**(-vv)+coc2*pg(2)*(xmu2**(-vv))
-     &      +coc3*pg(89)*xmu3**(-vv))*ts**vv
+                  dam=beta*(pg(91)/pg(90))*(pg(1)*xmu1**(-vv)+coc2*pg(2)*(xmu2**(-vv))
+     &                +coc3*pg(89)*xmu3**(-vv))*ts**vv
         
-           a=(1./(4.*pir))*(crad/vdop+dam/vdop2) 
-           ma=-a*mvdop/vdop         
+                  a=(1./(4.*pir))*(crad/vdop+dam/vdop2) 
+                  ma=-a*mvdop/vdop         
 
-           ddam=dam*(dpg(91)-dpg(90))+beta*(pg(91)/pg(90))*(xmu1**(-vv)*pg(1)*
-     &       dpg(1)+coc2*xmu2**(-vv)*pg(2)*dpg(2)+coc3*pg(89)*dpg(89)
-     &       *xmu3**(-vv))*ts**(vv)+vv*(dam/ts)
+                  ddam=dam*(dpg(91)-dpg(90))+beta*(pg(91)/pg(90))*(xmu1**(-vv)*pg(1)*
+     &                 dpg(1)+coc2*xmu2**(-vv)*pg(2)*dpg(2)+coc3*pg(89)*dpg(89)
+     &                 *xmu3**(-vv))*ts**(vv)+vv*(dam/ts)
 
-           dddam=dam*(ddpg(91)-ddpg(90))+beta*(pg(91)/pg(90))*(xmu1**(-vv)*
-     &     pg(1)*ddpg(1)+coc2*xmu2**(-vv)*pg(2)*ddpg(2)+coc3*pg(89)*ddpg(89)*
-     &     xmu3**(-vv))
+                  dddam=dam*(ddpg(91)-ddpg(90))+beta*(pg(91)/pg(90))*(xmu1**(-vv)*
+     &                  pg(1)*ddpg(1)+coc2*xmu2**(-vv)*pg(2)*ddpg(2)+coc3*pg(89)*ddpg(89)*
+     &                  xmu3**(-vv))
 
-           da=(crad/(4.*pir))*(-dvdop/(vdop**2.))+(1./(4.*pir))*(ddam*vdop2-
-     &     dam*dvdop2)/(vdop2**2.)
-           dda=(1./(4.*pir))*(dddam/vdop2)
-
-        endif   
-
-	
+                  da=(crad/(4.*pir))*(-dvdop/(vdop**2.))+(1./(4.*pir))*(ddam*vdop2-
+     &               dam*dvdop2)/(vdop2**2.)
+                  dda=(1./(4.*pir))*(dddam/vdop2)
+               endif   
 
 c calculo la funcion de planck en lambda y su derivada con t
-c la function "dtplanck" calcula la derivada de la f. de planck
-c con la temperatura.
-                www=wlengt1*1.e-8 
-c 		bp(i)=dplnck(t(i),www)  !cuerpo negro
-c 	        bt(i)=dtplanck(t(i),www)
+c dtplanck" es la derivada de la f. de planck con temperatura.
+               exalfa_plck=dexp(a_plck/ts)
+               if(ible .eq. 1)then 
+                  bpdob=c_plck/(exalfa_plck-1.d0)
+                  bp0(i)=real(bpdob)
+                  bt0(i)=real(bpdob*bpdob*a_plck*exalfa_plck/(dble(ts)*dble(ts)*c_plck))
+               end if
+                
+               blow=beta1(ixx,i)
+               blows=real(blow)
+               bup=beta2(ixx,i)
+               bratio=blow/bup
 
+               if(dabs(bratio-1.) .lt. 1.d-6)then
+                  bpdob=c_plck/(exalfa_plck-1.d0)
+                  bp(i)=real(bpdob)
+                  bt(i)=real(bpdob*bpdob*a_plck*exalfa_plck/(dble(ts)*dble(ts)*c_plck))
+               else
+                  bpdob=c_plck*bup/(blow*exalfa_plck-bup)
+                  bp(i)=real(bpdob)
+                  bt(i)=real(bpdob*bpdob*a_plck*exalfa_plck*blow/(dble(ts)*dble(ts)*c_plck*bup))
+               end if
 
+               eta0=eta0*blows
+               deta0=deta0*blows
+               ddeta0=ddeta0*blows
+               meta0=meta0*blows
 
-c                if(nlte.eq.0)then
-c                   blow=1.
-c                   bratio=1.
-c                else
-                   blow=beta1(ixx,i)
-                   bratio=blow/beta2(ixx,i)
-c                end if
+               y(i)=ckappa              !ckappa/ckappa5
+               dyt(i)=dkappa
+               dyp(i)=ddkappa
+               table(i,1)=dkappa        !derivada con t
+               table(i,2)=ddkappa       !    "     "  pe
+               table(i,3)=eta0    !kap. linea/kcont.5000
+               table(i,4)=deta0   !derivada con t
+               table(i,5)=ddeta0  !derivada con pe
+               table(i,6)=wc*vdop !despl. doppler en l.d.o(cm)
+               table(i,7)=vz(i)/vdop !velocidad eje z (u.doppler)
+               table(i,8)=dkappa5       !derivada con t de kappacon5
+               table(i,9)=ddkappa5      !  "       "  pe      "
+               table(i,10)=a      !damping
+               table(i,11)=da   !derivada del damping con t
+               table(i,12)=dda    !derivada del damping con p
+               table(i,13)=dvdop/vdop   !derivada de log(vdop) con t
+               table(i,14)=mvdop/vdop   !   "      "    "      con mic
+               table(i,15)=meta0        !derivada de eta0 con la micro
+               table(i,16)=ma           !derivada de a    con la micro
+71	         continue            !do en log(tau)
 
-                call planck2(t(i),www,bratio,bp(i),bt(i))
-c                bp(i)=tonto1
-c                bt(i)=tonto2
+c        call derivacuad(bp,dbp,ntau,tau)
+             amaxim=0.
+             do i=1,ntau
+                if(table(i,10).ge.amaxim)amaxim=table(i,10)
+             end do
 
-
-                eta0=eta0*blow
-                deta0=deta0*blow
-                ddeta0=ddeta0*blow
-                meta0=meta0*blow
-
-                y(i)=ckappa              !ckappa/ckappa5
-                dyt(i)=dkappa
-                dyp(i)=ddkappa
-                table(i,1)=dkappa        !derivada con t
-                table(i,2)=ddkappa       !    "     "  pe
-		table(i,3)=eta0    !kap. linea/kcont.5000
-		table(i,4)=deta0   !derivada con t
-		table(i,5)=ddeta0  !derivada con pe
-		table(i,6)=wc*vdop !despl. doppler en l.d.o(cm)
-		table(i,7)=vz(i)/vdop !velocidad eje z (u.doppler)
-		table(i,8)=dkappa5       !derivada con t de kappacon5
-		table(i,9)=ddkappa5      !  "       "  pe      "
-                table(i,10)=a      !damping
-		table(i,11)=da	 !derivada del damping con t
-		table(i,12)=dda    !derivada del damping con p
-		table(i,13)=dvdop/vdop   !derivada de log(vdop) con t
-	        table(i,14)=mvdop/vdop   !   "      "    "      con mic
-	        table(i,15)=meta0	 !derivada de eta0 con la micro
-	        table(i,16)=ma   	 !derivada de a    con la micro
-71	continue            !do en log(tau)
-
-c	call deriva(bp,dbp,ntau,kt,TOTAL) 
-        call derivacuad(bp,dbp,ntau,tau)
-
-	amaxim=0.
-	do i=1,ntau
-       	   if(table(i,10).ge.amaxim)amaxim=table(i,10)
-	end do
-
-	if(amaxim.gt.3.)then
-	   do i=1,ntau
-	      table(i,10)=(3.*table(i,10))/amaxim
-	      table(i,11)=(3.*table(i,11))/amaxim
-	      table(i,12)=(3.*table(i,12))/amaxim
-	      table(i,16)=(3.*table(i,16))/amaxim
-	   end do
-	end if
+            if(amaxim.gt.3.)then
+               do i=1,ntau
+                  table(i,10)=(3.*table(i,10))/amaxim
+                  table(i,11)=(3.*table(i,11))/amaxim
+                  table(i,12)=(3.*table(i,12))/amaxim
+                  table(i,16)=(3.*table(i,16))/amaxim
+               end do
+            end if
+    
+c inicializamos la emisividad a todas las frecuencias con la emisividad del continuo
+        if(ible .eq. 1)then !evaluo la emisividad del continuo
+           do j=1,ntau
+              emj=bp0(j)*y(j)
+              demj=bt0(j)*y(j)+bp0(j)*dyt(j)
+              do i=1,npas(iln)
+                 emisividad(j,i)=emj
+                 emisividad_dt(j,i)=demj
+              end do
+           end do
+        end if 
 
 c muestreo en lambda , calculo las l.d.o. de cada punto
-   	do 10 i=1,npas(iln)
-	   ikk=ikk0+i
-	   if(ible.eq.nble(iln).and.i.eq.npas(iln))ikk0=ikk0+npas(iln)
-	   dlamda=(dlongd(ikk)+(wlengt1-wlengt)*1.e3)*1.e-11  !en cm.
+        do 10 i=1,npas(iln)
+	       ikk=ikk0+i
+	       if(ible.eq.nble(iln).and.i.eq.npas(iln))ikk0=ikk0+npas(iln)
+	       dlamda=(dlongd(ikk)+(wlengt1-wlengt)*1.e3)*1.e-11  !en cm.
 	   
-           continuoharr(ikk)=con_i1(iln) + (con_i2(iln)-con_i1(iln))*
-     &               (wlengt1+dlongd(ikk)*1.e-3-wcon_i1(iln))/(wcon_i2(iln)-wcon_i1(iln))
-     
 c calculo etar,etal,etap y sus derivadas
 	   do 101 j=1,ntau     !do en tau
 	      a=table(j,10)	!damping
@@ -713,25 +596,34 @@ c calculo etar,etal,etap y sus derivadas
               mktot(j,i) = mktot(j,i)     +t15*etar+ t3*(ettar*t16+ettmr)
               pktot(j,i) = pktot(j,i) +t2 +t5*etar + t3* ettar*t12 
               vktot(j,i) = vktot(j,i)              + t3* vetar
-	
+                           
+c calculamos la emisividad
+              emisividad(j,i)=emisividad(j,i)+bp(j)*t3*etar
+              emisividad_dt(j,i)=emisividad_dt(j,i)+bt(j)*t3*etar+bp(j)*(t4*etar+t3*(ettar*t11+ettvr))
+              
 101	     continue !fin do en tau(estamos aun dentro del do en lamda)
 10	  continue	!fin del do en lambda(pasos)
 	end do   !fin del do en blends
 c	................................................................
-	do 9 i=1,npas(iln)
-	   do k=1,ntau
-	      dab(k)=dabtot(k,i)
-	      tk(k)=tktot(k,i)
-	      pk(k)=pktot(k,i)
-              vk(k)=vktot(k,i)
-	      mk(k)=mktot(k,i)
-	   end do
 
-c	   call contp(bp,dbp,dab,ntau,icont,kt,bt,tk,pk,vk,mk,
-c     &             grt,grp,grv,grm)	
-	   call hermite_c(bp,dbp,dab,ntau,icont,kt,bt,tk,pk,vk,mk,
+         do 9 i=1,npas(iln)
+	        do k=1,ntau
+	           dabk=dabtot(k,i)
+	           tkk=tktot(k,i)
+	           pk(k)=pktot(k,i)
+               vk(k)=vktot(k,i)
+	           mk(k)=mktot(k,i)
+               sourcek=emisividad(k,i)/dabk 
+               source_dt(k)=(emisividad_dt(k,i)-sourcek*tkk)/dabk
+               dab(k)=dabk
+               tk(k)=tkk
+               source(k)=sourcek
+	       end do
+
+           call derivacuad(source,dbp,ntau,tau)
+          
+	       call hermite_c(source,dbp,dab,ntau,icont,kt,source_dt,tk,pk,vk,mk,
      &             grt,grp,grv,grm)	
-     
      
 c introducimos el paso en tau para pasar la integral sobre las f. resp.
 c a sumatorio y normalizmos por el continuo
@@ -741,26 +633,25 @@ c en el nodo (en 'nodos')
 c !ojo las perturbaciones son relativas a los parametros en z no a linea vision
 
         ikk1=ikk1+1
-        continuoh=continuoharr(ikk1)
 
         if(mnodos(1).ne.0)then
            if(mnodos(2).eq.0)then
-	      do kk=1,ntau  !introduccion de grp en grt
+	          do kk=1,ntau  !introduccion de grp en grt
                  suma=0.
                  do kj=1,kk-2
                     suma=suma+wx(kj,kk)*grp(kj)
                  end do
                  correc=grp(kk)*px(kk)+suma
-	         if(kk.gt.1)correc=correc+grp(kk-1)*qx(kk)
+	             if(kk.gt.1)correc=correc+grp(kk-1)*qx(kk)
                  grt(kk)=grt(kk)+correc
               end do
            end if
-	   call rnorma(ntau,continuoh,grt)
+           call rnorma(ntau,continuoh,grt)
            if(iautomatico.ne.1.or.mnodos(1).eq.1)call 
      &        nodos(grt,ntau,tau,t,mnodos(1))	  !al final de blends2
         end if
         if(mnodos(2).ne.0)then
-	   call rnorma(ntau,continuoh,grp)
+           call rnorma(ntau,continuoh,grp)
            if(iautomatico.ne.1.or.mnodos(2).eq.1)call  
 c     &        nodosp(grp,ntau,tau,pe,mnodos(2))    !OJO nodosp escala con la pe en el ultimo nodo 
      &        nodos(grp,ntau,tau,pe,mnodos(2))    !OJO nodosp escala con la pe en el ultimo nodo 
@@ -771,44 +662,33 @@ c     &        nodosp(grp,ntau,tau,pe,mnodos(2))    !OJO nodosp escala con la pe
      &        nodos(grm,ntau,tau,vtur,mnodos(3)) !al final de blends2
         end if
         if(mnodos(5).ne.0)then
-	   call rnorma(ntau,continuoh,grv)
+          call rnorma(ntau,continuoh,grv)
           if(iautomatico.ne.1.or.mnodos(5).eq.1)call  
      &        nodos(grv,ntau,tau,vof,mnodos(5)) !al final de blends2
-
         end if
 
 c las f. respuesta salen ordenadas en longitud de onda,perfil y tau
 c rt(tau1:i(l1,l2,...);tau2:i......)
 	      do j=1,mnodos(1)
 	         iktt=(j-1)*ntotal+ikk1
-		 rt(iktt)=grt(j)
+		     rt(iktt)=grt(j)
 	      end do   
 	      do j=1,mnodos(2)
 	         iktt=(j-1)*ntotal+ikk1
-		 rp(iktt)=grp(j)
+		     rp(iktt)=grp(j)
 	      end do   
 	      do j=1,mnodos(3)
 	         iktt=(j-1)*ntotal+ikk1
-		 rm(iktt)=grm(j)
+		     rm(iktt)=grm(j)
 	      end do   
 	      do j=1,mnodos(5)
 	         iktt=(j-1)*ntotal+ikk1
-		 rv(iktt)=grv(j)
+		     rv(iktt)=grv(j)
 	      end do   
 
-	inten(ikk1)=icont/continuoh
-c        print*,'blendscon2',ikk1,inten(ikk1)
+	     inten(ikk1)=icont/continuoh
 9 	continue	!fin del do en lambda
 999	continue	!fin del do en lineas
-        if(iprimera .eq. 1)then
-c          close(43)
-        end if
+
 	return
 	end
-
-
-
-
-
-
-

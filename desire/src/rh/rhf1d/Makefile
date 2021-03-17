@@ -48,8 +48,8 @@ ADDRH_OBJS = anglequad.o \
              project.o \
              rh_chrono.o \
              rh_close.o \
-             rh_desire.o \
              rh_glob.o \
+             rh_sir.o \
              rhf1d.o \
              riiplane.o \
              solveray.o \
@@ -138,7 +138,7 @@ hydrostat.o:            ../rh.h  ../atom.h  ../atmos.h  geometry.h \
 multiatmos.o:           ../rh.h  ../atom.h  ../atmos.h  \
                         geometry.h  ../spectrum.h  ../background.h  \
                         ../constant.h  ../error.h  ../inputs.h  \
-                        ../statistics.h  ../xdr.h
+                        ../statistics.h  ../xdr.h  ../desire.h
 
 piecestokes_1D.o:       ../rh.h  ../error.h  ../atom.h  ../atmos.h  \
                         geometry.h  ../spectrum.h
@@ -152,11 +152,11 @@ project.o:              ../rh.h  ../atom.h  ../atmos.h  \
 rh_close.o:             ../rh.h  ../atom.h  ../atmos.h  ../spectrum.h  \
                         ../statistics.h  ../inputs.h
 
-rh_desire.o:            ../desire.h
-
 rh_glob.o:              ../rh.h  ../atom.h  ../atmos.h  \
                         geometry.h  ../spectrum.h  \
-                        ../statistics.h  ../inputs.h
+                        ../statistics.h  ../inputs.h  ../desire.h
+
+rh_sir.o:               ../desire.h
 
 rhf1d.o:                ../rh.h  ../atom.h  ../atmos.h  \
                         geometry.h  ../spectrum.h  ../background.h  \

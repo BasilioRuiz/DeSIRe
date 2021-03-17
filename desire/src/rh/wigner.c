@@ -164,10 +164,10 @@ double fact(double xi)
   register int n;
 
   static bool_t initialize = TRUE;
-  static double *factorial;
+  static double *factorial = NULL;
 
   if (initialize) {
-    factorial = (double *) malloc(NFACT * sizeof(double));
+    factorial = (double *) realloc(factorial, NFACT * sizeof(double));
 
     factorial[0]  = 1.0;
     for (n = 1;  n < NFACT;  n++) factorial[n] = factorial[n-1] * n;

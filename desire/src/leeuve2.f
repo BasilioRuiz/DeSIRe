@@ -3,18 +3,10 @@ c leeuve2 lee un fichero de datos de parametros de stokes :vobs
 	subroutine leeuve2(idis,vobs,ist,ntl,nlin,npas,dl,stok)
         implicit real*4 (a-h,o-z)
 
-	include 'PARAMETER' !por kld
+	include 'PARAMETER'
 	real*4 stok(*),dl(*),si(kld),sq(kld),su(kld),sv(kld)
 	integer npas(*),nlin(*),ist(*),idis
-	character*100 vobs
-	character*100 control
-	character*100 men1,men2,men3
-	common/canal/icanal
-	common/nombrecontrol/control
-
-	men3=' '
-        men1=' '
-	men2=' '
+	character vobs*(*)
 
 	ican=56
 
@@ -64,21 +56,17 @@ c                stop
 	return
 
 
-c	Mensajes de error:
-991	men1='STOP: The file containing the observed/stray light profiles does NOT exist:'
-	men2=vobs
-	call mensaje(2,men1,men2,men3)
+c	Mensajes de error
+991	call error(KSTOP,'leeuve2','The file containing the observed/stray'
+     &  //         ' light profiles does not exist\n File: '//vobs)
 
-992	men1='STOP: Incorrect format in the file containing the observed/stray light profiles:'
-	men2=vobs
-	call mensaje(2,men1,men2,men3)
+992	call error(KSTOP,'leeuve2','Incorrect format in the file containing'
+     &  //         ' the observed/stray light profiles\n File: '//vobs)
 
-c formato de escritura
+c       formato de escritura
 993     format(1x,i5,1x,f11.4,1x,4(e14.7,1x))
 
 	end
-
-
 
 c______________________________________________________________________
 c sfromiquv guarda en stok los vectores si,sq,su,sv segun ist(4)

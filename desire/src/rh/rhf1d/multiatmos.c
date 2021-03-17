@@ -6,8 +6,14 @@
 
        --------------------------                      ----------RH-- */
 
-/* --- Reads atmospheric model in MULTI format. --     -------------- */
+/* --- Reads atmospheric model in MULTI format.
 
+  Modifications:
+
+       - 11/11/20 epm:
+         We supply atmospheric models from SIR.
+
+       --                                              -------------- */
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -28,6 +34,7 @@
 #include "inputs.h"
 #include "statistics.h"
 #include "xdr.h"
+#include "desire.h"
 
 
 #define MULTI_COMMENT_CHAR  "*"
@@ -43,6 +50,9 @@ extern Spectrum spectrum;
 extern InputData input;
 extern char messageStr[];
 
+// 11/11/20 epm: Structure to pass atmospheric models from SIR.
+extern SIRatmos siratmos;
+
 
 /* ------- begin -------------------------- MULTIatmos.c ------------ */
 
@@ -57,28 +67,29 @@ void MULTIatmos(Atmosphere *atmos, Geometry *geometry)
   double *dscale, turbpress, turbelecpress, nbaryon, meanweight;
 
   /* --- P/Pe total ionized gas. Edited: BRC --          ------------ */
-  
+
   double threshold_ion = 1.9082806;
   double gas_pressure, elec_pressure ;
-  
+
   struct  stat statBuffer;
 
   getCPU(2, TIME_START, NULL);
 
   /* --- Get abundances of background elements --        ------------ */
- 
+
   readAbundance(atmos);
 
   /* --- Open the input file for model atmosphere in MULTI format - - */
 
-  if ((atmos->fp_atmos = fopen(input.atmos_input, "r")) == NULL) {
-    sprintf(messageStr, "Unable to open inputfile %s", input.atmos_input);
-    Error(ERROR_LEVEL_2, routineName, messageStr);
-  } else {
-    sprintf(messageStr, "\n -- reading input file: %s\n",
-	    input.atmos_input);
-    Error(MESSAGE, NULL, messageStr);
-  }
+  // 11/11/20 epm: SIR supplies the atmospheric model.
+  // if ((atmos->fp_atmos = fopen(input.atmos_input, "r")) == NULL) {
+  //   sprintf(messageStr, "Unable to open inputfile %s", input.atmos_input);
+  //   Error(ERROR_LEVEL_2, routineName, messageStr);
+  // } else {
+  //   sprintf(messageStr, " -- reading input file: %s\n\n",
+  //           input.atmos_input);
+  //   Error(MESSAGE, NULL, messageStr);
+  // }
 
   atmos->NHydr = N_HYDROGEN_MULTI;
 
@@ -96,29 +107,37 @@ void MULTIatmos(Atmosphere *atmos, Geometry *geometry)
   /* --- Read atmos ID, scale type, gravity, and number of depth
          points --                                       ------------ */
  
-  getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
-  if (enhanced_atmos_ID) {
+  // 11/11/20 epm: SIR supplies the atmospheric model.
+  // getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
+  // if (enhanced_atmos_ID) {
+  // 
+  //   /* --- Construct atmosID from filename and last modification date */
+  // 
+  //   stat(input.atmos_input, &statBuffer);
+  //   if ((filename = strrchr(input.atmos_input, '/')) != NULL)
+  //     filename++;
+  //   else
+  //     filename = input.atmos_input;
+  //     sprintf(atmos->ID, "%s (%.24s)", filename,
+  //             asctime(localtime(&statBuffer.st_mtime)));
+  //   Nread = 1;
+  // } else {
+  //   Nread = sscanf(inputLine, "%s", atmos->ID);
+  // }
+  // getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
+  // Nread += sscanf(inputLine, "%20s", scaleStr);
+  // getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
+  // Nread += sscanf(inputLine, "%lf", &atmos->gravity);
+  // getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
+  // Nread += sscanf(inputLine, "%d", &geometry->Ndep);
+  // checkNread(Nread, Nrequired=4, routineName, checkPoint=1);
 
-    /* --- Construct atmosID from filename and last modification date */
-
-    stat(input.atmos_input, &statBuffer);
-    if ((filename = strrchr(input.atmos_input, '/')) != NULL)
-      filename++;
-    else
-      filename = input.atmos_input;
-    sprintf(atmos->ID, "%s (%.24s)", filename,
-	    asctime(localtime(&statBuffer.st_mtime)));
-    Nread = 1;
-  } else
-    Nread = sscanf(inputLine, "%s", atmos->ID);
-
-  getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
-  Nread += sscanf(inputLine, "%20s", scaleStr);
-  getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
-  Nread += sscanf(inputLine, "%lf", &atmos->gravity);
-  getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
-  Nread += sscanf(inputLine, "%d", &geometry->Ndep);
-  checkNread(Nread, Nrequired=4, routineName, checkPoint=1);
+  memset(atmos->ID, 0, sizeof(atmos->ID));
+  strncpy(atmos->ID, siratmos.id, sizeof(atmos->ID)-1);
+  
+  scaleStr[0] = siratmos.scale;
+  atmos->gravity = siratmos.logg;
+  geometry->Ndep = siratmos.ntau;
 
   /* --- Keep duplicates of some of the geometrical quantities in
          Atmos structure --                            -------------- */
@@ -142,11 +161,18 @@ void MULTIatmos(Atmosphere *atmos, Geometry *geometry)
 
   dscale = (double *) malloc(Ndep * sizeof(double));
   for (k = 0;  k < Ndep;  k++) {
-    getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
-    Nread = sscanf(inputLine, "%lf %lf %lf %lf %lf",
-		   &dscale[k], &atmos->T[k], &atmos->ne[k],
-		   &geometry->vel[k], &atmos->vturb[k]);
-    checkNread(Nread, Nrequired=5, routineName, checkPoint=2);
+    // 11/11/20 epm: SIR supplies the atmospheric model.
+    // getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine,
+    //         exit_on_EOF=TRUE);
+    // Nread = sscanf(inputLine, "%lf %lf %lf %lf %lf",
+    //                &dscale[k], &atmos->T[k], &atmos->ne[k],
+    //                &geometry->vel[k], &atmos->vturb[k]);
+    // checkNread(Nread, Nrequired=5, routineName, checkPoint=2);
+    dscale[k]        = siratmos.dscale[k];
+    atmos->T[k]      = siratmos.T[k];
+    atmos->ne[k]     = siratmos.elecdens[k];
+    geometry->vel[k] = siratmos.vz[k];
+    atmos->vturb[k]  = siratmos.vmic[k];
   }
 
   switch(toupper(scaleStr[0])) {
@@ -164,8 +190,9 @@ void MULTIatmos(Atmosphere *atmos, Geometry *geometry)
     for (k = 0;  k < Ndep;  k++) geometry->height[k] = dscale[k] * KM_TO_M;
     break;
   default:
-    sprintf(messageStr, "Unknown depth scale string in file %s: %s",
-	    input.atmos_input, scaleStr);
+    sprintf(messageStr,
+            "Unknown depth scale reading the atmospheric model: %c",
+            scaleStr[0]);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
   free(dscale);
@@ -195,18 +222,25 @@ void MULTIatmos(Atmosphere *atmos, Geometry *geometry)
   /* --- Read Hydrogen populations if present --       -------------- */
 
   atmos->nH = matrix_double(atmos->NHydr, Ndep);
+  // 11/11/20 epm: SIR suppplies the hydrogen populations.
   for (k = 0;  k < Ndep;  k++) {
-    if (getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine,
-		exit_on_EOF=FALSE) == EOF) break;
-    Nread = sscanf(inputLine, "%lf %lf %lf %lf %lf %lf",
-		   &atmos->nH[0][k], &atmos->nH[1][k], &atmos->nH[2][k],
-		   &atmos->nH[3][k], &atmos->nH[4][k], &atmos->nH[5][k]);
-    checkNread(Nread, Nrequired=6, routineName, checkPoint=3);
+    // if (getLine(atmos->fp_atmos, MULTI_COMMENT_CHAR, inputLine,
+    //              exit_on_EOF=FALSE) == EOF) break;
+    // Nread = sscanf(inputLine, "%lf %lf %lf %lf %lf %lf",
+    //                &atmos->nH[0][k], &atmos->nH[1][k], &atmos->nH[2][k],
+    //                &atmos->nH[3][k], &atmos->nH[4][k], &atmos->nH[5][k]);
+    // checkNread(Nread, Nrequired=6, routineName, checkPoint=3);
+    if (geometry->scale == COLUMN_MASS) break;  // mass column implies k=0
+    atmos->nH[0][k] = siratmos.nh1[k];
+    atmos->nH[1][k] = siratmos.nh2[k];
+    atmos->nH[2][k] = siratmos.nh3[k];
+    atmos->nH[3][k] = siratmos.nh4[k];
+    atmos->nH[4][k] = siratmos.nh5[k];
+    atmos->nH[5][k] = siratmos.nh6[k];
   }
   if (k > 0  &&  k < Ndep) {
     sprintf(messageStr,
-	    "Reached end of input file %s before all data was read",
-	    input.atmos_input);
+            "Reached end of atmospheric model before all data was read");
     Error(ERROR_LEVEL_2, routineName, messageStr);
   } else if (k == 0) {
 
@@ -215,8 +249,7 @@ void MULTIatmos(Atmosphere *atmos, Geometry *geometry)
 
     if (geometry->scale != COLUMN_MASS) {
       sprintf(messageStr,
-	      "Height scale should be COLUMNMASS when nH not supplied: "
-	      "File %s", input.atmos_input);
+	      "Height scale should be COLUMNMASS when nH not supplied");
       Error(ERROR_LEVEL_2, routineName, messageStr);
     }
     atmos->nHtot = (double *) calloc(Ndep, sizeof(double));
@@ -352,9 +385,9 @@ void getBoundary(Geometry *geometry)
   case THERMALIZED: break;
   case IRRADIATED:
 
-    sprintf(messageStr, "\n -- reading irradiance input file: %s\n\n",
-	    input.Itop);
-    Error(MESSAGE, NULL, messageStr);
+    // sprintf(messageStr, " -- reading irradiance input file: %s\n\n",
+    //         input.Itop);
+    // Error(MESSAGE, NULL, messageStr);
 
     geometry->Itop = matrix_double(spectrum.Nspect, geometry->Nrays);
 

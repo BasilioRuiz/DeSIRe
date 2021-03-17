@@ -1,116 +1,115 @@
-      subroutine marquardt2(y,sig,ndata,a,mnodos,mfit,
-     *    covar,alpha,chisq,alamda,iamplio,beta)
+        subroutine marquardt2(y,sig,ndata,a,mnodos,mfit,
+     &                        covar,alpha,chisq,alamda,iamplio,beta)
 
-	implicit real*4 (a-h,o-z)
+        implicit real*4 (a-h,o-z)
+        include 'PARAMETER'
+        parameter (kld4=4*kld,nodos=18)
 
-	include 'PARAMETER'   !por kld y mmx==kn que se tomaba 200
-	parameter (kld4=4*kld,nodos=18)
-c        dimension y(ndata),sig(ndata),a(*),mnodos(nodos),v(mmx,mmx),w(mmx),
-c     *  covar(mfit,mfit),alpha(mfit,mfit),atry(mmx),beta(mfit),da(mmx)
-
+c       dimension y(ndata),sig(ndata),a(*),mnodos(nodos),v(mmx,mmx),w(mmx),
+c    &  covar(mfit,mfit),alpha(mfit,mfit),atry(mmx),beta(mfit),da(mmx)
         dimension y(ndata),sig(ndata),a(*),mnodos(*),v(mfitmax,mfitmax),
-     *  w(mfitmax),covar(mfitmax,mfitmax),alpha(mfitmax,mfitmax),
-     *  atry(mfitmax),beta(mfitmax),da(mfitmax)
-	real*4 sigreal(kld4)
-	integer iRH1,iRH2
-	real*4 rnlte_th
+     &  w(mfitmax),covar(mfitmax,mfitmax),alpha(mfitmax,mfitmax),
+     &  atry(mfitmax),beta(mfitmax),da(mfitmax)
 
+        real*4 sigreal(kld4)
+        integer iRH1,iRH2
+        real*4 rnlte_th
         integer mnodosold(nodos)
+        character*100 msg
 
-	character*20 control
-	common/tol/tol
+        common/tol/tol
         common/alamda0/alamda0
-	common/allc/all
-	common/ochisq/ochisq
-	common/sigrealchi/sigreal,chireal,sumsq
-	common/canal/icanal
-	common/nombrecontrol/control
+        common/allc/all
+        common/ochisq/ochisq
+        common/sigrealchi/sigreal,chireal,sumsq
         common/repeticion/factorrep !factor de lambda para evitar repeticiones
-        common/nciclos/nciclos   !del principal
-c el common siguiente viene del principal y es para pasarle a marquardt2 
-c los indices iniciales y finales de las perturbaciones a gamma y fi aditivas
-c        common/ifies/iga1,ifi11,iga2,ifi22 
+        common/nciclos/nciclos  !del principal
+c       El common siguiente viene del principal y es para pasarle a marquardt2
+c       los indices iniciales y finales de las perturbaciones a gamma y fi
+c       aditivas.
+c       common/ifies/iga1,ifi11,iga2,ifi22
         common/ifies/ipa1,ipa11,iga1,ifi11,ipa2,ipa22,iga2,ifi22
-        common/ieliminofrec/ielimino !(del ppal) para el print de la S/N
-        common/primerchi/chisn,snn
-	common/iRH/iRH1,iRH2  ! eq 1 we call RH, 0 don't call RH
-	common/thresholdNLTE/rnlte_th         
-        data it/0/
-	all=alamda
+        common/ieliminofrec/ielimino  !(del ppal) para el print de la S/N
+        common/primerchi/snn,chisn
+        common/iRH/iRH1,iRH2  !eq 1 we call RH, 0 don't call RH
+        common/thresholdNLTE/rnlte_th
 
+        data it/0/
+
+        all=alamda
         xpi=3.14159265
 
-      if(alamda.lt.0.)then
+        if(alamda.lt.0.)then
+           alamda=alamda0
+           call marqcoef2(y,sig,ndata,a,mnodos,mfit,alpha,beta,chisq)
 
-        alamda=alamda0
-        call marqcoef2(y,sig,ndata,a,mnodos,mfit,alpha,beta,chisq)
+           if(nciclos.lt.1)return
+           iRH1=0
+           iRH2=0
 
-	if(nciclos.lt.1)return
-        iRH1=0
-        iRH2=0
+           ochisq=chisq
+           chip=sumsq/float(ndata-ielimino)
+           snn=1./sqrt(chip)
+           chisn=chireal/float(ndata-ielimino-mfit)
 
-        ochisq=chisq
-        chip=sumsq/float(ndata-ielimino)
-	    chisn=1./sqrt(chip)
-        snn=chireal/float(ndata-ielimino-mfit)
-	write(*,786)0,chisn,snn  !esta es la correcta
-c	open(icanal,file=control,fileopt='eof')
-c	write(icanal,786)0,chisn,snn !esta es la correcta
-c	close(icanal)
-786	format(1x,i3,6x,1pe9.2,1x,e10.3)
-      endif
-c ::::::::::::::::::::::::hasta aqui solo para la primera iteracion
+           write(msg,786)0,snn,chisn
+           call error(KLITE,'',msg)
+        endif
 
-	it=it+1
-	
+786     format(1x,i3,6x,1pe9.2,1x,e10.3)
+
+c       ::::::::::::::::::::::::hasta aqui solo para la primera iteracion
+
+        it=it+1
+
         do j=1,mfit
            atry(j)=a(j)
-
            do k=1,mfit
               covar(j,k)=alpha(j,k)
-	   end do
+           end do
            covar(j,j)=alpha(j,j)*(1.+alamda)
            da(j)=beta(j)
- 	end do
+        end do
 
-	call svdmatriz2(covar,mfit,mnodos,da,tol,v,w)
+        call svdmatriz2(covar,mfit,mnodos,da,tol,v,w)
 
-	datTmax=0
-        do j=1,ipa1                       !nodos en T atm 1
+        datTmax=0
+
+        do j=1,ipa1  !nodos en T atm 1
            atry(j)=a(j)*(1.+da(j))
            if(it .eq.1 .and. abs(da(j)) .gt. datTmax)datTmax=abs(da(j))
-	end do
-	if(it .eq.1 .and. datTmax .gt. rnlte_th)iRH1=1
-	do j=ipa1+1,ipa11                 !nodos en Pe atm 1 
-c           atry(j)=a(ipa11)*(1.+da(j))   !escala con la Pe en el ultimo nodo
+        end do
+        if(it .eq.1 .and. datTmax .gt. rnlte_th)iRH1=1
+        do j=ipa1+1,ipa11                 !nodos en Pe atm 1
+c          atry(j)=a(ipa11)*(1.+da(j))    !escala con la Pe en el ultimo nodo
            if(da(j) .gt. .25) da(j)=.25
            if(da(j) .lt. -0.25) da(j)=-0.25
-           atry(j)=a(j)*(1.+da(j))   !escala con la Pe en el ultimo nodo
-	end do
+           atry(j)=a(j)*(1.+da(j))        !escala con la Pe en el ultimo nodo
+        end do
         do j=ipa11+1,iga1                 !nodos en mic,H,Vz atm 1
            atry(j)=a(j)*(1.+da(j))
-c           print*,'marquardt2 93 j a(j) da(j) atry(j)',j,a(j),da(j),atry(j)
-	end do
+c          print*,'marquardt2 93 j a(j) da(j) atry(j)',j,a(j),da(j),atry(j)
+        end do
         do j=iga1+1,ifi11                 !nodos en gamma y fi atm 1
            atry(j)=a(j)+da(j)
-c           print*,'marquardt2 97',j,a(j),da(j),atry(j)
+c          print*,'marquardt2 97',j,a(j),da(j),atry(j)
         end do
         do j=ifi11+1,ipa2                 !resto nodos atm1 y nodos T atm2
            atry(j)=a(j)*(1.+da(j))
         end do
         do j=ipa2+1,ipa22                 !nodos en Pe atm 2
-c           atry(j)=a(ipa22)*(1.+da(j))        !escala con la Pe en el ultimo nodo
+c          atry(j)=a(ipa22)*(1.+da(j))    !escala con la Pe en el ultimo nodo
            atry(j)=a(j)*(1.+da(j))        !escala con la Pe en el ultimo nodo
         end do
-       	do j=ipa22+1,iga2                 !nodos en mic,H,Vz atm 2
+        do j=ipa22+1,iga2                 !nodos en mic,H,Vz atm 2
            atry(j)=a(j)*(1.+da(j))
-	    end do
+        end do
         do j=iga2+1,ifi22                 !nodos en gamma y fi atm 2
-           atry(j)=a(j)+da(j)            
-	    end do
+           atry(j)=a(j)+da(j)
+        end do
         do j=ifi22+1,mfit                 !resto nodos atm2
            atry(j)=a(j)*(1.+da(j))
-	    end do
+        end do
 
         mfitold=mfit
         do j=1,18
@@ -125,52 +124,51 @@ c           atry(j)=a(ipa22)*(1.+da(j))        !escala con la Pe en el ultimo no
         if11old=ifi11
         if22old=ifi22
 
- 
         call marqcoef2(y,sig,ndata,atry,mnodos,mfit,covar,da,chisq)
- 
+
         if(chisq.lt.ochisq)then
 
-            if(abs(factorrep).gt.1.e-3)then
-                 if(alamda.gt.1.e-4)then
-                    alamda=0.1*alamda
-                 else	
-                    alamda=0.5*alamda
-                 end if	
-            end if
+           if(abs(factorrep).gt.1.e-3)then
+              if(alamda.gt.1.e-4)then
+                 alamda=0.1*alamda
+              else
+                 alamda=0.5*alamda
+              end if
+           end if
            ochisq=chisq
 
            do j=1,mfit
               do k=1,mfit
                  alpha(j,k)=covar(j,k)
-	      end do
-c              beta1(j)=beta(j)
+              end do
+c             beta1(j)=beta(j)
               beta(j)=da(j)
               a(j)=atry(j)
 
-	      iamplio=1
-	   end do
+              iamplio=1
+           end do
 
         else
 
-c           alamda=10.*alamda
-c                 if(alamda.lt.1.e3)then
-c                    alamda=10.*alamda
-c                 else	
-c                    alamda=2.*alamda
-c                 end if	
-		
-                 if(alamda.le.1.e-3)then
-                    alamda=100.*alamda
-                 else 
-                    if(alamda.lt.1.e3)then
-                       alamda=10.*alamda
-                    else	
-                       alamda=2.*alamda
-                    end if
-                 end if	
+c          alamda=10.*alamda
+c          if(alamda.lt.1.e3)then
+c             alamda=10.*alamda
+c          else
+c             alamda=2.*alamda
+c          end if
+
+           if(alamda.le.1.e-3)then
+              alamda=100.*alamda
+           else
+              if(alamda.lt.1.e3)then
+                 alamda=10.*alamda
+              else
+                 alamda=2.*alamda
+              end if
+           end if
 
            chisq=ochisq
-	   iamplio=0
+           iamplio=0
 
            mfit=mfitold
            do j=1,18
@@ -188,6 +186,4 @@ c                 end if
         endif
 
         return
-
         end
-c _____________________________________________________________________

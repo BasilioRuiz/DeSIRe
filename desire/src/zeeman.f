@@ -1,13 +1,15 @@
 c       code1 representa mediante letras minusculas los momentos angulares
 c       orbitales semienteros, asi p=1/2, f=3/2, h=5/2,k=7/2,m=9/2,o=11/2
 c                              r=13/2,t=15/2, u=17/2,v=19/2,w=21/2
-c	design representa, mediante letras mayusculas, los momentos angulares
+c       design representa, mediante letras mayusculas, los momentos angulares
 c       orbitales enteros.
 
 
       SUBROUTINE ZEEMAN(MC,MULT,DESIGN,TAM,JI,JF,DL0,NP,NL,NR,DLP,DLL,  
-     *DLR,SP,SL,SR) 
-     	implicit real*4 (a-h,o-z)
+     *DLR,SP,SL,SR)
+
+      implicit real*4 (a-h,o-z)
+      include 'PARAMETER'
       CHARACTER DESIGN*1
       character*1 CODE(13)/'S','P','D','F','G','H','I','K','L','M','N',   
      *'O','Q'/
@@ -15,7 +17,7 @@ c       orbitales enteros.
      *DLR(*),SP(*),SL(*),SR(*) 
         character*1 code1(21)/'p','1','f','2','h','3','k','4','m','5','o'
      & ,'6','r','7','t','8','u','9','v','0','w'/
-	 
+ 
       OAM=-1
       JI1=JI(1) 
       JI2=JI(2) 
@@ -38,13 +40,11 @@ c       orbitales enteros.
 6     TAM(I)=1.              ! TOTAL ANGULAR MOMENTUM   
       SPIN=0.5*FLOAT(MULT(I)-1) 
       if(spin.lt.0)then
-           print*,' '
-           print*,'STOP: Check the transitions in the file containing the atomic parameters.'
-           print*,'There is some error at reading the multiplicity or some letter used to code'
-	   print*,'the orbital angular momentum is erroneous or missing.'      
-           print*,' '
-           print*,'__________________________________________________________________________________'
-           stop
+           call error(KSTOP,'zeeman','Check the transitions in the file'
+     &     //         ' containing the atomic parameters.\n There is some'
+     &     //         ' error at reading the multiplicity or some letter'
+     &     //         ' used\n to code the orbital angular momentum is'
+     &     //         ' erroneous or missing')
        endif
 
       DO 7 J=1,13   
@@ -58,12 +58,9 @@ c       orbitales enteros.
       go to 8 
 70    continue
 
-      print*,' '
-      print*,'STOP: Check the transitions in the file containing the atomic parameters.'
-      print*,'Some letter used to code the orbital angular momentum is erroneous or missing.'      
-      print*,' '
-      print*,'__________________________________________________________________________________'
-      stop
+      call error(KSTOP,'zeeman','Check the transitions in the file'
+     & //        ' containing the atomic parameters.\n Some letter used to'
+     & //        ' code the orbital angular momentum is erroneous or missing')
  
 8     G(I)=1.5+(SPIN*(1.+SPIN)-OAM*(1.+OAM))/4.
 13    NP=1                   ! TRIPLETS WITH G=0 OR G1=G2   
@@ -79,13 +76,11 @@ c       orbitales enteros.
 4     DO 10 I=1,2   
       SPIN=0.5*FLOAT(MULT(I)-1) 
       if(spin.lt.0)then
-           print*,' '
-           print*,'STOP: Check the transitions in the file containing the atomic parameters.'
-           print*,'There is some error at reading the multiplicity or some letter used to code'
-	   print*,'the orbital angular momentum is erroneous or missing.'      
-           print*,' '
-           print*,'__________________________________________________________________________________'
-           stop
+           call error(KSTOP,'zeeman','Check the transitions in the file'
+     &     //         ' containing the atomic parameters.\n There is some'
+     &     //         ' error at reading the multiplicity or some letter'
+     &     //         ' used\n to code the orbital angular momentum is'
+     &     //         ' erroneous or missing')
        endif
 
       DO 11 J=1,13  
@@ -99,16 +94,12 @@ c       orbitales enteros.
       go to 10
 110   continue
 
-
-      print*,' '
-      print*,'STOP: Check the transitions in the file containing the atomic parameters.'
-      print*,'Some letter used to code the orbital angular momentum is erroneous or missing.'      
-      print*,' '
-      print*,'__________________________________________________________________________________'
-      stop
+      call error(KSTOP,'zeeman','Check the transitions in the file'
+     & //        ' containing the atomic parameters.\n Some letter used to'
+     & //        ' code the orbital angular momentum is erroneous or missing')
 
 
-C	LAMDE FACTOR FOR EACH LABEL
+C     LANDE FACTOR FOR EACH LABEL
 10    G(I)=1.5+(SPIN*(1.+SPIN)-OAM*(1.+OAM))/(2.*TAM(I)*(1.+TAM(I)))
       IF(ABS(G(2)-G(1)).GT.5.E-6) GO TO 12  
       I=2   
@@ -120,7 +111,7 @@ C	LAMDE FACTOR FOR EACH LABEL
 19    NL=NP 
       NR=NP 
       IF(NP.LE.MC) GO TO 18 
-      STOP 'EXIT ZEEMAN'
+      call error(KSTOP,'zeeman','Stop in line 114')
 16    NP=2*JI2  
       GO TO 19  
 17    NP=2*JI2-1
@@ -174,7 +165,7 @@ C	LAMDE FACTOR FOR EACH LABEL
       NL=NP 
       NR=NP 
 36    IF(NP.LE.MC) GO TO 35 
-      STOP 'EXIT ZEEMAN'
+      call error(KSTOP,'zeeman','Stop in line 168')
 33    NP=I+1
       NL=I  
       NR=I  

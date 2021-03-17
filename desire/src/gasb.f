@@ -6,8 +6,9 @@ c	dp es la derivada de p respecto a t, ddp respecto a pe.
 
       subroutine gasb(theta,pe,p,dp,ddp)
 c	...............................................................
-      parameter (ncontr=28)
       implicit real*4 (a-h, o-z)
+      include 'PARAMETER'
+      parameter (ncontr=28)
       dimension cmol(91),alfai(ncontr),chi1(ncontr),chi2(ncontr),
      *u0(ncontr),u1(ncontr),u2(ncontr)
 	dimension du0(ncontr),du1(ncontr),du2(ncontr),dcmol(91)
@@ -74,8 +75,8 @@ c	...............................................................
       else
       
       if(pe.le.0)then
-         print*,'WARNING: Negative values of the electron pressure have been found in subroutine gasb.f'
-	 print*,'         These are being changed to 1.e-10'
+         call error(KWARN,'gasb','Negative values of the electron pressure'
+     &   //         ' have been found.\n These are being changed to 1.e-10')
          pe=1.e-10
          g4=0.
          g5=0.
@@ -157,12 +158,8 @@ c	g1=g1+p(i)*a*ss1
 
 
 	if(g5.lt.1.e-35)then
-	   print*,' '
-           print*,'STOP: The electronic pressure is too small in subroutine gasb.'
-	   print*,'      Check the atmospheric models.'
-	   print*,' '
-	   print*,'__________________________________________________________________________________'
-	stop
+           call error(KSTOP,'gasb','The electronic pressure is too small.'
+     &     //         ' Check the atmospheric models')
 	end if
 
       call acotasig(g5,1.e-20,1.e20)

@@ -38,7 +38,7 @@ c	print*,'pmusum asum=',pmusum,asum
 
 	Pe=Pg*1.e-4 !inicializamos 
 	call pefrompg11(T,Pg,Pe)
-	print*,'en PemufromPgT_isub.f T Pg Pe=',T,Pg,Pe
+c	print*,'en PemufromPgT_isub.f T Pg Pe=',T,Pg,Pe
 
 	call gasc(T,Pe,Pg,pp)
 	

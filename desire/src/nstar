@@ -1,0 +1,60 @@
+[3;J[H[2J========================================== .
+========================================== ./rh
+barklem.c:  reducedmass  = AMU / (1.0/atmos.H->weight + 1.0/element->weight);
+broad.c:		    (1.0 + atom->weight/atmos.H->weight), 0.3);
+broad.c:      pow(1.0 + atmos.H->weight/atom->weight, line->cvdWaals[1]);
+broad.c:  for (k = 0;  k < atmos.Nspace;  k++) GvdW[k] *= atmos.H->n[0][k];
+cocollisions.c:	(1.0 - exp(-beta[k])) * atmos.H->n[0][k];
+collision.c:      np = atmos.H->n[atmos.H->Nlevel-1];
+collision.c:        Cup = atmos.H->n[0][k] * C[k];
+collision.c:	atom->C[ij][k] += atmos.H->n[0][k] * C[k];
+collision.c:      np = atmos.H->n[atmos.H->Nlevel-1];
+collision.c:	    exp(-ar85d*EV/KBOLTZMANN/atmos.T[k])*atmos.H->n[5][k] *
+collision.c:	    atmos.H->n[0][k] * CUBE(CM_TO_M);
+h2collisions.c:	(1.0 - exp(-beta[k])) * atmos.H->n[0][k];
+hydrogen.c:    atmos.H->NLTEpops = FALSE;
+hydrogen.c:    /* --- To save memory space let atmos.H->n point to LTE populations
+hydrogen.c:           atmos.H->nstar --                           -------------- */
+hydrogen.c:    if (!atmos.H->active) atmos.H->n = atmos.H->nstar;
+hydrogen.c:    atmos.H->NLTEpops = TRUE;
+hydrogen.c:    if (!atmos.H->active)
+hydrogen.c:      atmos.H->n = matrix_double(atmos.H->Nlevel, atmos.Nspace);
+hydrogen.c:    quantumNo = (int *) malloc((atmos.H->Nlevel - 1) * sizeof(int));
+hydrogen.c:    for (i = 0;  i < atmos.H->Nlevel-1;  i++) {
+hydrogen.c:      sscanf(atmos.H->label[i], "H I %s", config);
+hydrogen.c:	g_total[quantumNo[i] - 1] += atmos.H->g[i];
+hydrogen.c:    for (i = 0;  i < atmos.H->Nlevel-1;  i++) {
+hydrogen.c:	g_i = atmos.H->g[i] / g_total[iq];
+hydrogen.c:	  atmos.H->n[i][k] = g_i * atmos.nH[iq][k];
+hydrogen.c:		quantumNo[i], (i == atmos.H->Nlevel-2) ? "" : "");
+hydrogen.c:      atmos.H->n[atmos.H->Nlevel-1][k] = atmos.nH[atmos.NHydr-1][k];
+hydrogen.c:  if (atmos.H->active) return opaque;
+hydrogen.c:  npstar = atmos.H->nstar[atmos.H->Nlevel - 1];
+hydrogen.c:  for (kr = 0;  kr < atmos.H->Ncont;  kr++) {
+hydrogen.c:    continuum = atmos.H->continuum + kr;
+hydrogen.c:		   (atmos.H->E[continuum->j] - atmos.H->E[continuum->i]));
+hydrogen.c:      g_bf  = Gaunt_bf(lambda, n_eff, atmos.H->stage[i] + 1);
+hydrogen.c:      np = atmos.H->n[atmos.H->Nlevel-1];
+hydrogen.c:	gijk    = atmos.H->nstar[i][k]/npstar[k] * expla;
+hydrogen.c:	chi[k] += sigma * (1.0 - expla) * atmos.H->n[i][k];
+hydrogen.c:  np = atmos.H->n[atmos.H->Nlevel-1];
+hydrogen.c:    chi[k] = (atmos.H->n[0][k] * 1.0E-29) * pe * kappa;
+hydrogen.c:    chi[k] *= atmos.H->n[0][k] * (atmos.ne[k] * Ck);
+hydrogen.c:  np = atmos.H->n[atmos.H->Nlevel-1];    
+hydrogen.c:    chi[k] = (atmos.H->n[0][k] * 1.0E-29) * (np[k] * 1.0E-20) * kappa;
+kurucz.c:    np = atmos.H->n[atmos.H->Nlevel-1];
+kurucz.c:		  (1.0 + element->weight/atmos.H->weight), 0.3);
+solvene.c:  np = atmos.H->n[atmos.H->Nlevel-1];
+========================================== ./rh/extern
+========================================== ./rh/makefiles
+========================================== ./rh/rhf1d
+hydrostat.c:  np  = atmos.H->n[atmos.H->Nlevel-1];
+hydrostat.c:      Phi_H2 = nH2[k] / SQ(atmos.H->ntotal[k]);
+hydrostat.c:    n_k[0] = atmos.H->ntotal[k] - np[k];
+hydrostat.c:    nHtot_old = atmos.H->ntotal[k];
+hydrostat.c:    atmos.H->ntotal[k] = n_k[0] + n_k[2];
+hydrostat.c:    for (i = 0;  i < atmos.H->Nlevel;  i++)
+hydrostat.c:      atmos.H->n[i][k] *= atmos.H->ntotal[k] / nHtot_old;   
+rhf1d.c:       nh[i][j] = atmos.H->n[j][k]*1e-6;  // convert to CGS system
+ 
+Enter ...

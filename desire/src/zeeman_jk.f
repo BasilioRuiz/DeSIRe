@@ -8,8 +8,10 @@ c     be provided in the atomic parameter file. The other values
 c     specified in the transition will not be used here.
 
       SUBROUTINE ZEEMAN_jk(MC,MULT,DESIGN,TAM,JI,JF,DL0,NP,NL,NR,DLP,DLL,  
-     *DLR,SP,SL,SR,xg1,xg2) 
-     	implicit real*4 (a-h,o-z)
+     *DLR,SP,SL,SR,xg1,xg2)
+
+      implicit real*4 (a-h,o-z)
+      include 'PARAMETER'
       CHARACTER DESIGN*1
       character*1 CODE(13)/'S','P','D','F','G','H','I','K','L','M','N',   
      *'O','Q'/
@@ -17,7 +19,7 @@ c     specified in the transition will not be used here.
      *DLR(*),SP(*),SL(*),SR(*) 
         character*1 code1(21)/'p','1','f','2','h','3','k','4','m','5','o'
      & ,'6','r','7','t','8','u','9','v','0','w'/
-	 
+ 
       OAM=-1
       JI1=JI(1) 
       JI2=JI(2) 
@@ -53,12 +55,9 @@ c     specified in the transition will not be used here.
       go to 8 
 70    continue
 
-      print*,' '
-      print*,'STOP: Check the transitions in the file containing the atomic parameters.'
-      print*,'Some letter used to code the orbital angular momentum is erroneous or missing.'      
-      print*,' '
-      print*,'__________________________________________________________________________________'
-      stop
+      call error(KSTOP,'zeeman_jf','Check the transitions in the file'
+     & //        ' containing the atomic parameters.\n Some letter used to'
+     & //        ' code the orbital angular momentum is erroneous or missing')
  
 8     G(I)=g(i)                  !1.5+(SPIN*(1.+SPIN)-OAM*(1.+OAM))/4.
 13    NP=1                   ! TRIPLETS WITH G=0 OR G1=G2   
@@ -86,8 +85,7 @@ c     specified in the transition will not be used here.
 110   continue
 
 
-
-C	LAMDE FACTOR FOR EACH LABEL
+C     LANDE FACTOR FOR EACH LABEL
 10    G(I)=g(i)   !1.5+(SPIN*(1.+SPIN)-OAM*(1.+OAM))/(2.*TAM(I)*(1.+TAM(I)))
       IF(ABS(G(2)-G(1)).GT.5.E-6) GO TO 12  
       I=2   
@@ -99,7 +97,7 @@ C	LAMDE FACTOR FOR EACH LABEL
 19    NL=NP 
       NR=NP 
       IF(NP.LE.MC) GO TO 18 
-      STOP 'EXIT ZEEMAN'
+      call error(KSTOP,'zeeman_jk','Stop in line 100')
 16    NP=2*JI2  
       GO TO 19  
 17    NP=2*JI2-1
@@ -153,7 +151,7 @@ C	LAMDE FACTOR FOR EACH LABEL
       NL=NP 
       NR=NP 
 36    IF(NP.LE.MC) GO TO 35 
-      STOP 'EXIT ZEEMAN'
+      call error(KSTOP,'zeeman_jk','Stop in line 154')
 33    NP=I+1
       NL=I  
       NR=I  

@@ -102,6 +102,16 @@
        If the atmosphere is moving, or if a polarized line is present
        data is stored for each angle and wavelength, otherwise data
        is stored once for each wavelength only.
+
+ Modifications:
+
+       - 04/04/20 epm:
+         Disk access is avoided as much as possible.
+         BACKGROUND_FILE is saved in memory rather than disk.
+         Two keywords have to be set: OLD_BACKGROUND=FALSE
+         (input.old_background=FALSE in "background.c") and,
+         VMACRO_TRESH=0.0 (atmos->moving=TRUE in "multiatmos.c").
+
        --                                              -------------- */
 
 #include <fcntl.h>
@@ -187,17 +197,18 @@ void Background(bool_t write_analyze_output, bool_t equilibria_only)
     return;
   }
 
+  // 04/04/20 epm: The keyword OLD_BACKGROUND should be FALSE.
   if (input.old_background) {
     if ((atmos.fd_background =
-	 open(input.background_File, O_RDONLY, 0)) == -1) {
+         open(input.background_File, O_RDONLY, 0)) == -1) {
       sprintf(messageStr, "Unable to open input file %s",
-	      input.background_File);
+              input.background_File);
       Error(ERROR_LEVEL_2, routineName, messageStr);
     }
     readBRS();
     return;
   }
-    
+
   getCPU(3, TIME_START, NULL);
   if (strcmp(input.fudgeData, "none")) {
     do_fudge = TRUE;
@@ -210,8 +221,8 @@ void Background(bool_t write_analyze_output, bool_t equilibria_only)
       Error(ERROR_LEVEL_2, routineName, messageStr);
     }
     sprintf(messageStr,
-	    "\n-Fudging background opacities with file\n  %s\n\n",
-	    input.fudgeData);
+            " Fudging background opacities with file %s\n\n",
+            input.fudgeData);
     Error(MESSAGE, routineName, messageStr);
 
     getLine(fp_fudge, COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
@@ -324,12 +335,14 @@ void Background(bool_t write_analyze_output, bool_t equilibria_only)
   /* --- Open output file for background opacity, emissivity,
          scattering --                                 -------------- */
 
-  if ((atmos.fd_background =
-       open(input.background_File, O_RDWR | O_CREAT, PERMISSIONS)) == -1) {
-    sprintf(messageStr, "Unable to open output file %s",
-	    input.background_File);
-    Error(ERROR_LEVEL_2, routineName, messageStr);
-  }
+  // 04/04/20 epm: We don't want BACKGROUND_FILE anymore.
+  // if ((atmos.fd_background =
+  //      open(input.background_File, O_RDWR | O_CREAT, PERMISSIONS)) == -1) {
+  //   sprintf(messageStr, "Unable to open output file %s",
+  //           input.background_File);
+  //   Error(ERROR_LEVEL_2, routineName, messageStr);
+  // }
+
   /* --- Go through the spectrum and add the different opacity and
          emissivity contributions. This is the main loop --  -------- */
 
@@ -634,16 +647,19 @@ void Background(bool_t write_analyze_output, bool_t equilibria_only)
     }
   }
 
-  if (write_analyze_output) {
-    /* --- Write background record structure --          ------------ */
-    
-    writeBRS();
+  // 04/04/20 epm: We can manage without these files.
+  // The keyword NON_ICE has to be FALSE to skip readMolecules().
+  // if (write_analyze_output) {
+  //   /* --- Write background record structure --          ------------ */
+  //
+  //   writeBRS();
+  //
+  //   /* --- Write out the metals and molecules --         ------------ */
+  //
+  //   writeMetals("metals.out");
+  //   writeMolecules(MOLECULAR_CONCENTRATION_FILE);
+  // }
 
-    /* --- Write out the metals and molecules --         ------------ */
-
-    writeMetals("metals.out");
-    writeMolecules(MOLECULAR_CONCENTRATION_FILE);
-  }
   /* --- Clean up but keep H, H2, and active atom and/or molecule
          if appropriate --                               ------------ */
 

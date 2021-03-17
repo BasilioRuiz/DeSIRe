@@ -1,12 +1,25 @@
 c     ----------------------------------------------------------
 c     WARNING: Whenever this file is changed, the code should be
 c     recompiled and linked.
+c
+c     05/05/20 epm: Add error constants.
 c     ----------------------------------------------------------
 
-c     Fundamental parameters:
+c     Fundamental parameters.
 
-      parameter (kt=300)      !maximum number of depth points (64)
-      parameter (kn=300)      !maximum number of nodes (64)
-      parameter (kl=14)       !maximum number of lines (100)
+      parameter (kt=200)      !maximum number of depth points (64)
+      parameter (kn=200)      !maximum number of nodes (64)
+      parameter (kl=20)       !maximum number of lines (100)
       parameter (kld=5000)    !maximum number of wavelengths (600)
-      parameter (mfitmax=300) !maximum number of total nodes (200)
+      parameter (mfitmax=200) !maximum number of total nodes (200)
+      parameter (m1=1024)     !power of 2 for FFT at deconv & deconv2
+
+c     05/05/20 epm: Add error constants.
+
+      parameter (KSTOP=1)     !terminating error (initial blank + 2 new lines)
+      parameter (KERR =2)     !no critical error (initial blank + 2 new lines)
+      parameter (KWARN=3)     !warning           (initial blank + 2 new lines)
+      parameter (KPARA=4)     !paragraph         (initial blank + 2 new lines)
+      parameter (KLINE=5)     !fancy message     (initial blank + 1 new line)
+      parameter (KLITE=6)     !literal message   (no blank      + 1 new line)
+      parameter (KTEXT=7)     !text              (no blank      + no new line)

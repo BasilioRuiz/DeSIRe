@@ -1,145 +1,291 @@
-c write_atmos_RH write the model atmosphere in RH format
-
-c Calling a C Function from Fortran
-c To call a C function from a Fortran program, ensure that the C function's 
-c name is spelled the way the Fortran compiler expects it to be. When you control 
-c the name of the C function, the simplest solution is to give it a name that 
-c consists of lowercase letters with a terminal underscore. For example, the following C function:
-c int fromfort_() {...}
-c could be declared in a Fortran program as follows:
-c external FROMFORT
+c_____________________________________________________________________________
+c
+c write_atmos_RH
+c write the model atmosphere in RH format
+c
+c 11/11/20 epm: Save the model in memory instead of file.
+c_____________________________________________________________________________
 
         subroutine write_atmos_RH(ID_model,RH_model,RH_mag,atmosLG,ntau)
+
         implicit real*4 (a-h,o-z)
-	include 'PARAMETER'   !por kt,kn,kl,kld
-	
-	character RH_model*(*),RH_mag*(*),ID_model*(*)
-	real*4 atmosLG(*),T,elec_dens,vz,vmic !,logtau
-        integer ntau,HEon
-c	real*8 degrad,Bs,gs,fis
-c	real*8 vector(3*ntau),vector2(3*ntau)
-c	real*8 degrad,x,epsil
-	real*8 log_mass
-	real*8 mass_column(ntau)      !,mass_columnold(ntau)
-	real*8 gravity,dlog10g
-	real*4 pg1(kt),z1(kt),ro1(kt),pg2(kt),z2(kt),ro2(kt),z1i,z0,zn
-	real*4 gamma_rad(kt),phi_rad(kt)
-	real*4 deglat,deglon
-	common/HEonoff/HEon  !HEon=1 HE, HEon=0 Non HE
-	common/zetas/pg1,z1,ro1,pg2,z2,ro2    !para el calculo de z,pg y ro en amp22 y amp22err
-	common/latlong/deglat,deglon
+        include 'PARAMETER'
 
-c        print*,'write_atmos_RH campo=',ntau,atmosLG(4*ntau+1),atmosLG(6*ntau+1),atmosLG(7*ntau+1)
-c        stop
-c	epsil=1.d-6
-	bolr=1.3806488e-16
-c	degrad=3.1415926535897932385d0/180.d0
-c       degrad=0.017453293005625408d0
-	gravity=27413.847972d0      !cgs
-	dlog10g=dlog10(gravity)    !4.43797
-	ican=53
-	epsilon=1.e-4
+        character RH_model*(*),RH_mag*(*),ID_model*(*)
+        character geoscale
+        integer*4 ntau,nB,HEon
+        integer*4 codes(100)
+        real*4    deglat,deglon
+        real*4    atmosLG(*)
+        real*4    T(kt),elec_dens(kt),vz(kt),vmic(kt)
+        real*4    B(kt),gamma(kt),phi(kt)
+        real*8    gravity,dlog10g
+        real*8    mass_column(ntau)
+        real*8    log_mass(kt)
 
-	open(ican,file=RH_model)
-	write(ican,*)ID_model(1:20)
+        common/HEonoff/HEon  !HEon=1 HE, HEon=0 Non HE
+        common/latlong/deglat,deglon
+c       Usamos este common compartido con write_atmos_RH_tau() para salvar
+c       las variables en el (en vez de usar save) y ahorrar algo de memoria.
+        common/saveatmos/T,elec_dens,vz,vmic,log_mass,B,gamma,phi
 
-        write(ican,*)'Mass scale'
-        write(ican,'("* log g [cm s^-2]")')
-	write(ican,*)dlog10g            !4.43797  !log g
-	write(ican,'("* Ndep")')
-	write(ican,*)ntau
-	write(ican,'("*")')	
-        write(ican,'("*lgcolumnMass Temperature Ne V Vturb")')
-        
-c        print*,'write_atmos_RH ',dlog10g,ntau,HEon,10**atmosLG(ntau),10**atmosLG(1)
-c         print*,'write_atmos_RH ',HEon
-c         stop
-        
-        if(HEon .eq.0)then
-           print*,'We are running out of Hydrostatic equilibrium'
+        epsil=1.e-6
+        bolr=1.3806488e-16
+        gravity=27413.847972d0   !cgs
+        dlog10g=dlog10(gravity)  !4.43797
+
+c       ican=53
+c       RH_model='Temporary.atmos'
+c       open(ican,file=RH_model)
+c       write(ican,*)ID_model(1:20)
+c       write(ican,*)'Mass scale'
+c       write(ican,'("* log g [cm s^-2]")')
+c       write(ican,*)dlog10g
+c       write(ican,'("* Ndep")')
+c       write(ican,*)ntau
+c       write(ican,'("*")')
+c       write(ican,'("*lgcolumnMass Temperature Ne V Vturb")')
+
+        call toascii(trim(ID_model),100,codes)
+        ncodes=len_trim(ID_model)
+        geoscale='M'
+
+c       Le damos la vuelta a los arrays porque SIR va desde lo mas profundo
+c       a la superficie y RH va al reves, de la superficie a lo profundo.
+
+        i=1
+        if(HEon.eq.0)then
+           call error(KWARN,'write_atmos_RH',
+     &                'We are running out of hydrostatic equilibrium')
            taun=10**atmosLG(ntau)
            rhon=atmosLG(10*ntau+2+ntau)
            zn=atmosLG(8*ntau+2+ntau)
-	   delta_tau=(10**atmosLG(ntau-1)-taun)       !chnaging sign (-d(tau))
+           delta_tau=(10**atmosLG(ntau-1)-taun)  !changing sign (-d(tau))
            delta_z=(zn-atmosLG(8*ntau+2+ntau-1))*1.e5
-	   romean=(rhon+atmosLG(10*ntau+2+ntau-1))/2.
-	   absorp=delta_tau/delta_z/romean
-c	   print*,'write_atmos_RH  delta_z=',delta_z,'romean=',romean,'absorp=',absorp,'T=',atmosLG(2*ntau),'pe=',atmosLG(3*ntau)
+           romean=(rhon+atmosLG(10*ntau+2+ntau-1))/2.
+           absorp=delta_tau/delta_z/romean
            mass_column(ntau)=taun/absorp
-c           mass_columnold(ntau)=mass_column(ntau)
            rho0=rhon
            z0=zn
-           log_mass= dlog10(mass_column(ntau))
-           T=atmosLG(2*ntau)
-           elec_dens=atmosLG(3*ntau)/bolr/T
-           vz=-atmosLG(6*ntau)*1.e-5
-           vmic=atmosLG(4*ntau)*1.e-5
-           write(ican,100)log_mass,T,elec_dens,vz,vmic      !WARNING Vz=0 --> vz*0.
-	   do k=ntau-1,1,-1
-	      T=atmosLG(k+ntau)
-              elec_dens=atmosLG(k+2*ntau)/bolr/T
-              vz=-atmosLG(k+5*ntau)*1.e-5
-              vmic=atmosLG(k+3*ntau)*1.e-5
-	      rho1=atmosLG(10*ntau+2+k)
-	      z1i=atmosLG(8*ntau+2+k)
-	      delta_z=(z1i-z0)*1.e5
-	      x=rho1/rho0-1.0
-	      if(x .gt. epsil)then
-	         mass_column(k)=mass_column(k+1)-rho0*delta_z*x/dlog(1.d0+x)
-	      else
-	         mass_column(k)=mass_column(k+1)-rho0*delta_z/(1.d0-0.5d0*x)
-	      endif
-              rho0=rho1 
+           T(i)=atmosLG(2*ntau)
+           elec_dens(i)=atmosLG(3*ntau)/bolr/T(i)
+           vz(i)=-atmosLG(6*ntau)*1.e-5
+           vmic(i)=atmosLG(4*ntau)*1.e-5
+           log_mass(i)= dlog10(mass_column(ntau))
+c          write(ican,100)log_mass(i),T(i),elec_dens(i),vz(i),vmic(i)
+           i=i+1
+           do k=ntau-1,1,-1
+              T(i)=atmosLG(k+ntau)
+              elec_dens(i)=atmosLG(k+2*ntau)/bolr/T(i)
+              vz(i)=-atmosLG(k+5*ntau)*1.e-5
+              vmic(i)=atmosLG(k+3*ntau)*1.e-5
+              rho1=atmosLG(10*ntau+2+k)
+              z1i=atmosLG(8*ntau+2+k)
+              delta_z=(z1i-z0)*1.e5
+              x=rho1/rho0-1.0
+              if(x.gt.epsil)then
+                 mass_column(k)=mass_column(k+1)-rho0*delta_z*x/dlog(1.d0+x)
+              else
+                 mass_column(k)=mass_column(k+1)-rho0*delta_z/(1.d0-0.5d0*x)
+              endif
+              rho0=rho1
               z0=z1i
-c              mass_columnold(i)=mass_column(i)
-              log_mass= dlog10(mass_column(k))
-              write(ican,100)log_mass,T,elec_dens,vz,vmic      !WARNING Vz=0 --> vz*0.
-c              if(k .eq. 301)print*,'stop 1 en write_atmos_RH',log_mass,T,elec_dens,vz,vmic
-c              if(k .eq. 301)stop
-	  end do
-       else
-c          print*,'We are in Hydrostatic equilibrium'
-	  do k=ntau,1,-1
-             T=atmosLG(k+ntau)
-             elec_dens=atmosLG(k+2*ntau)/bolr/T
-             vz=-atmosLG(k+5*ntau)*1.e-5
-             vmic=atmosLG(k+3*ntau)*1.e-5
-c             print*,'write_atmos_RH pe',k,atmosLG(k+2*ntau)
-             log_mass= dlog10(atmosLG(9*ntau+2+k)*1.d0)-dlog10g
-c         print*,'write_atmos_RH log_mass=',atmosLG(9*ntau+2+k)*1.d0,'T=',atmosLG(k+ntau),'pe=',atmosLG(k+2*ntau)
-c             print*,'write_atmos_RH 2',log_mass,T,elec_dens,vz,vmic
-             write(ican,100)log_mass,T,elec_dens,vz,vmic      !WARNING Vz=0 --> vz*0.
-c             if(k .eq. 300)print*,' 300 en write_atmos_RH',log_mass,T,elec_dens,vz,vmic
-c             if(k .eq. 301)print*,' 301 en write_atmos_RH',log_mass,T,elec_dens,vz,vmic
-c             if(k .eq. 301)stop
-          end do
-       end if   
-c       stop
-c       print*,'write_atmos_RH 113 tau=36',atmosLG(36+ntau)
-       
-        close(ican)
+              log_mass(i)= dlog10(mass_column(k))
+c             write(ican,100)log_mass(i),T(i),elec_dens(i),vz(i),vmic(i)
+              i=i+1
+           end do
 
-        do i=1,ntau
-          gamma_rad(i)=atmosLG(6*ntau+i)
-          phi_rad(i)=atmosLG(7*ntau+i)
+        else
+           do k=ntau,1,-1
+              T(i)=atmosLG(k+ntau)
+              elec_dens(i)=atmosLG(k+2*ntau)/bolr/T(i)
+              vz(i)=-atmosLG(k+5*ntau)*1.e-5
+              vmic(i)=atmosLG(k+3*ntau)*1.e-5
+              log_mass(i)= dlog10(dble(atmosLG(9*ntau+2+k)))-dlog10g
+c             write(ican,100)log_mass(i),T(i),elec_dens(i),vz(i),vmic(i)
+              i=i+1
+           end do
+        end if
+
+c       close(ican)
+
+c       Escritura del campo magnetico.
+
+        nB=0
+        i=1
+        do k=ntau,1,-1
+           B(i)=atmosLG(4*ntau+k)*1.e-4
+           gamma(i)=atmosLG(6*ntau+k)
+           phi(i)=atmosLG(7*ntau+k)
+           if(B(i).gt.0) nB=ntau
+           i=i+1
         end do
-        if(abs(deglat) .gt. epsilon .or. abs(deglon) .gt. epsilon)then
-           call taulinea5sub(1,deglat,deglon,gamma_rad,phi_rad,ntau) !cambiamos de LoS a local (Z)
+
+c       Si corresponde, cambiamos de LoS a local (Z).
+        if(abs(deglat).gt.epsil .or. abs(deglon).gt.epsil)then
+           call taulinea5sub(1,deglat,deglon,gamma,phi,ntau)
         endif
-        
-        open(ican,file=RH_mag)
-c        print*,'Voy a escribir en ',RH_mag,' en write_atmos_RH el campo '
-        do i=ntau,1,-1
-c            print*,'write_atmos_RH campo',i,atmosLG(4*ntau+i),atmosLG(6*ntau+i), atmosLG(7*ntau+i)
-c            write(ican,*) atmosLG(4*ntau+i)*1.d-4,atmosLG(6*ntau+i), atmosLG(7*ntau+i)
-             write(ican,*)atmosLG(4*ntau+i)*1.d-4,gamma_rad(i),phi_rad(i)  
-        end do
-        close(ican)
-        
-        
+
+c       RH_mag='Temporary_field.mod'
+c       if(RH_mag.ne.'none')then
+c          open(ican,file=RH_mag)
+c          do i=1,ntau
+c             write(ican,*)B(i),gamma(i),phi(i)
+c          end do
+c          close(ican)
+c       end if
+
+c       Pasamos todo a RH.
+
+        call siratmos(codes,ncodes,geoscale,dlog10g,ntau,
+     &                log_mass,T,elec_dens,vz,vmic,nB,B,gamma,phi)
+
 100     format(1x,f13.9,1x,f10.2,1x,1pe12.5,1x,e11.4,1x,e11.4,1x)
-	return	
 
-	end
-	
+        return
+        end
 
+c_____________________________________________________________________________
+c
+c write_atmos_RH_tau
+c write the model atmosphere in RH format in logtau scale (needs H populations)
+c
+c 11/11/20 epm: Save the model in memory instead of file.
+c_____________________________________________________________________________
+
+        subroutine write_atmos_RH_tau(ID_model,RH_model,RH_mag,atmosLG,
+     &                                ntau,natmos)
+
+        implicit real*4 (a-h,o-z)
+        include 'PARAMETER'
+
+        character RH_model*(*),RH_mag*(*),ID_model*(*)
+        character geoscale
+        integer*4 ntau,nB,natmos
+        integer*4 codes(100)
+        real*4    deglat,deglon
+        real*4    atmosLG(*)
+        real*4    T(kt),elec_dens(kt),vz(kt),vmic(kt)
+        real*4    B(kt),gamma(kt),phi(kt)
+        real*4    hydro1(6,kt),hydro2(6,kt)
+        real*4    nh1(kt),nh2(kt),nh3(kt),nh4(kt),nh5(kt),nh6(kt)
+        real*8    gravity,dlog10g
+        real*8    log_tau(kt)
+
+        character*40 msg
+
+        save nh1,nh2,nh3,nh4,nh5,nh6
+
+        common/hydroge_populations/hydro1,hydro2  !float (6,kt), H populations
+        common/latlong/deglat,deglon
+c       Usamos este common compartido con write_atmos_RH() para salvar
+c       las variables en el (en vez de usar save) y ahorrar algo de memoria.
+        common/saveatmos/T,elec_dens,vz,vmic,log_tau,B,gamma,phi
+
+        epsil=1.e-6
+        bolr=1.3806488e-16
+        gravity=27413.847972d0   !cgs
+        dlog10g=dlog10(gravity)  !4.43797
+
+c       ican=53
+c       RH_model='Temporary.atmos'
+c       open(ican,file=RH_model)
+c       write(ican,*)ID_model(1:20)
+c       write(ican,*)'Tau scale'
+c       write(ican,'("* log g [cm s^-2]")')
+c       write(ican,*)dlog10g
+c       write(ican,'("* Ndep")')
+c       write(ican,*)ntau
+c       write(ican,'("*")')
+c       write(ican,'("*lgtau Temperature Ne V Vturb")')
+
+        call toascii(trim(ID_model),100,codes)
+        ncodes=len_trim(ID_model)
+        geoscale='T'
+
+c       Le damos la vuelta a los arrays porque SIR va desde lo mas profundo
+c       a la superficie y RH va al reves, de la superficie a lo profundo.
+
+        i=1
+        do k=ntau,1,-1
+           T(i)=atmosLG(k+ntau)
+           elec_dens(i)=atmosLG(k+2*ntau)/bolr/T(i)
+           vz(i)=-atmosLG(k+5*ntau)*1.e-5
+           vmic(i)=atmosLG(k+3*ntau)*1.e-5
+           log_tau(i)= dble(atmosLG(k))
+c          write(ican,100)log_tau(i),T(i),elec_dens(i),vz(i),vmic(i)
+           i=i+1
+        end do
+
+c       write(ican,'("*")')
+c       write(ican,'("* Hydrogen populations ")')
+c       write(ican,'("*    nh(1)        nh(2)        n(h3)        nh(4)'
+c    &  //         '        nh(5)        np ")')
+        if(natmos.eq.1)then
+           i=1
+           do k=ntau,1,-1
+              nh1(i)=hydro1(1,k)
+              nh2(i)=hydro1(2,k)
+              nh3(i)=hydro1(3,k)
+              nh4(i)=hydro1(4,k)
+              nh5(i)=hydro1(5,k)
+              nh6(i)=hydro1(6,k)
+              i=i+1
+c             write(ican,101)(hydro1(j,k),j=1,6)
+           end do
+        else if(natmos.eq.2)then
+           i=1
+           do k=ntau,1,-1
+              nh1(i)=hydro2(1,k)
+              nh2(i)=hydro2(2,k)
+              nh3(i)=hydro2(3,k)
+              nh4(i)=hydro2(4,k)
+              nh5(i)=hydro2(5,k)
+              nh6(i)=hydro2(6,k)
+              i=i+1
+c             write(ican,101)(hydro2(j,k),j=1,6)
+           end do
+        else
+           write(msg,'(a,i2)') 'Wrong number of atmospheres = ',natmos
+           call error(KSTOP,'write_atmos_RH_tau',msg)
+        end if
+
+c       close(ican)
+
+c       Escritura del campo magnetico.
+
+        nB=0
+        i=1
+        do k=ntau,1,-1
+           B(i)=atmosLG(4*ntau+k)*1.e-4
+           gamma(i)=atmosLG(6*ntau+k)
+           phi(i)=atmosLG(7*ntau+k)
+           if(B(i).gt.0) nB=ntau
+           i=i+1
+        end do
+
+c       Si corresponde, cambiamos de LoS a local (Z).
+        if(abs(deglat).gt.epsil .or. abs(deglon).gt.epsil)then
+           call taulinea5sub(1,deglat,deglon,gamma,phi,ntau)
+        endif
+
+c       RH_mag  ='Temporary_field.mod'
+c       if(RH_mag.ne.'none')then
+c          open(ican,file=RH_mag)
+c          do i=1,ntau
+c             write(ican,*)B(i),gamma(i),phi(i)
+c          end do
+c          close(ican)
+c       end if
+
+c       Pasamos todo a RH.
+
+        call siratmos(codes,ncodes,geoscale,dlog10g,ntau,
+     &                log_tau,T,elec_dens,vz,vmic,nB,B,gamma,phi)
+        call siratmosnh(nh1,nh2,nh3,nh4,nh5,nh6)
+
+100     format(1x,f13.9,1x,f10.2,1x,1pe12.5,1x,e11.4,1x,e11.4,1x)
+101     format(6(1x,e12.5))
+
+        return
+        end

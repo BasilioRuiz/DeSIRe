@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Wed Feb 26 16:11:25 2014 --
+       Last modified: Tue May  5 14:41:48 2020 --
 
        --------------------------                      ----------RH-- */
 
@@ -59,7 +59,7 @@ extern char messageStr[];
 
 /* ------- begin -------------------------- readAtom.c -------------- */
 
-void readAtom(Atom *atom, char *atom_file, bool_t active)
+void readAtom(Atom *atom, char *atom_file)
 {
   const char routineName[] = "readAtom";
   register int kr, krp, kf, la, k, n;
@@ -83,19 +83,17 @@ void readAtom(Atom *atom, char *atom_file, bool_t active)
 
   /* --- Open the data file for current model atom --  -------------- */
 
-  initAtom(atom);
   if ((atom->fp_input = fopen(atom_file, "r")) == NULL) {
     sprintf(messageStr, "Unable to open input file %s", atom_file);
     Error(ERROR_LEVEL_2, routineName, atom_file);
-/*  } else {
-    sprintf(messageStr, " -- reading input file: %s %s",
-	    atom_file, (active) ? "(active)\n\n" : "(passive)\n");
-    Error(MESSAGE, routineName, messageStr);*/
+  } else {
+    // sprintf(messageStr, " -- reading input file: %s %s\n",
+    //         atom_file, (atom->active) ? "(active)" : "(passive)");
+    // Error(MESSAGE, routineName, messageStr);
   }
-  atom->active = active;
 
   /* --- Read atom ID and convert to uppercase --     -------------- */
- 
+
   getLine(atom->fp_input, COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
   Nread = sscanf(inputLine, "%2s", atom->ID);
   checkNread(Nread, Nrequired=1, routineName, checkPoint=1);
@@ -123,8 +121,8 @@ void readAtom(Atom *atom, char *atom_file, bool_t active)
     }
   }
   if (!match) {
-    sprintf(messageStr, " No matching element in periodic table for "
-	    " element %s in file %s, or abundance not specified",
+    sprintf(messageStr, "No matching element in periodic table for "
+	    "element\n %s in file %s, or abundance not specified",
 	    atom->ID, atom_file);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
@@ -267,7 +265,7 @@ void readAtom(Atom *atom, char *atom_file, bool_t active)
       } else {
 	vacuum_to_air(1, &line->lambda0, &lambda_air);
 	sprintf(messageStr,
-		" Line %d -> %d (%9.3f [nm]) has %d components\n",
+		" Line %d -> %d (%9.3f [nm]) has %d components\n\n",
 		line->j, line->i, lambda_air, line->Ncomponent);
 	Error(MESSAGE, routineName, messageStr);
       }
@@ -288,18 +286,18 @@ void readAtom(Atom *atom, char *atom_file, bool_t active)
     } else if (strstr(vdWstr, "BARKLEM")) {
       line->vdWaals = BARKLEM;
       if (!getBarklemactivecross(line)) {
-/*	sprintf(messageStr,
-		"Line %3d -> %3d: cannot treat line "
-		"with Barklem type broadening. Using UNSOLD.", j, i);
-	Error(WARNING, routineName, messageStr); */
-	line->vdWaals = UNSOLD;
-	line->cvdWaals[3] = line->cvdWaals[1] = 0.0;
+        // sprintf(messageStr,
+        //         "Line %3d -> %3d: cannot treat line with Barklem "
+        //         "type broadening\n Using UNSOLD", j, i);
+        // Error(WARNING, routineName, messageStr);
+        line->vdWaals = UNSOLD;
+        line->cvdWaals[3] = line->cvdWaals[1] = 0.0;
       }
     } else {
       sprintf(messageStr, "Invalid value for vd Waals string: %s", vdWstr);
       Error(ERROR_LEVEL_2, routineName, messageStr);
     }
- 
+
     line->symmetric   = (strstr(symmStr, "ASYMM")) ? FALSE : TRUE;
     line->polarizable = FALSE;
 
@@ -322,28 +320,23 @@ void readAtom(Atom *atom, char *atom_file, bool_t active)
       }
 
       if (atmos.Stokes) {
-	if (line->g_Lande_eff != 0.0 ||
-	    (determinate(atom->label[i], atom->g[i], &nq, &S, &L, &Jl) &&
-	     determinate(atom->label[j], atom->g[j], &nq, &S, &L, &Ju) &&
-	     fabs(Ju - Jl) <= 1.0)) {
+        if (line->g_Lande_eff != 0.0 ||
+            (determinate(atom->label[i], atom->g[i], &nq, &S, &L, &Jl) &&
+             determinate(atom->label[j], atom->g[j], &nq, &S, &L, &Ju) &&
+             fabs(Ju - Jl) <= 1.0)) {
 
-          if (line->Ncomponent > 1) {
-	    sprintf(messageStr,
-		    "Line %3d -> %3d: cannot treat composite line "
-                    "with polarization", j, i);
-	    Error(ERROR_LEVEL_2, routineName, messageStr);
-	  }
-	  line->polarizable = TRUE;
-	} else {
-/*	  sprintf(messageStr,
-		  " -- Treating line %3d -> %3d without polarization%s\n",
-		  j, i, (kr == Nline-1) ? "\n" : "");
-	  Error(MESSAGE, routineName, messageStr);  */
-	  line->polarizable = FALSE;
-	}
+          line->polarizable = TRUE;
+        } else {
+          // sprintf(messageStr,
+          //         " Treating line %3d -> %3d without polarization%s",
+          //         j, i, (kr == Nline-1) ? "\n\n" : "\n\n");
+          // Error(MESSAGE, routineName, messageStr);
+          line->polarizable = FALSE;
+        }
       }
     }
   }
+
   /* --- Go through the bound-free transitions --      -------------- */
 
   atom->continuum =
@@ -452,7 +445,7 @@ void readAtom(Atom *atom, char *atom_file, bool_t active)
       for (kr = 0;  kr < Ncont;  kr++) {
 	continuum = atom->continuum + kr;
 	if (continuum->i == i  &&  continuum->j == j) {
-	  sprintf(messageStr, "Fixed transition j = %d,  i = %d"
+	  sprintf(messageStr, "Fixed transition j = %d, i = %d"
 		  " duplicates active continuum", j, i);
 	  Error(ERROR_LEVEL_2, routineName, messageStr);
 	}
@@ -489,13 +482,13 @@ void readAtom(Atom *atom, char *atom_file, bool_t active)
       if (atmos.moving && !input.PRD_angle_dep) {
 	sprintf(messageStr,
 		"Using angle-averaged PRD in moving atmosphere for "
-                "atom %2s\n", atom->ID);
+                "atom %2s", atom->ID);
 	Error(WARNING, routineName, messageStr);
       }
       if (!atmos.moving && input.PRD_angle_dep) {
 	sprintf(messageStr,
 		"Using angle-dependent PRD in static atmosphere for "
-                "atom %2s\n", atom->ID);
+                "atom %2s", atom->ID);
 	Error(WARNING, routineName, messageStr);
       }
       
@@ -526,8 +519,8 @@ void readAtom(Atom *atom, char *atom_file, bool_t active)
 	      realloc (line->xrd, line->Nxrd * sizeof(AtomicLine *));
 
 	    sprintf(messageStr,
-		    "Found %d subordinate PRD lines for line %d-%d of "
-		    "atom %2s\n", line->Nxrd, line->j, line->i, atom->ID);
+		    " Found %d subordinate PRD lines for line %d-%d of "
+		    "atom %2s\n\n", line->Nxrd, line->j, line->i, atom->ID);
 	    Error(MESSAGE, routineName, messageStr);
 	  }
 	}
@@ -553,8 +546,8 @@ void readAtom(Atom *atom, char *atom_file, bool_t active)
   } else {
 
     if (atom->popsinFile  &&
-	atom->initial_solution == OLD_POPULATIONS) {
- 
+        atom->initial_solution == OLD_POPULATIONS) {
+
       atom->NLTEpops = TRUE;
 
       /* --- Allocate memory for Non-LTE populations -- ------------- */
@@ -562,9 +555,12 @@ void readAtom(Atom *atom, char *atom_file, bool_t active)
       atom->n = matrix_double(atom->Nlevel, atmos.Nspace);
       readPopulations(atom);
 
+      // 04/04/20 epm: We save populations in memory rather than disk.
+      // sprintf(messageStr,
+      //   " -- Read input file: %s with NLTE populations for atom %s\n",
+      //   atom->popsinFile, atom->ID);
       sprintf(messageStr,
-	  " --- Read input file: %s with NLTE populations for atom %s\n",
-	      atom->popsinFile, atom->ID);
+        " Read from memory NLTE populations for atom %s\n\n", atom->ID);
       Error(MESSAGE, routineName, messageStr);
     } else {
       atom->NLTEpops = FALSE;
@@ -766,7 +762,7 @@ void readAtomicModels(void)
   char    filename[MAX_LINE_SIZE],
           actionKey[MAX_KEYWORD_SIZE], popsKey[MAX_KEYWORD_SIZE],
           popsFile[MAX_LINE_SIZE], inputLine[MAX_LINE_SIZE], *atomID;
-  bool_t  active, exit_on_EOF;
+  bool_t  exit_on_EOF;
   int     Nread, Nrequired, checkPoint;
   FILE   *fp_atoms;
   Atom   *atom;
@@ -809,7 +805,7 @@ void readAtomicModels(void)
     for (m = 0;  m < n;  m++) {
       if (strstr(atomID, atmos.atoms[m].ID)) {
 	sprintf(messageStr,
-		"Aready read atomic model for element %s\n", atomID);
+		"Already read atomic model for element %s", atomID);
 	Error(ERROR_LEVEL_2, routineName, messageStr);
       }
     }
@@ -817,9 +813,14 @@ void readAtomicModels(void)
            treated in Non-LTE --                       -------------- */
 
     atom = &atmos.atoms[n];
-    readAtom(atom, filename,
-	     active=(strstr(actionKey, "ACTIVE") ? TRUE : FALSE));
+    initAtom(atom);
 
+    atom->active = (strstr(actionKey, "ACTIVE") ? TRUE : FALSE);
+
+    // 03/03/21 epm: Check HYDROGEN_LTE when H active.
+    if (n == 0 && atom->active && atmos.H_LTE)
+      Error(ERROR_LEVEL_2, routineName,
+            "HYDROGEN_LTE keyword has to be FALSE when H is ACTIVE");
 
     /* --- Set flag for initial soltion --             -------------- */
 
@@ -834,7 +835,7 @@ void readAtomicModels(void)
 
     if (atom->initial_solution == UNKNOWN) {
       sprintf(messageStr,
-	      "Unknown initial solution specified for atom: %s\n",
+	      "Unknown initial solution specified for atom: %s",
 	      atomID);
       Error(ERROR_LEVEL_2, routineName, messageStr);
     } 
@@ -849,7 +850,7 @@ void readAtomicModels(void)
     if (atom->initial_solution == OLD_POPULATIONS) {
       if (Nread < 4) {
 	sprintf(messageStr,
-		"No file with OLD_POPULATIONS specified for atom: %s\n",
+		"No file with OLD_POPULATIONS specified for atom: %s",
 		atomID);
 	Error(ERROR_LEVEL_2, routineName, messageStr);
       }
@@ -857,6 +858,7 @@ void readAtomicModels(void)
 	(char *) malloc((strlen(popsFile) + 1) * sizeof(char));
       strcpy(atom->popsinFile, popsFile);
     }
+    readAtom(atom, filename);
   }
   fclose(fp_atoms);  
 

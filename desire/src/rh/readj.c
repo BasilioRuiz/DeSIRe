@@ -7,15 +7,32 @@
        --------------------------                      ----------RH-- */
 
 /* --- Routines to read and write angle-averaged mean intensity and
-       background opacities and emissivities. --       -------------- */
- 
+       background opacities and emissivities.
 
-/* --- Note: pread and pwrite are only able to deal with chunks
+       Note: pread and pwrite are only able to deal with chunks
              that are less than 2^31 - 1 bytes. The routines
              pread_rh and pwrite_rh read/write chunks of PWRITE_SLICE
-             sequentially to overcome this. --         -------------- */
+             sequentially to overcome this.
+
+       Modifications:
+
+       - 04/04/20 epm:
+         Disk access is avoided as much as possible.
+
+         BACKGROUND_FILE is saved in memory rather than disk.
+         Two keywords have to be set: OLD_BACKGROUND=FALSE
+         (input.old_background=FALSE in "background.c") and,
+         VMACRO_TRESH=0.0 (atmos->moving=TRUE in "multiatmos.c").
+
+         J_FILE is saved in memory rather than disk.
+         The keyword LIMIT_MEMORY has to be set to FALSE.
+         Be aware that 'rhf1d' and 'solveray' need the keyword
+         STARTING_J to be set to NEW_J as J_FILE is missing.
+
+       --                                              -------------- */
 
 #include <unistd.h>
+#include <string.h>
 
 #include "rh.h"
 #include "atom.h"
@@ -31,7 +48,7 @@
 /* --- Function prototypes --                          -------------- */
 
 size_t pwrite_rh(int fd, const void *buf, size_t count, off_t offset);
-size_t pread_rh(int fd, const void *buf, size_t count, off_t offset);
+size_t pread_rh(int fd, void *buf, size_t count, off_t offset);
 
 
 /* --- Global variables --                             -------------- */
@@ -41,10 +58,33 @@ extern Spectrum spectrum;
 extern InputData input;
 extern char messageStr[];
 
+static void *pmem_bg = NULL;
+static void *pmem_J  = NULL;
+
 
 /* ------- begin -------------------------- readJlambda.c ----------- */
 
-void readJlambda(int nspect, double *J)
+void readJlambda( int nspect, double *J )
+{
+  const char routineName[] = "readJlambda";
+
+  size_t recordsize = atmos.Nspace * sizeof(double);
+  off_t  offset     = recordsize * nspect;
+
+  if (pmem_J != NULL)
+  {
+     memcpy(J, pmem_J + offset, recordsize);
+  }
+  else
+  {
+    sprintf(messageStr,
+            "Error reading J (offset = %lld, recordsize = %zu): pointer null",
+            (long long) offset, recordsize);
+    Error(ERROR_LEVEL_2, routineName, messageStr);
+  }
+}
+
+void readJlambda_OLD(int nspect, double *J)
 {
   const char routineName[] = "readJlambda";
 
@@ -59,8 +99,8 @@ void readJlambda(int nspect, double *J)
 
   if (!result) {
     sprintf(messageStr,
-	    "Error reading file: offset = %lld, recordsize = %zu",
-	    (long long) offset, recordsize);
+          "Error reading file: offset = %lld, recordsize = %zu",
+          (long long) offset, recordsize);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
 }
@@ -68,7 +108,30 @@ void readJlambda(int nspect, double *J)
 
 /* ------- begin -------------------------- writeJlambda.c ---------- */
 
-void writeJlambda(int nspect, double *J)
+void writeJlambda( int nspect, double *J )
+{
+  const char routineName[] = "writeJlambda";
+
+  size_t recordsize = atmos.Nspace * sizeof(double);
+  off_t  offset     = recordsize * nspect;
+
+  void *tmp;   // avoid memory leak
+
+  if ((tmp = realloc(pmem_J, offset + recordsize)) != NULL)
+  {
+    pmem_J = tmp;
+    memcpy(pmem_J + offset, J, recordsize);
+  }
+  else
+  {
+    sprintf(messageStr,
+            "Error writing J (offset = %lld, recordsize = %zu): pointer null",
+            (long long) offset, recordsize);
+    Error(ERROR_LEVEL_2, routineName, messageStr);
+  }
+}
+
+void writeJlambda_OLD(int nspect, double *J)
 {
   const char routineName[] = "writeJlambda";
 
@@ -83,8 +146,8 @@ void writeJlambda(int nspect, double *J)
 
   if (!result) {
     sprintf(messageStr,
-	    "Error writing file: offset = %lld, recordsize = %zu",
-	    (long long) offset, recordsize);
+          "Error writing file: offset = %lld, recordsize = %zu",
+          (long long) offset, recordsize);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
 }
@@ -409,7 +472,20 @@ void writeProfile(AtomicLine *line, int lamu, double *phi)
 
 /* ------- begin -------------------------- pread_rh.c -------------- */
 
-size_t pread_rh(int fd, const void *buffer, size_t count, off_t offset)
+size_t pread_rh( int fd, void *buffer, size_t count, off_t offset )
+{
+  if (pmem_bg != NULL)
+  {
+    memcpy(buffer, pmem_bg + offset, count);
+  }
+  else
+  {
+    count = 0;
+  }
+  return(count);
+}
+
+size_t pread_rh_OLD(int fd, const void *buffer, size_t count, off_t offset)
 {
   register int i;
 
@@ -435,7 +511,23 @@ size_t pread_rh(int fd, const void *buffer, size_t count, off_t offset)
 
 /* ------- begin -------------------------- pwrite_rh.c ------------- */
 
-size_t pwrite_rh(int fd, const void *buffer, size_t count, off_t offset)
+size_t pwrite_rh( int fd, const void *buffer, size_t count, off_t offset )
+{
+  void *tmp;   // avoid memory leak
+
+  if ((tmp = realloc(pmem_bg, offset + count)) != NULL)
+  {
+    pmem_bg = tmp;
+    memcpy(pmem_bg + offset, buffer, count);
+  }
+  else
+  {
+    count = 0;
+  }
+  return(count);
+}
+
+size_t pwrite_rh_OLD(int fd, const void *buffer, size_t count, off_t offset)
 {
   register int i;
 

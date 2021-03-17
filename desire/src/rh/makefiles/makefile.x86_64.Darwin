@@ -28,6 +28,7 @@ LDFLAGS  = -m64 -L../
 
 #      --                                              -------------- ##
 
+ARFLAGS  = rvs
 ARCHLIBS = -lm -lpthread
 ARCHINC  = 
 

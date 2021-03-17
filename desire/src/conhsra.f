@@ -189,10 +189,13 @@ c------------------------------------------------------------------
 	real*8 function conhsra_RH(x)
 	
 	implicit real*8 (a-h,o-z)
+        include 'PARAMETER'
 	real*8 xx,yn
 	real*4 x
+
         if(x .lt. 1700.)then
-	  print*,'Warning: revise continuum calibration in conhsra_RHNLTE'
+            call error(KWARN,'conhsra_RH',
+     &                 'Please, revise continuum calibration')
         else if(x .le. 1724)then	!CORRECTED
             xx=x*1.d0-2.d3
             yn=-0.035332881+xx*(-0.00025832630+xx*(-4.5882973e-07))
@@ -370,7 +373,8 @@ c
            yn=0.98759222+xx*(-0.0035465176+xx*0.00045682467)              
         else
            yn=1.d0
-           print*,'Warning: revise continuum calibration in conhsra_RHNLTE'
+           call error(KWARN,'conhsra_RH',
+     &                'Please, revise continuum calibration')
         end if   
 	
 	conhsra_RH=yn
@@ -381,11 +385,13 @@ c------------------------------------------------------------------
 	real*8 function conhsra_RHLTE(x)
 	
 	implicit real*8 (a-h,o-z)
+        include 'PARAMETER'
 	real*8 xx,yl
 	real*4 x
 	
 	if(x .lt. 1700.)then
-	  print*,'Warning: revise continuum calibration in conhsra_RHNLTE'
+            call error(KWARN,'conhsra_RHLTE',
+     &                 'Please, revise continuum calibration')
         else if (x .lt. 2513.5)then	!CORRECTED
             xx=x*1.d0-2.d3
             yl=0.37219930+xx*(0.00014417795+xx*(-6.8141446e-07+xx*(
@@ -499,10 +505,12 @@ c-------------------------------------------------------------------------------
         real*8 function conhsra_RHtable(x)
 	
 	implicit real*8 (a-h,o-z)
+        include 'PARAMETER'
 	real*8 xarr1(24),scaley(23),xxi
 	real*8 c1(23),c2(23),c3(23),c4(23),c5(23)
 	integer imin
 	real*4 x
+        character*100 msg
 
 	data xarr1/ 2000.00d0, 2032.50d0, 2100.00d0,
      *   2176.50d0, 2265.60d0, 2267.30d0, 2333.50d0,
@@ -550,9 +558,10 @@ c-------------------------------------------------------------------------------
      * 0.0573901,0.00000, 0.00877613, 0.00000/   
      
      	if(x .lt. 2000.)then
-	  print*,'STOP: continuum calibration in conhsra_RHtable'
-	  print*,'valid for wavelenths larger than 2000 A and lower than 10000 A'
-	  STOP
+          write(msg, *)'Lambda = ', x
+          call error(KSTOP,'conhsra_RHtable','Continuum calibration valid'
+     &    //         ' for wavelenths in the range 2000 to 10000 A\n'
+     &    //         msg)
         end if
         
        	imin=1

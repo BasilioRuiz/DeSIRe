@@ -41,8 +41,15 @@
        Also evaluates the mean molecular weight avgWeight and stores it
        in the Atmos structure.
 
- Note: List of elements and their atomic weights are taken from the
+  Note: 
+       List of elements and their atomic weights are taken from the
        Atlas 9 code of R. L. Kurucz.
+
+  Modifications:
+
+       - 08/08/20 epm:
+         We supply the abundance values from SIR.
+
        --                                              -------------- */
 
 #include <stdlib.h>
@@ -58,6 +65,7 @@
 #include "inputs.h"
 #include "xdr.h"
 #include "atomweights.h"
+#include "desire.h"
 
 
 #define COMMENT_CHAR           "#"
@@ -71,6 +79,9 @@
 
 extern InputData input;
 extern char messageStr[];
+
+// 08/08/20 epm: New struct to load abundance values from SIR.
+extern SIRabun sirabun;
 
 
 /* ------- begin -------------------------- readAbundance.c --------- */
@@ -104,28 +115,37 @@ void readAbundance(Atmosphere *atmos)
     element->model = NULL;
   }
 
-  if ((fp_abund = fopen(input.abund_input, "r")) == NULL) {
-    sprintf(messageStr,
-	    "Unable to open input file %s", input.abund_input);
-    Error(ERROR_LEVEL_2, routineName, messageStr);
-  }
   /* --- Read abundances from file --                  -------------- */
+  //
+  // if ((fp_abund = fopen(input.abund_input, "r")) == NULL) {
+  //   sprintf(messageStr,
+  //           "Unable to open input file %s", input.abund_input);
+  //   Error(ERROR_LEVEL_2, routineName, messageStr);
+  // }
+  //
+  // while (getLine(fp_abund, COMMENT_CHAR, line, exit_on_EOF=FALSE) != EOF) {
+  //   if ((Nread = sscanf(line, "%s %lf", ID, &abund)) != 2) {
+  //     sprintf(messageStr, "Unable to read input file %s",
+  //             input.abund_input);
+  //     Error(ERROR_LEVEL_2, routineName, messageStr);
+  //   }
 
-  while (getLine(fp_abund, COMMENT_CHAR, line, exit_on_EOF=FALSE) != EOF) {
-    if ((Nread = sscanf(line, "%s %lf", ID, &abund)) != 2) {
-      sprintf(messageStr, "Unable to read input file %s",
-	      input.abund_input);
-      Error(ERROR_LEVEL_2, routineName, messageStr);
-    }
+  /* --- 08/08/20 epm: We supply the abundances from SIR --  -------- */
+
+  for (i = 0; i < sirabun.nelem; i++) {
+    strncpy(ID, sirabun.id[i], ATOM_ID_WIDTH);
+    ID[ATOM_ID_WIDTH] = '\0';
+    abund = sirabun.abun[i];
+
     UpperCase(ID);
     if (strlen(ID) == 1) strcat(ID, " ");
 
     for (n = 0;  n < atmos->Nelem;  n++) {
       if ((match = strstr(atmos->elements[n].ID, ID))) {
-	atmos->elements[n].abund = abund;
-	if (strstr(ID, "H ")  &&  (abund == 12.0)) DEX = TRUE;
+        atmos->elements[n].abund = abund;
+        if (strstr(ID, "H ") && (abund > 11.9) && (abund < 12.1)) DEX = TRUE;
         atmos->elements[n].abundance_set = TRUE;
-	break;
+        break;
       }
     }
     if (!match) {
@@ -133,14 +153,15 @@ void readAbundance(Atmosphere *atmos)
       Error(WARNING, routineName, messageStr);
     }
   }
-  fclose(fp_abund);
+
+  // fclose(fp_abund);
 
   /* --- Multiply with metallicity factor if different from 1.0 -- -- */
 
   metallicity = POW10(input.metallicity);
   if (input.metallicity != 0.0) {
     sprintf(messageStr,
-	    "\nMultiplying metal abundances by metallicity of %5.3f\n\n",
+	    " Multiplying metal abundances by metallicity of %5.3f\n\n",
 	    metallicity);
     Error(MESSAGE, routineName, messageStr);
   }

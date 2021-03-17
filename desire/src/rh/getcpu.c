@@ -70,7 +70,8 @@ void getCPU(int level, enum CPUaction action, char *label)
   clock_t CPUtime;
 #endif
 
-  if (level == 0 && action == TIME_START && !commandline.showkeywords)
+  if (stats.printCPU &&
+      level == 0 && action == TIME_START && !commandline.showkeywords)
   {
     // 13/06/19 epm: After converting RH executables to functions,
     // the file remains open (there is not end of application to close it)
@@ -128,13 +129,15 @@ void printTotalCPU()
   double user, system, total;
   struct tms tms;
 
-  times(&tms);
-  user   = ((double) tms.tms_utime) / sysconf(_SC_CLK_TCK);
-  system = ((double) tms.tms_stime) / sysconf(_SC_CLK_TCK);
-  total  = user + system;
-  
-  fprintf(stats.fp_CPU, "\nTotal_time____: %8.3f [sec] ", total);
-  fprintf(stats.fp_CPU, " (user: %4.1f%%, system: %4.1f%%)\n\n",
-	  100*user/total, 100*system/total);
+  if (stats.printCPU && stats.fp_CPU) {
+    times(&tms);
+    user   = ((double) tms.tms_utime) / sysconf(_SC_CLK_TCK);
+    system = ((double) tms.tms_stime) / sysconf(_SC_CLK_TCK);
+    total  = user + system;
+
+    fprintf(stats.fp_CPU, "\nTotal_time____: %8.3f [sec] ", total);
+    fprintf(stats.fp_CPU, " (user: %4.1f%%, system: %4.1f%%)\n\n",
+            100*user/total, 100*system/total);
+  }
 }
 /* ------- end ---------------------------- printTotalCPU ----------- */

@@ -15,7 +15,6 @@
   See: Ayres, T.R., Wiedemann, G., 1989, ApJ 338, 1033
        --                                              -------------- */
 
-
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
@@ -41,6 +40,7 @@
 
 #define OMEGA0 2.103E+05
 
+
 /* --- Function prototypes --                          -------------- */
 
 
@@ -60,7 +60,7 @@ void COcollisions(struct Molecule *molecule)
   double hcomega_k, *beta, C_0;
 
   if (!strstr(molecule->ID, "CO")) {
-    sprintf(messageStr, "Molecule is not CO: %s\n", molecule->ID);
+    sprintf(messageStr, "Molecule is not CO: %s", molecule->ID);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
 

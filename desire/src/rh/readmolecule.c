@@ -85,15 +85,13 @@ void readMolecule(Molecule *molecule, char *fileName, bool_t active)
     sprintf(messageStr, "Unable to open inputfile %s", fileName);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   } else {
-  /*  sprintf(messageStr, " -- reading input file: %s %s", 
-	    fileName, (active) ? "(active)\n\n" : "(passive)\n");
-
-
-    Error(MESSAGE, routineName, messageStr);*/
+    // sprintf(messageStr, " -- reading input file: %s %s\n",
+    //         fileName, (active) ? "(active)" : "(passive)");
+    // Error(MESSAGE, routineName, messageStr);
     initMolecule(molecule);
   }
   /* --- Read molecule ID --                           -------------- */
- 
+
   getLine(fp_molecule, COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
   Nread = sscanf(inputLine, "%s", molecule->ID);
   checkNread(Nread, Nrequired=1, routineName, checkPoint=1);
@@ -116,7 +114,7 @@ void readMolecule(Molecule *molecule, char *fileName, bool_t active)
   getLine(fp_molecule, COMMENT_CHAR, inputLine, exit_on_EOF=TRUE);
   molecule->Nelement = countTokens(inputLine, " ,");
   if (molecule->Nelement == 0) {
-    sprintf(messageStr, "Could not identify constituents for molecule %s\n",
+    sprintf(messageStr, "Could not identify constituents for molecule %s",
 	    molecule->ID);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
@@ -148,7 +146,7 @@ void readMolecule(Molecule *molecule, char *fileName, bool_t active)
     }
     if (!match) {
       sprintf(messageStr, "Could not find element %s of molecule %s"
-              " in periodic table, or element abundance not specified\n",
+              " in periodic table,\n or element abundance not specified",
 	      elementID, molecule->ID);
       Error(ERROR_LEVEL_2, routineName, messageStr);
     }
@@ -254,7 +252,7 @@ void readMolecule(Molecule *molecule, char *fileName, bool_t active)
 
   if (active) {
     if (molecule->Nrt == 0) {
-      sprintf(messageStr, " No lines specified for active molecule %s\n",
+      sprintf(messageStr, "No lines specified for active molecule %s",
 	      molecule->ID);
       Error(ERROR_LEVEL_2, routineName, messageStr);
     }
@@ -322,7 +320,7 @@ void readMolecule(Molecule *molecule, char *fileName, bool_t active)
 				  (molecule->Nconfig + 1) * sizeof(char));
     molecule->configs[molecule->Nconfig] = '\0';
     sprintf(messageStr,
-	    " --- Found %d electronic configurations for molecule %s: %s\n\n",
+	    " Found %d electronic configurations for molecule %s: %s\n\n",
 	    molecule->Nconfig, molecule->ID, molecule->configs);
     Error(MESSAGE, routineName, messageStr);    
 
@@ -589,13 +587,13 @@ void readMolecularLines(struct Molecule *molecule, char *line_data)
   C = 2.0*PI * (Q_ELECTRON/EPSILON_0) * (Q_ELECTRON/M_ELECTRON) / CLIGHT;
 
   /* --- Open the data file --                         -------------- */
- 
+
   if ((fp_lines = fopen(line_data, "r")) == NULL) {
     sprintf(messageStr, "Unable to open inputfile %s", line_data);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   } else {
-    sprintf(messageStr, " -- reading input file: %s\n", line_data);
-    Error(MESSAGE,routineName, messageStr);
+    // sprintf(messageStr, " -- reading input file: %s\n", line_data);
+    // Error(MESSAGE, routineName, messageStr);
   }
   /* --- Get count, type, and format of the lines in this file -- -- */
 
@@ -656,7 +654,7 @@ void readMolecularLines(struct Molecule *molecule, char *line_data)
 	break;
       default:
 	sprintf(messageStr, "Invalid value of branch string in file %s: %s\n"
-		" Line: %f [nm]\n  Valid options are P, R and Q",
+		" Line: %f [nm] - Valid options are P, R and Q",
 		line_data, branchStr, mrt->lambda0);
 	Error(ERROR_LEVEL_2, routineName, messageStr);
       }
@@ -824,14 +822,14 @@ void readMolecularLines(struct Molecule *molecule, char *line_data)
 	case 'A': mrt->Hundi = CASE_A;  break;
 	case 'B': mrt->Hundi = CASE_B;  break;
         default:
-          sprintf(messageStr, "Unsupported Hund's case: %s\n", Hundi);
+          sprintf(messageStr, "Unsupported Hund's case: %s", Hundi);
 	  Error(ERROR_LEVEL_2, routineName, messageStr);
 	}
         switch (Hundj[0]) {
 	case 'A': mrt->Hundj = CASE_A;  break;
 	case 'B': mrt->Hundj = CASE_B;  break;
         default:
-          sprintf(messageStr, "Unsupported Hund's case: %s\n", Hundj);
+          sprintf(messageStr, "Unsupported Hund's case: %s", Hundj);
 	  Error(ERROR_LEVEL_2, routineName, messageStr);
 	}
 	/* --- Orbital angular momemtum Lambda along nuclear axis
@@ -849,7 +847,7 @@ void readMolecularLines(struct Molecule *molecule, char *line_data)
 	case 'F': mrt->Lambdai = 3;  break;
         default:
           sprintf(messageStr,
-		  "Unsupported orbital projection Lambda: %s\n", Lambdai);
+		  "Unsupported orbital projection Lambda: %s", Lambdai);
 	  Error(ERROR_LEVEL_2, routineName, messageStr);
 	}
         switch (Lambdaj[0]) {
@@ -859,7 +857,7 @@ void readMolecularLines(struct Molecule *molecule, char *line_data)
 	case 'F': mrt->Lambdaj = 3;  break;
         default:
           sprintf(messageStr,
-		  "Unsupported orbital projection Lambda: %s\n", Lambdaj);
+		  "Unsupported orbital projection Lambda: %s", Lambdaj);
 	  Error(ERROR_LEVEL_2, routineName, messageStr);
 	}
 	/* --- Set the polarized flag only if the atmosphere has magnetic
@@ -876,7 +874,7 @@ void readMolecularLines(struct Molecule *molecule, char *line_data)
   molecule->Nrt += Nrt;
 
   fclose(fp_lines);
-  sprintf(messageStr, " --- read %d %s lines for molecule %2s\n\n",
+  sprintf(messageStr, " Read %d %s lines for molecule %2s\n\n",
 	  Nrt, type_string, molecule->ID);
   Error(MESSAGE, routineName, messageStr);
 }
@@ -934,15 +932,14 @@ void readMolecularModels(void)
     /* --- The first molecule MUST be H2 --            -------------- */
 
     if (n == 0  &&  !strstr(moleculeID, "H2")) {
-      sprintf(messageStr,
-	      "\n First molecule should be H2\n");
+      sprintf(messageStr, "First molecule should be H2");
       Error(ERROR_LEVEL_2, routineName, messageStr);
     }
     /* --- Check for duplicate molecule IDs --         -------------- */
 
     for (m = 0;  m < n;  m++) {
       if (strcmp(moleculeID, atmos.molecules[m].ID) == 0) {
-	sprintf(messageStr, "Duplicate model for molecule %s\n",
+	sprintf(messageStr, "Duplicate model for molecule %s",
 		moleculeID);
 	Error(ERROR_LEVEL_2, routineName, messageStr);
       }
@@ -968,7 +965,7 @@ void readMolecularModels(void)
       molecule->initial_solution = OLD_POPULATIONS;
       if (Nread < 4) {
 	sprintf(messageStr,
-		"No file with OLD_POPULATIONS specified for molecule: %s\n",
+		"No file with OLD_POPULATIONS specified for molecule: %s",
 		moleculeID);
 	Error(ERROR_LEVEL_2, routineName, messageStr);
       }
@@ -983,9 +980,9 @@ void readMolecularModels(void)
 
     if (molecule->initial_solution == UNKNOWN) {
       sprintf(messageStr,
-	      "Unknown initial solution specified for molecule: %s\n"
-              "Has to be LTE_POPULATIONS for molecules\n",
-	      moleculeID);
+              "Unknown initial solution specified for molecule: %s\n"
+              " Has to be LTE_POPULATIONS for molecules",
+              moleculeID);
       Error(ERROR_LEVEL_2, routineName, messageStr);
     } 
 

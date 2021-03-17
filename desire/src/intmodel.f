@@ -1,14 +1,14 @@
 c esta rutina interpola en tau el modelo ttau,tt,ppe...y da la salida en
 c ttau,tt,ppe...por medio de un polinomio de grado ngrado
 
-	subroutine intmodel(ngrado,n,tau,ttau,tt,ppe,mmic,hh,vvz,gg,ffi)
+        subroutine intmodel(ngrado,n,tau,ttau,tt,ppe,mmic,hh,vvz,gg,ffi)
 
-	include 'PARAMETER'  !por kt
-	implicit real*4 (a-h,o-z)
+        implicit real*4 (a-h,o-z)
+        include 'PARAMETER'  !por kt
 
-	real ttau(*),tt(*),ppe(*),hh(*),MMIC(*),VVZ(*),gg(*),ffi(*)
-	real tau(*),t(kt),pe(kt),h(kt),vz(kt),MIC(kt),G(kt),FI(kt)
-	real xa(11),ya(11)
+        real ttau(*),tt(*),ppe(*),hh(*),MMIC(*),VVZ(*),gg(*),ffi(*)
+        real tau(*),t(kt),pe(kt),h(kt),vz(kt),MIC(kt),G(kt),FI(kt)
+        real xa(11),ya(11)
 
 c interpolaremos las presiones en logaritmos neperianos
 	num=n

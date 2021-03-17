@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Tue Jan 12 10:17:35 2010 --
+       Last modified: Thu Apr 30 22:05:39 2020 --
 
        --------------------------                      ----------RH-- */
 
@@ -309,16 +309,17 @@ void adjustStokesMode()
   AtomicLine *line;
 
   /* --- Reset Stokes mode so that the full Stokes equations are
-         solved in case of input.StokesMode == FIELD_FREE, or
-         input.StokesMode == POLARIZATION_FREE. --    -------------- */
+         solved in case of input.StokesMode == FIELD_FREE --
+                                                      -------------- */
 
-  if (atmos.Nactiveatom == 0 || atmos.Stokes == FALSE ||
-      input.StokesMode == NO_STOKES ||
-      input.StokesMode == FULL_STOKES) return;
+  if ((atmos.Nactiveatom == 0 || atmos.Stokes == FALSE ||
+       input.StokesMode == NO_STOKES ||
+       input.StokesMode == FULL_STOKES) && !input.backgr_pol) return;
   else
     input.StokesMode = FULL_STOKES;
 
   if (oldMode == FIELD_FREE) {
+
     getCPU(2, TIME_START, NULL);
 
     for (nact = 0;  nact < atmos.Nactiveatom;  nact++) {

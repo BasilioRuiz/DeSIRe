@@ -7,7 +7,14 @@
        --------------------------                      ----------RH-- */
 
 /* --- Print warning, or print error string and exit when error level
-       is above preset treshold --                     -------------- */
+       is above preset treshold
+
+       Modifications:
+
+       - 04/04/20 epm:
+         Change to separate outputs on screen from logfile.
+
+       --                                              -------------- */
 
 #include <stdlib.h>
 #include <errno.h>
@@ -27,35 +34,56 @@ extern CommandLine commandline;
 /* ------- begin -------------------------- Error.c ----------------- */
 
 void Error(enum errorlevel level, const char *routineName,
-	   const char *messageStr)
+           const char *messageStr)
 {
-  char errorStr[MAX_MESSAGE_LENGTH];
+  char str[MAX_MESSAGE_LENGTH];
   enum errorlevel defaultLevel = ERROR_LEVEL_1;
 
-  switch (level) {
-  case MESSAGE:
-    if (!commandline.quiet)
-      fprintf(commandline.logfile, "%s", (messageStr) ? messageStr : "");
-    return;
-  case WARNING:
-    fprintf(commandline.logfile, "\n-WARNING in routine %s\n %s\n",
-	    routineName, (messageStr) ? messageStr : " (Undocumented)\n");
-    return;
-  default:
-    if (level < defaultLevel) {
-      fprintf(commandline.logfile, "\a\n-ERROR in routine %s\n %s \n %s\n",
-	      routineName,(messageStr) ? messageStr : " (Undocumented)\n",
-	      "Trying to continue.....");
-      return;
-    } else {
-      sprintf(errorStr, "\a\n\n-TERMINATING_ERROR in routine %s\n %s \n %s\n",
-	      routineName,(messageStr) ? messageStr : " (Undocumented)\n",
-	      "Exiting.....");
+  switch (level)
+  {
+    case MESSAGE:
+    {
+      sprintf(str, "%s", (messageStr) ? messageStr : "");
 
-      fprintf(commandline.logfile, "%s", errorStr);
-      if (commandline.logfile != stderr) fprintf(stderr, "%s", errorStr);
+      if (!commandline.quiet) fprintf(stdout, "%s", str);
+      if (commandline.logfile) fprintf(commandline.logfile, "%s", str);
+    }
+    return;
 
-      exit(level);
+    case WARNING:
+    {
+      sprintf(str, "-WARNING in routine %s\n %s\n\n",
+              routineName, (messageStr) ? messageStr : " ( Undocumented )");
+
+      if (!commandline.quiet) fprintf(stdout, "%s", str);
+      if (commandline.logfile) fprintf(commandline.logfile, "%s", str);
+    }
+    return;
+
+    default:
+    {
+      if (level < defaultLevel)
+      {
+        sprintf(str, "\a-ERROR in routine %s\n %s\n %s\n\n",
+                routineName, (messageStr) ? messageStr : " ( Undocumented )",
+                "Trying to continue.....");
+
+        if (!commandline.quiet) fprintf(stdout, "%s", str);
+        if (commandline.logfile) fprintf(commandline.logfile, "%s", str);
+
+        return;
+      }
+      else
+      {
+        sprintf(str, "\a\n-TERMINATING_ERROR in routine %s\n %s\n %s\n\n",
+                routineName, (messageStr) ? messageStr : " ( Undocumented )",
+                "Exiting.....");
+
+        fprintf(stdout, "%s", str);
+        if (commandline.logfile) fprintf(commandline.logfile, "%s", str);
+
+        exit(level);
+      }
     }
   }
 }

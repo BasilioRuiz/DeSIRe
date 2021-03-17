@@ -311,8 +311,8 @@ ZeemanMultiplet* MolZeeman(MolecularLine *mrt)
   }
 
   vacuum_to_air(1, &(mrt->lambda0), &lambda_air);
-  sprintf(messageStr, " -- %2s line at %9.4f nm has %3d "
-	  "Zeeman components, gL_eff = %7.4f\n", mrt->molecule->ID,
+  sprintf(messageStr, " %2s line at %9.4f nm has %3d "
+	  "Zeeman components, gL_eff = %7.4f\n\n", mrt->molecule->ID,
 	  lambda_air, zm->Ncomponent, mrt->g_Lande_eff);
   Error(MESSAGE, routineName, messageStr);
 

@@ -97,7 +97,7 @@ void distribute_nH()
   if (atmos.H_LTE) {
     atmos.H->NLTEpops = FALSE;
     Error(MESSAGE, routineName,
-	  "\nUsing LTE hydrogen populations for background opacities\n\n");
+          " Using LTE hydrogen populations for background opacities\n\n");
 
     /* --- To save memory space let atmos.H->n point to LTE populations
            atmos.H->nstar --                           -------------- */
@@ -134,7 +134,7 @@ void distribute_nH()
       } else {
         sprintf(messageStr, "Too many hydrogen levels (level n = %d)\n"
 		" Background opacity additional levels set to zero%s",
-		quantumNo[i], (i == atmos.H->Nlevel-2) ? "\n\n" : "");
+		quantumNo[i], (i == atmos.H->Nlevel-2) ? "" : "");
 	Error(WARNING, routineName, messageStr);
       }
     }    

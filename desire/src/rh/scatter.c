@@ -18,7 +18,6 @@
        no longer automatically deleted. Careful, they can be quite big.
        --                                              -------------- */
 
- 
 #include <stdlib.h>
 #include <math.h>
 
@@ -50,7 +49,7 @@ extern char messageStr[];
 
 void PRDScatter(AtomicLine *PRDline, enum Interpolation representation)
 {
-  const char routineName[] = "scatterIntegral";
+  const char routineName[] = "PRDScatter";
   register int  la, k, lap, kr, ip, kxrd;
 
   char    filename[MAX_LINE_SIZE];
@@ -247,7 +246,7 @@ void PRDScatter(AtomicLine *PRDline, enum Interpolation representation)
 	       fwrite(gii, sizeof(double), Np, PRDline->fp_GII)) != Np) {
 	    sprintf(messageStr,
 		  "Unable to write proper number of redistribution weights\n"
-		  " Wrote %d instead of %d.\n Line %d -> %d, la = %d, k = %d",
+		  " Wrote %d instead of %d\n Line %d -> %d, la = %d, k = %d",
 		    Nwrite, Np, XRDline->j, XRDline->i, la, k);
 	    Error(ERROR_LEVEL_2, routineName, messageStr);
 	  }
@@ -256,7 +255,7 @@ void PRDScatter(AtomicLine *PRDline, enum Interpolation representation)
 	       fread(gii, sizeof(double), Np, PRDline->fp_GII)) != Np) {
 	    sprintf(messageStr,
 		  "Unable to read proper number of redistribution weights\n"
-		  " Read %d instead of %d.\n Line %d -> %d, la = %d, k = %d",
+		  " Read %d instead of %d\n Line %d -> %d, la = %d, k = %d",
 		  Nread, Np, XRDline->j, XRDline->i, la, k);
 	    Error(ERROR_LEVEL_2, routineName, messageStr);
 	  }
@@ -296,7 +295,7 @@ void PRDScatter(AtomicLine *PRDline, enum Interpolation representation)
 void PRDAngleScatter(AtomicLine *PRDline,
 		     enum Interpolation representation)
 {
-  const char routineName[] = "scatterIntegral";
+  const char routineName[] = "PRDAngleScatter";
   register int  la, k, lap, kr, ip, mu, mup;
 
   char    filename[MAX_LINE_SIZE];
@@ -319,6 +318,7 @@ void PRDAngleScatter(AtomicLine *PRDline,
 	    PRDline->j, PRDline->i, atom->ID);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
+
   getCPU(3, TIME_START, NULL);
 
   cDop = (NM_TO_M * PRDline->lambda0) / (4.0 * PI);
@@ -547,7 +547,7 @@ void PRDAngleScatter(AtomicLine *PRDline,
 				     PRDline->fp_GII)) != Np) {
 		  sprintf(messageStr,
 		"Unable to write proper number of redistribution weights\n"
-		" Wrote %d instead of %d.\n Line %d -> %d, la = %d, k = %d",
+		" Wrote %d instead of %d\n Line %d -> %d, la = %d, k = %d",
 			  Nwrite, Np, PRDline->j, PRDline->i, la, k);
 		  Error(ERROR_LEVEL_2, routineName, messageStr);
 		}
@@ -556,7 +556,7 @@ void PRDAngleScatter(AtomicLine *PRDline,
 				   PRDline->fp_GII)) != Np) {
 		  sprintf(messageStr,
 		"Unable to read proper number of redistribution weights\n"
-	        " Read %d instead of %d.\n Line %d -> %d, la = %d, k = %d",
+	        " Read %d instead of %d\n Line %d -> %d, la = %d, k = %d",
 			  Nread, Np, PRDline->j, PRDline->i, la, k);
 		  Error(ERROR_LEVEL_2, routineName, messageStr);
 		}

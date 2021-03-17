@@ -6,13 +6,15 @@ c isigno (=1 convolucion),(=-1 deconvolucion),(0= return)
 c n es el numero de puntos
 
       subroutine deconv2(vin,isigno,nlins,npass,dlamda0s,dlamdas,s)
+
       implicit real*4 (a-h,o-z)
-      parameter(m1=1024)   !m1 MUST be an integer power of 2!!!
+      include 'PARAMETER'
 
       real*4 vin(*),dlamda0s(*),dlamdas(*)
       real*4 frec,ex,cota,paso,sigma,pi,c,s
       real*4 v1(m1),v2(m1),expo(m1)
       integer npass(*),ifiltro,nlins,isigno,linea
+      character*100 msg
       common/ifiltro/ifiltro
       data ivez/0/
 
@@ -29,16 +31,15 @@ c descomponemos vin en datos para cada linea: v1
 	kk=0
    
 c rellenamos hasta 'ntot' con ceros
-
 	do j=1,nlins
 	  n2=npass(j)
 	  i1=(ntot-n2)/2
 	  i2=i1+n2
 
           if(n2.gt.ntot)then
-          print*,'DECONV2: the line # ',j,' has more than ',
-     &            ntot,' wavelengths'
-            stop
+             write(msg,'(a,i5,a,i5,a)') 'Line ',j,' has more than ',
+     &             ntot,' wavelengths'
+             call error(KSTOP,'deconv2',msg)
           end if
 
 	  if(n2.gt.1)then
@@ -98,6 +99,4 @@ c	    if(n2.gt.1)call deconvsub2(v2,ntot,expo,linea)
 
 	return
 	end
-
-
 

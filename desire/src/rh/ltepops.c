@@ -175,7 +175,7 @@ void LTEmolecule(Molecule *molecule)
   MolecularLine *mrt;
 
   if (!molecule->active) {
-    sprintf(messageStr, "Molecule must be active: %s\n", molecule->ID);
+    sprintf(messageStr, "Molecule must be active: %s", molecule->ID);
     Error(ERROR_LEVEL_2, "LTEmolecule", messageStr);
   }
   /* --- Fill energy matrix --                         -------------- */

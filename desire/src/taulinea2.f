@@ -5,26 +5,29 @@ c il=1 :transforma una atmosfera en la linea de vision a una atmosfera
 c       en direccion z
 c ntau : numero de puntos en tau
 c tau  : log10(tau)
-	subroutine taulinea2(il,cth,ihe,vx,atmos,ntau)
+        subroutine taulinea2(il,cth,ihe,vx,atmos,ntau)
 
-	include 'PARAMETER'   !para kt
-	parameter (kt8=8*kt+2)
-	implicit real*4 (a-h,o-z)
-	integer ihe,il,ntau
-	real*4 atmos(*),atmos1(kt8),atmos2(kt8),cth,vx
-c	real*4 gammal1(kt),gammal2(kt),phil1(kt),phil2(kt)
-c	common/LOS/ gammal1,phil1,gammal2,phil2  !para ASP: subsir
+        implicit real*4 (a-h,o-z)
+        include 'PARAMETER'
+        parameter (kt8=8*kt+2)
+        integer ihe,il,ntau
+        real*4 atmos(*),atmos1(kt8),atmos2(kt8),cth,vx
+        character*40 msg
+c       real*4 gammal1(kt),gammal2(kt),phil1(kt),phil2(kt)
+c       common/LOS/ gammal1,phil1,gammal2,phil2  !para ASP: subsir
 
-	do i=1,8*ntau+2
+        do i=1,8*ntau+2
            atmos1(i)=atmos(i)
            atmos2(i)=atmos(i+8*ntau+2)
-	end do
-        
+        end do
+
 c	if(cth.ne.1.)then
 	if(abs(cth-1) .lt. 1.e-4)then 
-	   print*,'The atmospheres are assumed to be line of sight!!'
-           print*,'However, hydrostatic equilibrium is computed along'
-           print*,'the vertical (using the heliocentric angle provided)',cth
+           write(msg,*)cth
+           call error(KWARN,'taulinea2','The atmospheres are assumed to be'
+     &     //         ' line of sight.\n However, hydrostatic equilibrium is'
+     &     //         ' computed along the vertical\n using the heliocentric'
+     &     //         ' angle provided (cth = '//trim(msg)//')')
 	end if
 
 c	call taulinea(il,cth,ihe,vx,atmos1,ntau,gammal1,phil1)  ! gammal1???

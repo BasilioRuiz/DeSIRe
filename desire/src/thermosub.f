@@ -1,3 +1,5 @@
+c Este modulo pertenece al programa 'modelador3'
+c
 c thermo calcula los coeficientes termodinamicos:
 c alpha,delta, cv
 c tambien calcula pg, rho, pesomolecularmedio

@@ -131,9 +131,7 @@ clean:
 
 ## --- Explicit dependencies on include files --       -------------- ##
 
-# 21/06/19 epm: "barklem.o" depends on "inputs.h".
-# 31/07/19 epm: "barklem.o" depends on "desire.h".
-librh.a(abundance.o):     rh.h  atom.h  atmos.h  constant.h  error.h  inputs.h  xdr.h  atomweights.h
+librh.a(abundance.o):     rh.h  atom.h  atmos.h  constant.h  error.h  inputs.h  xdr.h  atomweights.h  desire.h
 librh.a(accelerate.o):    rh.h  accelerate.h  error.h  statistics.h
 librh.a(backgropac_xdr.o):rh.h  atom.h  atmos.h  spectrum.h  background.h  error.h  inputs.h  xdr.h
 librh.a(background.o):    rh.h  atom.h  atmos.h  spectrum.h  constant.h  background.h  error.h  statistics.h  inputs.h  xdr.h
@@ -166,7 +164,7 @@ librh.a(hydrogen.o):      rh.h  atom.h  atmos.h  constant.h  background.h  error
 librh.a(initial_xdr.o):   rh.h  atom.h  atmos.h  spectrum.h  accelerate.h  constant.h  statistics.h  error.h  inputs.h  xdr.h
 librh.a(initscatter.o):   rh.h  atom.h  atmos.h  spectrum.h  accelerate.h  error.h  statistics.h  inputs.h
 librh.a(iterate.o):       rh.h  atom.h  atmos.h  spectrum.h  background.h  accelerate.h  error.h  statistics.h  inputs.h
-librh.a(kurucz.o):        rh.h  atom.h  atmos.h  background.h  spectrum.h  constant.h  inputs.h  error.h
+librh.a(kurucz.o):        rh.h  atom.h  atmos.h  background.h  spectrum.h  constant.h  inputs.h  error.h  desire.h
 librh.a(linear.o):        rh.h
 librh.a(ltepops.o):       rh.h  atom.h  atmos.h  constant.h  error.h  statistics.h
 librh.a(ludcmp.o):        rh.h  error.h
@@ -177,7 +175,7 @@ librh.a(molzeeman.o):     rh.h  atom.h  spectrum.h  error.h
 librh.a(nemetals.o):      rh.h  atom.h  atmos.h  background.h
 librh.a(ohchbf.o):        rh.h  atom.h  atmos.h  constant.h
 librh.a(opacity.o):       rh.h  error.h  atom.h  atmos.h  spectrum.h  inputs.h  constant.h
-librh.a(options.o):       rh.h  error.h  inputs.h
+librh.a(options.o):       rh.h  error.h  inputs.h  desire.h
 librh.a(order.o):         rh.h
 librh.a(parse.o):         rh.h  error.h  inputs.h
 librh.a(paschen.o):       rh.h  error.h
@@ -187,15 +185,15 @@ librh.a(profile.o):       rh.h  atom.h  atmos.h  inputs.h  constant.h  statistic
 librh.a(radrate_xdr.o):   rh.h  atom.h  atmos.h  error.h  inputs.h  xdr.h
 librh.a(rayleigh.o):      rh.h  atom.h  atmos.h  constant.h  background.h  error.h
 librh.a(readatom.o):      rh.h  atom.h  atmos.h  spectrum.h  background.h  constant.h  error.h  inputs.h  statistics.h
-librh.a(readb_xdr.o):     rh.h  atom.h  atmos.h  error.h  inputs.h  xdr.h
-librh.a(readinput.o):     rh.h  atom.h  atmos.h  spectrum.h  constant.h  statistics.h  inputs.h  error.h
+librh.a(readb_xdr.o):     rh.h  atom.h  atmos.h  error.h  inputs.h  xdr.h  desire.h
+librh.a(readinput.o):     rh.h  atom.h  atmos.h  spectrum.h  constant.h  statistics.h  inputs.h  error.h  desire.h
 librh.a(readj.o):         rh.h  atom.h  atmos.h  spectrum.h  background.h  inputs.h  error.h
 librh.a(readmolecule.o):  rh.h  atom.h  atmos.h  spectrum.h  background.h  constant.h  error.h  inputs.h  statistics.h
 librh.a(readvalue.o):     rh.h  atom.h  atmos.h  error.h  inputs.h
 librh.a(redistribute.o):  rh.h  atom.h  atmos.h  spectrum.h  accelerate.h  error.h  inputs.h
 librh.a(scatter.o):       rh.h  atom.h  atmos.h  spectrum.h  inputs.h  constant.h  error.h  statistics.h
 librh.a(solvene.o):       rh.h  atom.h  atmos.h  constant.h  error.h  statistics.h
-librh.a(sortlambda.o):    rh.h  atom.h  atmos.h  spectrum.h  background.h  constant.h  inputs.h  error.h  statistics.h  xdr.h
+librh.a(sortlambda.o):    rh.h  atom.h  atmos.h  spectrum.h  background.h  constant.h  inputs.h  error.h  statistics.h  xdr.h  desire.h
 librh.a(spline.o):        rh.h
 librh.a(statequil.o):     rh.h  atom.h  atmos.h  inputs.h  accelerate.h  statistics.h  error.h
 librh.a(stokesopac.o):    rh.h  atom.h  atmos.h  spectrum.h  inputs.h

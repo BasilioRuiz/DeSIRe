@@ -1,7 +1,7 @@
       SUBROUTINE SVBKSB(U,W,V,M,N,MP,NP,B,X)
 
-      include 'PARAMETER'  !mfitmax
       implicit real*4 (a-h,o-z)
+      include 'PARAMETER'  !mfitmax
 
       real*4 U(mfitmax,mfitmax),W(mfitmax),V(mfitmax,mfitmax),
      &       B(mfitmax),X(mfitmax),TMP(mfitmax)

@@ -27,7 +27,7 @@ void SetFPEtraps(void)
   /* --- Explicitly do not set traps --                -------------- */
 
   Error(MESSAGE, "SetFPEtraps", 
-	"\nFPE traps have not been set explicitly\n");
+	" FPE traps have not been set explicitly\n\n");
 }
 /* --- end SETNOTRAPS --                               -------------- */
 
@@ -59,10 +59,10 @@ void SetFPEtraps(void)
 
   if (ieee_handler("set", "common", 
                    (sigfpe_handler_type) Trapped_FPE_Exception) != 0)
-    Error(MESSAGE, routineName, "IEEE trapping not supported here\n");
+    Error(MESSAGE, routineName, " IEEE trapping not supported here\n\n");
   else
     Error(MESSAGE, routineName,
-	  "\n-Setting FPE traps for sparc (SunOS 5.x)\n");
+	  " Setting FPE traps for sparc (SunOS 5.x)\n\n");
 }
 
 void Trapped_FPE_Exception(int sig, siginfo_t *sip, ucontext_t *uap)
@@ -82,10 +82,10 @@ void Trapped_FPE_Exception(int sig, siginfo_t *sip, ucontext_t *uap)
   case FPE_FLTINV:   type = "invalid floating point operation"; break;
   case FPE_FLTSUB:   type = "subscript out of range          "; break;
   }
- 
-  sprintf(messageStr, "  ---- trapped IEEE FPE: %s ----\n"
-	  "  ---- signal: %d, code: 0x%x, aborting ----\n",
-	  type, sig, sip->si_code);
+
+  sprintf(messageStr, " ---- trapped IEEE FPE: %s ----\n"
+                      " ---- signal: %d, code: 0x%x, aborting ----\n\n",
+                      type, sig, sip->si_code);
   Error(MESSAGE, routineName, messageStr);
   abort();
 }
@@ -120,7 +120,7 @@ void SetFPEtraps(void)
 void SetFPEtraps(void)
 {
   Error(MESSAGE, "SetFPEtraps",
-	"\nUnsupported CPU and/or OS: cannot set FPE traps explicitly\n");
+	" Unsupported CPU and/or OS: cannot set FPE traps explicitly\n\n");
 }
 
 #endif

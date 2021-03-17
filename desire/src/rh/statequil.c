@@ -14,7 +14,6 @@
        set to -1 then at each spatial location the row with the largest
        population from the previous iteration will be eliminated -- - */
 
- 
 #include <stdlib.h>
 
 #include "rh.h"
@@ -34,6 +33,7 @@
 extern Atmosphere atmos;
 extern InputData input;
 extern char messageStr[];
+
 
 /* ------- begin -------------------------- statEquil.c ------------- */
 

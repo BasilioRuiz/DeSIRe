@@ -168,7 +168,7 @@ void tqli(double *d, double *e, int N, double **z)
       if (m != l) {
 	if (iter++ == N_MAX_ITER_TQLI) {
 	  sprintf(messageStr,
-		  "  Too many iterations in tqli: %d\n", iter-1);
+		  "Too many iterations in tqli: %d", iter-1);
 	  Error(ERROR_LEVEL_2, routineName, messageStr);
 	}
 

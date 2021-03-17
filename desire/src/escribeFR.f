@@ -2,7 +2,7 @@
 
 	implicit real*4 (a-h,o-z)
 
-	include 'PARAMETER'  !por kn,kl,kld
+	include 'PARAMETER'
 
 	parameter (kn16=16*kn+4,kt16=16*kt+5)         !
         parameter (mmax=16*kn+2,kld4=4*kld,kldn=mmax*kld4) 
@@ -87,7 +87,7 @@ c              if(i.eq.10)norma(ki)=exp(atmosr(ki)) !presion
            if(m(i).ne.0)then
 	      call extraeFR(m(i),FR,k,dscal) 
               call concatena(modelout1,cha(i),modelFR)
-              print*,'Output RF file ',modelFR
+              call error(KLINE,'','Output RF file: '//modelFR)
               open(19,file=modelFR)
                  write(19,*) m(i),ntotal4
                  write(19,*) ((FR((j-1)*ntotal4+jj)/norma(k1+j),jj=1,ntotal4)
@@ -100,7 +100,7 @@ c              if(i.eq.10)norma(ki)=exp(atmosr(ki)) !presion
            if(m(i).ne.0)then
 	      call extraeFR(m(i),FR,k,dscal) 
               call concatena(modelout2,cha(i),modelFR2)
-              print*,'Output RF file  ',modelFR2
+              call error(KLINE,'','Output RF file: '//modelFR2)
               open(19,file=modelFR2)
                  write(19,*) m(i),ntotal4
                  write(19,*)
@@ -113,7 +113,7 @@ c              if(i.eq.10)norma(ki)=exp(atmosr(ki)) !presion
         if(m(i).ne.0)then
 	   call extraeFR(m(i),FR,k,dscal) 
            call concatena(modelout1,cha(i),modelFR)
-           print*,'Output RF file  ',modelFR
+           call error(KLINE,'','Output RF file: '//modelFR)
            open(19,file=modelFR)
                  write(19,*) m(i),ntotal4
                  write(19,*)

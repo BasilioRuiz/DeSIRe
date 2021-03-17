@@ -1,73 +1,57 @@
-c leeuveobs lee un fichero de datos de parametros de stokes :vobs
-	
-	subroutine leeuveobsindic(vobs,ist,ntl,nli,nlin,npas,dl,nble,stok)
+c leeuveobsindic lee un fichero de datos de parametros de stokes :vobs
 
-	include 'PARAMETER'  !por kld
-	real*4 stok(*),dl(*),si(kld),sq(kld),su(kld),sv(kld)
-	integer npas(*),ist(*),nble(*),nlin(*),nli,icanal
-	character vobs*(*)
-	character*100 control
-	character*100 men1,men2,men3
-c	character mensajito*45
-	common/canal/icanal
-	common/nombrecontrol/control
+        subroutine leeuveobsindic(vobs,ist,ntl,nli,nlin,npas,dl,nble,stok)
 
+        implicit real*4 (a-h,o-z)
+        include 'PARAMETER'
+        real*4 stok(*),dl(*),si(kld),sq(kld),su(kld),sv(kld)
+        integer npas(*),ist(*),nble(*),nlin(*),nli
+        character vobs*(*)
         common/contraste/contr
-	men1=' '
-	men2=' '
-	men3=' '
 
-	ican=56
+        ican=56
 
-	open(ican,file=vobs,status='old',err=991)
-	k=0
-	n0=-1
+        open(ican,file=vobs,status='old',err=991)
+        k=0
+        n0=-1
         i=0
-	do while(k.lt.kld)
-	   k=k+1
-	   read(ican,*,err=992,end=990)a,dl(k),si(k),sq(k),su(k),sv(k)
+        do while(k.lt.kld)
+           k=k+1
+           read(ican,*,err=992,end=990)a,dl(k),si(k),sq(k),su(k),sv(k)
            n1=nint(a)
            if(n1.ne.n0)then
              j=1
              i=i+1
 
-	     if(i.gt.kl) then  !Si el numero de lineas es mayor que kl
-	         men1='STOP: The number of lines in the observed/stray light profiles is larger than'
-	         men2='      the current limit. Decrease this number or change the PARAMETER file.'       
-	         call mensaje(2,men1,men2,men3)
-	     endif
-             
-	     nlin(i)=n1     !para eliminar la malla si es necesario
-           endif
-	   n0=n1
+             if(i.gt.kl) then  !si el numero de lineas es mayor que kl
+                 call error(KSTOP,'leeuveobsindic','The number of lines in'
+     &           //         ' the observed/stray light profiles is larger'
+     &           //         ' than\n the current limit. Decrease this number'
+     &           //         ' or change the PARAMETER file')
+             end if
+
+             nlin(i)=n1  !para eliminar la malla si es necesario
+           end if
+           n0=n1
            npas(i)=j
            j=j+1
-	end do
+        end do
 990     ntl=i
-        nli=k-1     !este es el numero de longitudes de onda
-	
-c	print*,'leeuveobsindic 49',ntl,nli,kld
-	
-	if(nli.gt.kld)then  
-	   men1='STOP: The number of wavelengths in the observed/stray light profiles is larger than'
-	   men2='      the current limit kld. Decrease this number or change the PARAMETER file.'
-	   call mensaje(2,men1,men2,men3)
-	endif
+        nli=k-1  !este es el numero de longitudes de onda
 
-	do j=1,ntl
-	    nble(j)=1      !si no tenemos malla, no tenemos blends
-c	    print*,'leeuveobsindic 59 nble(',j,')=',nble(j)
-	    do jj=j+1,ntl-1
-c	       print*,'leeuveobsindic 61 ',j,jj+1,nlin(j),nlin(jj+1)
-               if(nlin(j).eq.nlin(jj+1))goto 993
-	    enddo
-       	enddo
+        if(nli.gt.kld)then
+           call error(KSTOP,'leeuveobsindic','The number of wavelengths in'
+     &     //         ' the observed/stray light profiles is larger than\n'
+     &     //         ' the current limit kld. Decrease this number or'
+     &     //         ' change the PARAMETER file')
+        end if
 
-
-	print*,'Number of wavelengths in the observed profiles: ',nli 
-c	open(icanal,file=control,fileopt='eof')
-c	write(icanal,*)'Number of wavelengths in the observed profiles: ',nli 
-c	close(icanal)
+        do j=1,ntl
+           nble(j)=1  !si no tenemos malla, no tenemos blends
+           do jj=j+1,ntl-1
+             if(nlin(j).eq.nlin(jj+1))goto 993
+           end do
+        end do
 
         if(contr.gt.-1.e5)then
            nli=nli+1
@@ -80,24 +64,78 @@ c	close(icanal)
            dl(nli)=0.
         end if
 
-	call sfromiquv(ist,nli,si,sq,su,sv,stok) !cuelga de leeuve2
-	close(ican)
-	return
+        call sfromiquv(ist,nli,si,sq,su,sv,stok) !cuelga de leeuve2
 
+        close(ican)
+        return
 
-c	Mensajes de error:
+c       Mensajes de error:
 
-991	men1='STOP: The file containing the observed/stray light profiles does NOT exist:'
-	men2=vobs
-	call mensaje(2,men1,men2,men3)
+991     call error(KSTOP,'leeuveobsindic','The file containing the'
+     &  //         ' observed/stray light profiles does not exist\n'
+     &  //         ' File: '//vobs)
 
-992	men1='STOP: Incorrect format in the file containing the observed/stray light profiles:'
-	men2=vobs
-	call mensaje(2,men1,men2,men3)
+992     call error(KSTOP,'leeuveobsindic','Incorrect format in the file'
+     &  //         ' containing the observed/stray light profiles\n'
+     &  //         ' File: '//vobs)
 
-993	men1='STOP: The wavelength samples of a given line have to be written contiguously'
-	men2='      in the file containg the observed/stray light profiles:'
-	men3=vobs
-	call mensaje(3,men1,men2,men3)
+993     call error(KSTOP,'leeuveobsindic','The wavelength samples of a given'
+     &  //         ' line have to be written contiguously\n in the file'
+     &  //         ' containing the observed/stray light profiles')
 
-	end
+        return
+        end
+
+c-----------------------------------------------------------------------------
+
+c leeI lee un fichero de datos de parametros de stokes :devuleve solo Stokes I
+        
+        subroutine leeI(vobs,ntl,nli,npas,dl,si)
+
+        implicit real*4 (a-h,o-z)
+        include 'PARAMETER'
+        real*4 dl(*),si(*)
+        integer npas(*)
+        character vobs*(*)
+        common/contraste/contr
+
+        ican=56
+
+        open(ican,file=vobs,status='old',err=791)
+        k=0
+        n0=-1
+        i=0
+        do while(k.lt.kld)
+           k=k+1
+           read(ican,*,err=792,end=790)a,dl(k),si(k)  !,sq,su,sv
+           n1=nint(a)
+           if(n1.ne.n0)then
+              j=1
+              i=i+1
+           endif
+           n0=n1
+           npas(i)=j
+           j=j+1
+        end do
+790     ntl=i
+        nli=k-1
+
+        if(contr.gt.-1.e5)then
+           nli=nli+1
+           ntl=ntl+1
+           npas(ntl)=1
+           si(nli)=contr
+           dl(nli)=0.
+        end if
+
+        close(ican)
+        return
+
+791     call error(KSTOP,'leeI','The file containing the PSF in .per format'
+     &  //         ' does not exist\n File: '//vobs)
+
+792     call error(KSTOP,'leeI','Incorrect format in the file containing'
+     &  //         ' the PSF in .per format\n File: '//vobs)
+
+        return
+        end

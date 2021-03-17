@@ -6,12 +6,13 @@ c	dp es la derivada de p respecto a t, ddp respecto a pe.
 
       subroutine gasb_db(theta_r4,pe_r4,p_r4,dp_r4,ddp_r4)
 c	...............................................................
-      parameter (ncontr=28)
       implicit integer*4 (i-n)
       implicit real*8 (a-h, o-z)
+      include 'PARAMETER'
+      parameter (ncontr=28)
         real*4 theta_r4,pe_r4,t_r4
         real*4 p_r4(99),dp_r4(99),ddp_r4(99)
-        real*4 weighti_r4,alfaii_r4,chi1i_r4,chi2i_r4
+        real*4 weight_r4,weighti_r4,alfaii_r4,chi1i_r4,chi2i_r4
         real*4 cmol(91),dcmol(91)
         real*4 alfai_r4(ncontr),chi1_r4(ncontr),chi2_r4(ncontr)
         real*4 u0_r4(ncontr),u1_r4(ncontr),u2_r4(ncontr)
@@ -84,8 +85,8 @@ c	...............................................................
       else
       
       if(pe.le.0)then
-         print*,'WARNING: Negative values of the electron pressure have been found in subroutine gasb.f'
-	 print*,'         These are being changed to 1.e-10'
+         call error(KWARN,'gasb_db','Negative values of the electron pressure'
+     &   //         ' have been found.\n These are being changed to 1.e-10')
          pe=1.d-10
          g4=0.
          g5=0.
@@ -180,12 +181,8 @@ c	print*,'gasb_db 168 ',ss,dss,dlg1
 
 
 	if(g5.lt.1.d-35)then
-	   print*,' '
-           print*,'STOP: The electronic pressure is too small in subroutine gasb.'
-	   print*,'      Check the atmospheric models.'
-	   print*,' '
-	   print*,'__________________________________________________________________________________'
-	   stop
+           call error(KSTOP,'gasb_db','The electronic pressure is too small.'
+     &     //         ' Check the atmospheric models')
 	end if
 
 c      call acotasig_db(g5,1.d-20,1.d20)

@@ -9,8 +9,8 @@ c	dp es la derivada de logp respecto a t, ddp respecto de logp respecto a pe.
 
       subroutine gasb_thermo(theta,pe,p,dp,ddp,u_ion,du_ion,ddu_ion)
 c	...............................................................
-        implicit real*4 (a-h,o-z)
-
+      implicit real*4 (a-h,o-z)
+      include 'PARAMETER'
       parameter (ncontr=28)
       parameter (eV=1.6021766e-12) !1 eV en ergios
         dimension cmol(91),alfai(ncontr),chi1(ncontr),chi2(ncontr)
@@ -22,8 +22,8 @@ c	...............................................................
 
       t=5040./theta
       if(pe.le.0)then
-         print*,'WARNING: Negative values of the electron pressure have been found in subroutine gasb.f'
-	 print*,'         These are being changed to 1.e-10'
+         call error(KWARN,'gasb_thermo','Negative values of the electron pressure'
+     &   //         ' have been found.\n These are being changed to 1.e-10')
          pe=1.e-10
          g4=0.
          g5=0.
@@ -121,12 +121,8 @@ c	g1=g1+p(i)*a*ss1
 	ddla=g2*ddg2+g3*ddg3
 
 	if(g5.lt.1.e-35)then
-	   print*,' '
-           print*,'STOP: The electronic pressure is too small in subroutine gasb.'
-	   print*,'      Check the atmospheric models.'
-	   print*,' '
-	   print*,'__________________________________________________________________________________'
-	stop
+           call error(KSTOP,'gasb_thermo','The electronic pressure is too small.'
+     &     //         ' Check the atmospheric models')
 	end if
 
       call acotasig(g5,1.e-20,1.e20)

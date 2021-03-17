@@ -86,7 +86,7 @@ void Redistribute(int NmaxIter, double iterLimit)
 	    PRDScatter(line, representation=LINEAR);
 
 	  accel = Accelerate(line->Ng_prd, line->rho_prd[0]);
-	  sprintf(messageStr, "  PRD: iter #%d, atom %s, line %d,",
+	  sprintf(messageStr, " PRD: iter #%d, atom %s, line %d,",
 		  line->Ng_prd->count-1, atom->ID, kr);
 	  drho = MaxChange(line->Ng_prd, messageStr, quiet=FALSE);
 	  sprintf(messageStr, (accel) ? " (accelerated)\n" : "\n");

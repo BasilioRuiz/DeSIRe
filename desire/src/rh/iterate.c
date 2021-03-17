@@ -8,7 +8,6 @@
 
 /* --- Main iteration routine --                       -------------- */
 
- 
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
@@ -29,6 +28,7 @@ typedef struct {
   int    nspect;
   double dJ;
 } threadinfo;
+
 
 /* --- Function prototypes --                          -------------- */
 
@@ -57,6 +57,7 @@ void Iterate(int NmaxIter, double iterLimit)
   Molecule *molecule;
 
   if (NmaxIter <= 0) return;
+
   getCPU(1, TIME_START, NULL);
 
   /* --- Initialize structures for Ng acceleration of population
@@ -92,8 +93,8 @@ void Iterate(int NmaxIter, double iterLimit)
 
     /* --- Solve statistical equilibrium equations --  -------------- */
 
-    /* sprintf(messageStr, "\n -- Iteration %3d\n", niter);
-    Error(MESSAGE, routineName, messageStr);*/
+    // sprintf(messageStr, " -- Iteration %3d\n", niter);
+    // Error(MESSAGE, routineName, messageStr);
     dpopsmax = updatePopulations(niter);
 
     if (atmos.NPRDactive > 0) {
@@ -242,9 +243,9 @@ double solveSpectrum(bool_t eval_operator, bool_t redistribute)
     }
   }
 
-  /*sprintf(messageStr, " Spectrum max delta J = %6.4E (lambda#: %d)\n",
-	  dJmax, lambda_max);
-  Error(MESSAGE, NULL, messageStr); */
+  // sprintf(messageStr, " Spectrum max delta J = %6.4E (lambda#: %d)\n\n",
+  //         dJmax, lambda_max);
+  // Error(MESSAGE, NULL, messageStr);
 
   getCPU(3, TIME_POLL,
 	 (eval_operator) ? "Spectrum & Operator" : "Solve Spectrum");

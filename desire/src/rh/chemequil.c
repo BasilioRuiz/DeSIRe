@@ -156,7 +156,7 @@ void ChemicalEquilibrium(int NmaxIter, double iterLimit)
       if (nuclei[j]->model->stage[0] > 0) {
 	sprintf(messageStr,
 		"Model for element %s does not have a neutral stage\n"
-		" needed for molecular formation\n",
+		" needed for molecular formation",
 		nuclei[j]->ID);
 	Error(ERROR_LEVEL_2, routineName, messageStr);
       }
@@ -310,8 +310,8 @@ void ChemicalEquilibrium(int NmaxIter, double iterLimit)
 
       Accelerate(Ngn, n);
       sprintf(messageStr,
-	      "\n%s-- Chemical equilibrium: depth %3.3d, iteration %d",
-	      (niter == 1) ? "\n" : "", k, niter);
+	      "\n %s-- Chemical equilibrium: depth %3.3d, iteration %d",
+	      (niter == 1) ? "\n " : "", k, niter);
 
       if ((dnmax = MaxChange(Ngn, messageStr, quiet=TRUE)) <= iterLimit)
 	break;
@@ -320,7 +320,7 @@ void ChemicalEquilibrium(int NmaxIter, double iterLimit)
     if (dnmax > iterLimit) {
       sprintf(messageStr, "Iteration not converged:\n"
               " temperature: %6.1f [K], \n"
-	      " density: %9.3E [m^-3],\n dnmax: %9.3E\n",
+	      " density: %9.3E [m^-3],\n dnmax: %9.3E",
 	      atmos.T[k], atmos.nHtot[k], dnmax);
       Error(WARNING, "ChemicalEquilibrium", messageStr);
     }
@@ -353,8 +353,8 @@ void ChemicalEquilibrium(int NmaxIter, double iterLimit)
   for (nu = 0;  nu < Nnuclei;  nu++) {
     atom = nuclei[nu]->model;
     if (atom && atom->active) {
-      sprintf(messageStr, "\nReduced number density of"
-	      " active atom %s due to molecule%s\n  ",
+      sprintf(messageStr, " Reduced number density of"
+	      " active atom %s due to molecule%s\n   ",
 	      atom->ID, (nuclei[nu]->Nmolecule > 1) ? "s" : "");
       for (i = 0;  i < nuclei[nu]->Nmolecule;  i++) {
 	sprintf(tmpStr, "%s%s",
@@ -438,8 +438,8 @@ double partfunction(struct Molecule *molecule, double T)
     break;
   default:
     sprintf(messageStr,
-	    "Unknown method for calculation of partition function\n"
-            "for molecule %s: %d", molecule->ID, molecule->fit);
+            "Unknown method for calculation of partition function\n"
+            " for molecule %s: %d", molecule->ID, molecule->fit);
     Error(ERROR_LEVEL_2, "partfunction", messageStr);
   }
   return pf;
@@ -520,8 +520,8 @@ double equilconstant(struct Molecule *molecule, double T)
 
   default:
     sprintf(messageStr,
-	    "Unknown method for calculation of equilibrium constant\n"
-            "for molecule %s: %d", molecule->ID, molecule->fit);
+            "Unknown method for calculation of equilibrium constant\n"
+            " for molecule %s: %d", molecule->ID, molecule->fit);
     Error(ERROR_LEVEL_2, "equilconstant", messageStr);
   }
 

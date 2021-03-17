@@ -48,7 +48,7 @@ c           if(j .ge. num)ngrado=0
 	      ya(k)=atmos(nn+irow*ntau+n3+k)   
            end do	
 c           if(ngrado .eq. 1)ya(2)=ya(1)+(ya(2)-ya(1))*(ntau-i+1)/float(ntau)
-	   call polint(xa,ya,ngrado+1,taunewi,ti,error) 
+	   call polint(xa,ya,ngrado+1,taunewi,ti,dy) 
 	   atmosnew(nn+irow*ntau+i)=ti
             
            irow=2                           !log(pe)
@@ -58,7 +58,7 @@ c	      print*,'interpoate1 ',i,k,xa(k),ya(k)
 	   end do
 c	   if(ngrado .eq. 1)ya(2)=ya(1)+(ya(2)-ya(1))*(ntau-i+1)/float(ntau)
 
-	   call polint(xa,ya,ngrado+1,taunewi,ti,error)
+	   call polint(xa,ya,ngrado+1,taunewi,ti,dy)
 	   atmosnew(nn+irow*ntau+i)=exp(ti)
 c	   print*,'interpoate1 ',i,taunewi,ti,exp(ti)	   
 	   
@@ -68,7 +68,7 @@ c	   print*,'interpoate1 ',i,taunewi,ti,exp(ti)
               end do
 c              if(ngrado .eq. 1)ya(2)=ya(1)+(ya(2)-ya(1))*(ntau-i+1)/float(ntau)
 
-	      call polint(xa,ya,ngrado+1,taunewi,ti,error) 
+	      call polint(xa,ya,ngrado+1,taunewi,ti,dy) 
 	      atmosnew(nn+irow*ntau+i)=ti
            end do
 
@@ -77,21 +77,21 @@ c              if(ngrado .eq. 1)ya(2)=ya(1)+(ya(2)-ya(1))*(ntau-i+1)/float(ntau)
            end do	
 c           if(ngrado .eq. 1)ya(2)=ya(1)+(ya(2)-ya(1))*(ntau-i+1)/float(ntau)
 
-	   call polint(xa,ya,ngrado+1,taunewi,ti,error) 
+	   call polint(xa,ya,ngrado+1,taunewi,ti,dy) 
 	   znew(i)=ti
 	   
 	   do k=1,ngrado+1
 	      ya(k)=alog(abs(pg(n3+k)))             !pg
            end do	
 c           if(ngrado .eq. 1)ya(2)=ya(1)+(ya(2)-ya(1))*(ntau-i+1)/float(ntau)
-	   call polint(xa,ya,ngrado+1,taunewi,ti,error) 
+	   call polint(xa,ya,ngrado+1,taunewi,ti,dy) 
 	   pgnew(i)=exp(ti)
 	   
            do k=1,ngrado+1
 	      ya(k)=alog(abs(ro(n3+k)))             !rho
            end do	
 c           if(ngrado .eq. 1)ya(2)=ya(1)+(ya(2)-ya(1))*(ntau-i+1)/float(ntau)
-	   call polint(xa,ya,ngrado+1,taunewi,ti,error) 
+	   call polint(xa,ya,ngrado+1,taunewi,ti,dy) 
 	   ronew(i)=exp(ti)
 	end do   
 	do i=1,n

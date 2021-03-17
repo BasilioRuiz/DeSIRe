@@ -54,10 +54,16 @@ FORMAT(F11.4,F7.3,F6.2,F12.3,F5.2,1X,A10,F12.3,F5.2,1X,A10,
 30 isotope shift of wavelength in mA 
 
 
- Note: The periodic table index of Kurucz starts at 1 (for Hydrogen).
-       In the RH routines counting starts at 0 in the atmos.elements
-       structure. This discrepancy is accounted for in the opacity
-       calculation (rlk_opacity.c).
+  Note: The periodic table index of Kurucz starts at 1 (for Hydrogen).
+        In the RH routines counting starts at 0 in the atmos.elements
+        structure. This discrepancy is accounted for in the opacity
+        calculation (rlk_opacity.c).
+
+  Modifications:
+
+       - 07/07/20 epm:
+         We supply Kurucz data from SIR.
+
        --                                              -------------- */
 
 #include <ctype.h>
@@ -73,6 +79,7 @@ FORMAT(F11.4,F7.3,F6.2,F12.3,F5.2,1X,A10,F12.3,F5.2,1X,A10,
 #include "constant.h"
 #include "inputs.h"
 #include "error.h"
+#include "desire.h"
 
 #define COMMENT_CHAR             "#"
 #define RLK_RECORD_LENGTH        160
@@ -102,6 +109,9 @@ extern Atmosphere atmos;
 extern InputData input;
 extern char messageStr[];
 
+// 07/07/20 epm: Structure to pass Kurucz data from SIR.
+extern SIRKurucz sirkurucz;
+
 
 /* ------- begin -------------------------- readKuruczLines.c ------- */
 
@@ -112,19 +122,20 @@ void readKuruczLines(char *inputFile)
                              (Q_ELECTRON/M_ELECTRON) / CLIGHT;
 
   char   inputLine[RLK_RECORD_LENGTH+1], listName[MAX_LINE_SIZE],
-    filename[MAX_LINE_SIZE], Gvalues[18+1], elem_code[7],
+         filename[MAX_LINE_SIZE], Gvalues[18+1], elem_code[7],
          labeli[RLK_LABEL_LENGTH+1], labelj[RLK_LABEL_LENGTH+1],
         *commentChar = COMMENT_CHAR;
   bool_t swap_levels, determined, useBarklem;
   int    Nline, Nread, Nrequired, checkPoint, hfs_i, hfs_j, gL_i, gL_j,
-         iso_dl;
+         iso_dl, iline;
   double lambda0, Ji, Jj, Grad, GStark, GvdWaals, pti,
          Ei, Ej, gf, lambda_air;
   RLK_Line *rlk;
   Barklemstruct bs_SP, bs_PD, bs_DF;
   FILE  *fp_Kurucz, *fp_linelist;
 
-  if (!strcmp(inputFile, "none")) return;
+  /// 07/07/20 epm: As we supply Kurucz data from SIR we don't need the file.
+  /// if (!strcmp(inputFile, "none")) return;
 
   /* --- Read in the data files for Barklem collisional broadening -- */
 
@@ -135,46 +146,62 @@ void readKuruczLines(char *inputFile)
   labeli[RLK_LABEL_LENGTH] = '\0';
   labelj[RLK_LABEL_LENGTH] = '\0';
 
-  if ((fp_Kurucz = fopen(inputFile, "r")) == NULL) {
-    sprintf(messageStr, "Unable to open input file %s", inputFile);
-    Error(ERROR_LEVEL_1, routineName, messageStr);
-    return;
-  }
+  /// if ((fp_Kurucz = fopen(inputFile, "r")) == NULL) {
+  ///   sprintf(messageStr, "Unable to open input file %s", inputFile);
+  ///   Error(ERROR_LEVEL_1, routineName, messageStr);
+  ///   return;
+  /// }
+
   /* --- Go through each of the linelist files listed in input file - */  
 
-  while (getLine(fp_Kurucz, commentChar, listName, FALSE) != EOF) {
-    Nread = sscanf(listName, "%s", filename);
-    if ((fp_linelist = fopen(filename, "r")) == NULL) {
-      sprintf(messageStr, "Unable to open input file %s", filename);
-      Error(ERROR_LEVEL_1, routineName, messageStr);
-    }
-    /* --- Count the number of lines in this file --   -------------- */
+  iline = 0;
+  Nline = sirkurucz.nlines;
 
-    Nline = 0;
-    while (fgets(inputLine, RLK_RECORD_LENGTH+1, fp_linelist) != NULL)
-      if (*inputLine != *commentChar) Nline++;
-    rewind(fp_linelist);
+  /// while (getLine(fp_Kurucz, commentChar, listName, FALSE) != EOF) {
+  if (Nline > 0) {
 
-    if (atmos.Nrlk == 0) atmos.rlk_lines = NULL;
+    /// Nread = sscanf(listName, "%s", filename);
+    /// if ((fp_linelist = fopen(filename, "r")) == NULL) {
+    ///   sprintf(messageStr, "Unable to open input file %s", filename);
+    ///   Error(ERROR_LEVEL_1, routineName, messageStr);
+    /// }
+    /// /* --- Count the number of lines in this file --   -------------- */
+    /// 
+    /// Nline = 0;
+    /// while (fgets(inputLine, RLK_RECORD_LENGTH+1, fp_linelist) != NULL)
+    ///   if (*inputLine != *commentChar) Nline++;
+    /// rewind(fp_linelist);
+
+    // 02/02/21 epm: Comment the following line to avoid memory leaks.
+    // if (atmos.Nrlk == 0) atmos.rlk_lines = NULL;
     atmos.rlk_lines = (RLK_Line *)
       realloc(atmos.rlk_lines, (Nline + atmos.Nrlk) * sizeof(RLK_Line));
 
     /* --- Read lines from file --                     -------------- */
 
     rlk = atmos.rlk_lines + atmos.Nrlk;
-    while (fgets(inputLine, RLK_RECORD_LENGTH+1, fp_linelist) != NULL) {
-      if (*inputLine != *commentChar) {
+
+    /// while (fgets(inputLine, RLK_RECORD_LENGTH+1, fp_linelist) != NULL) {
+    while (iline < Nline) {
+
+       /// if (*inputLine != *commentChar) {
+       if (iline < Nline) {  // redundant but we want to keep the indentation
 
         initRLK(rlk);
 
-	Nread = sscanf(inputLine, "%lf %lf %s %lf",
-		       &lambda_air, &gf, (char *) &elem_code, &Ei);
+	/// Nread = sscanf(inputLine, "%lf %lf %s %lf",
+	///                &lambda_air, &gf, (char *) &elem_code, &Ei);
+        lambda_air = sirkurucz.lambda[iline];
+        gf = sirkurucz.gf[iline];
+        sprintf(elem_code, "%6.2f", sirkurucz.elemcode[iline]);
+        Ei = sirkurucz.Ei[iline];
 
         /* --- Ionization stage and periodic table index -- --------- */
 
         sscanf(elem_code, "%d.%d", &rlk->pt_index, &rlk->stage);
 
-	Nread += sscanf(inputLine+53, "%lf", &Ej);
+	/// Nread += sscanf(inputLine+53, "%lf", &Ej);
+        Ej = sirkurucz.Ej[iline];
 
 	Ei = fabs(Ei) * (HPLANCK * CLIGHT) / CM_TO_M;
 	Ej = fabs(Ej) * (HPLANCK * CLIGHT) / CM_TO_M;
@@ -188,18 +215,28 @@ void readKuruczLines(char *inputFile)
 	  swap_levels = TRUE; 
 	  rlk->Ei = Ej;
 	  rlk->Ej = Ei;
-	  strncpy(labeli, inputLine+69, RLK_LABEL_LENGTH);
-	  strncpy(labelj, inputLine+41, RLK_LABEL_LENGTH);
+	  /// strncpy(labeli, inputLine+69, RLK_LABEL_LENGTH);
+	  /// strncpy(labelj, inputLine+41, RLK_LABEL_LENGTH);
+          sprintf(labeli, "%d%c",
+                  sirkurucz.spinj[iline], sirkurucz.orbitj[iline]);
+          sprintf(labelj, "%d%c",
+                  sirkurucz.spini[iline], sirkurucz.orbiti[iline]);
 	} else {
 	  swap_levels = FALSE;
 	  rlk->Ei = Ei;
           rlk->Ej = Ej;
-	  strncpy(labeli, inputLine+41, RLK_LABEL_LENGTH);
-	  strncpy(labelj, inputLine+69, RLK_LABEL_LENGTH);
+	  /// strncpy(labeli, inputLine+41, RLK_LABEL_LENGTH);
+	  /// strncpy(labelj, inputLine+69, RLK_LABEL_LENGTH);
+          sprintf(labeli, "%d%c",
+                  sirkurucz.spini[iline], sirkurucz.orbiti[iline]);
+          sprintf(labelj, "%d%c",
+                  sirkurucz.spinj[iline], sirkurucz.orbitj[iline]);
 	}
 
-	Nread += sscanf(inputLine+35, "%lf", &Ji);
-	Nread += sscanf(inputLine+63, "%lf", &Jj);
+	/// Nread += sscanf(inputLine+35, "%lf", &Ji);
+	/// Nread += sscanf(inputLine+63, "%lf", &Jj);
+        Ji = sirkurucz.Ji[iline];
+        Jj = sirkurucz.Jj[iline];
 	if (swap_levels) SWAPDOUBLE(Ji, Jj);
 	rlk->gi = 2*Ji + 1;
 	rlk->gj = 2*Jj + 1;
@@ -231,8 +268,11 @@ void readKuruczLines(char *inputFile)
 
         /* --- Line broadening --                      -------------- */
 
-	strncpy(Gvalues, inputLine+79, 18);
-	Nread += sscanf(Gvalues, "%lf %lf %lf", &Grad, &GStark, &GvdWaals);
+	/// strncpy(Gvalues, inputLine+79, 18);
+	/// Nread += sscanf(Gvalues, "%lf %lf %lf", &Grad, &GStark, &GvdWaals);
+        Grad = sirkurucz.Grad[iline];
+        GStark = sirkurucz.GStark[iline];
+        GvdWaals = sirkurucz.GvdWaals[iline];
 
 	if (GStark != 0.0) 
 	  rlk->GStark = POW10(GStark) * CUBE(CM_TO_M);
@@ -262,7 +302,7 @@ void readKuruczLines(char *inputFile)
           useBarklem = getBarklemcross(&bs_DF, rlk, lambda_air);
         }
       }
-	/* --- Else use good old Unsoeld --            -------------- */
+	/* --- Else use good old Unsold --             -------------- */
 
         if (!useBarklem) {
 	  getUnsoldcross(rlk);
@@ -279,18 +319,25 @@ void readKuruczLines(char *inputFile)
 	}
 	/* --- Isotope and hyperfine fractions and slpittings -- ---- */
 
-	Nread += sscanf(inputLine+106, "%d", &rlk->isotope);
-	Nread += sscanf(inputLine+108, "%lf", &rlk->isotope_frac);
+	/// Nread += sscanf(inputLine+106, "%d", &rlk->isotope);
+        rlk->isotope = 0;
+	/// Nread += sscanf(inputLine+108, "%lf", &rlk->isotope_frac);
+        rlk->isotope_frac = 0.0;
 	rlk->isotope_frac = POW10(rlk->isotope_frac);
-	Nread += sscanf(inputLine+117, "%lf", &rlk->hyperfine_frac);
+	/// Nread += sscanf(inputLine+117, "%lf", &rlk->hyperfine_frac);
+        rlk->hyperfine_frac = 0.0;
 	rlk->hyperfine_frac = POW10(rlk->hyperfine_frac);
-	Nread += sscanf(inputLine+123, "%5d%5d", &hfs_i, &hfs_j);
+	/// Nread += sscanf(inputLine+123, "%5d%5d", &hfs_i, &hfs_j);
+        hfs_i = 0;
+        hfs_j = 0;
 	rlk->hfs_i = ((double) hfs_i) * MILLI * KBOLTZMANN;
 	rlk->hfs_j = ((double) hfs_j) * MILLI * KBOLTZMANN;
 
 	/* --- Effective Lande factors --              -------------- */
 
-	Nread += sscanf(inputLine+143, "%5d%5d", &gL_i, &gL_j);
+	/// Nread += sscanf(inputLine+143, "%5d%5d", &gL_i, &gL_j);
+        gL_i = 0;
+        gL_j = 0;
 	rlk->gL_i = gL_i * MILLI;
 	rlk->gL_j = gL_j * MILLI;
 	if (swap_levels) {
@@ -298,11 +345,11 @@ void readKuruczLines(char *inputFile)
 	  SWAPDOUBLE(rlk->gL_i, rlk->gL_j);
 	}
 
-	/*      Nread += sscanf(inputLine+154, "%d", &iso_dl); */
+	/* Nread += sscanf(inputLine+154, "%d", &iso_dl); */
 	iso_dl = 0;
 	rlk->iso_dl = iso_dl * MILLI * ANGSTROM_TO_NM;
 
-	checkNread(Nread, Nrequired=17, routineName, checkPoint=1);
+	/// checkNread(Nread, Nrequired=17, routineName, checkPoint=1);
 	/*
 	printf("  Line: %f (vacuum), %f (air)\n"
 	       " gi, gj: %f, %f\n"
@@ -321,17 +368,17 @@ void readKuruczLines(char *inputFile)
 	       rlk->cross, rlk->alpha, rlk->Si, rlk->Li, rlk->Sj, rlk->Lj);
 	*/
 	rlk++;
+        iline++;
       }
     }
-    fclose(fp_linelist);
+    /// fclose(fp_linelist);
 
-    sprintf(messageStr, "Read %d Kurucz lines from file %s\n",
-	    Nline, listName);
+    sprintf(messageStr, " Read %d Kurucz lines from SIR\n\n", Nline);
     Error(MESSAGE, routineName, messageStr);
     atmos.Nrlk += Nline;
   }
 
-  fclose(fp_Kurucz);
+  /// fclose(fp_Kurucz);
 
   free_BS(&bs_SP);
   free_BS(&bs_PD);

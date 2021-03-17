@@ -9,15 +9,13 @@ c _______________________________________________________________
 	subroutine equisubmu_contmag(ntau,tau1,t,pe,pg0,pg,z,ro,b,gamma)
 
 	implicit real*4 (a-h,o-z)
-
 	include 'PARAMETER'  
 	parameter (nex=28,cgases=83145100.)
 	real*4 tau(kt),t(kt),pe(kt),pg(*),kac,d2,x(kt),kappa(kt),taue(kt)
         real*4 z(kt),z1(kt),ro(*),y(kt),b(kt),gamma(*),ptot(kt)
         real*4 tau1(kt)
 	real*4 mu
-	integer*4 nmaxitera
-   
+	integer*4 nmaxitera 
 	real*4 wgt,abu,ei1,ei2,pp(10),tsi,psi,d1(10)
         common/constantes/g,avog	!gravedad,n. avogadro/pmu
 	common/mu/cth                   !esto esta deshabilitado desde sir (entra 1)
@@ -127,8 +125,10 @@ c integramos
               dif=2.*abs((ptot(i)-ptotpr))/(ptot(i)+ptotpr)
             end do
 
-            if(dif.gt.0.1) print*,'WARNING:
-     & Hydrostatic equilibrium results in inaccurate electron pressures '
+            if(dif.gt.0.1)then
+               call error(KWARN,'equisubmu_contmag','Hydrostatic equilibrium'
+     &         //         ' results in inaccurate electron pressures')
+            end if
             pg(i)=pgpr
             call pefrompg11(tsi,pg(i),psi)
             pe(i)=psi

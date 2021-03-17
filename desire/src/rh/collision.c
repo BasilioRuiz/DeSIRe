@@ -659,7 +659,7 @@ void CollisionRate(struct Atom *atom, FILE *fp_atom)
     }
 
     if (nitem != Nitem) {
-      sprintf(messageStr, "\n Read %d, not %d items (keyword = %s)\n",
+      sprintf(messageStr, "Read %d, not %d items (keyword = %s)",
 	      nitem, Nitem, keyword);
       Error(ERROR_LEVEL_2, routineName, messageStr);
     }

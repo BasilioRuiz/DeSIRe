@@ -533,7 +533,7 @@ c.......................................................................
 52    	kacr4=real(kac+carbon+sodium+mgatom)
 	katr4=real(kat+dcarbon+dsodium+dmgatom)
 	kapr4=real(kap+ddcarbon+ddsodium+ddmgatom)
-	print*,'k_db',kacr4,katr4,kapr4
+c	print*,'k_db',kacr4,katr4,kapr4
 
 99999 wavelt=0.			! antes ponia wavelt=lambda
       end

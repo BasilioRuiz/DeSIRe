@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Mon Jun 11 14:46:13 2018 --
+       Last modified: Tue Apr 28 21:17:27 2020 --
 
        --------------------------                      ----------RH-- */
 
@@ -88,15 +88,16 @@ void readValues(FILE *fp_keyword, int Nkeyword,	Keyword *theKeywords)
     recognized = FALSE;
     for (n = 0;  n < Nkeyword;  n++) {
       if (!strcmp(keyword, theKeywords[n].keyword)) {
-	recognized = TRUE;
-	if (theKeywords[n].type == KEYWORD_DEFAULT) {
-	  sprintf(messageStr,
-		   "Overriding default value %s for keyword %s with %s",
-		   theKeywords[n].value, theKeywords[n].keyword, value);
-	  Error(WARNING, routineName, messageStr);
-	}
+        recognized = TRUE;
+        // 05/05/20 epm: Do not show these warnings.
+        // if (theKeywords[n].type == KEYWORD_DEFAULT) {
+        //   sprintf(messageStr,
+        //           "Overriding default value %s for keyword\n %s with %s",
+        //           theKeywords[n].value, theKeywords[n].keyword, value);
+        //   Error(WARNING, routineName, messageStr);
+        // }
         strcpy(theKeywords[n].value, value);
-	theKeywords[n].set = TRUE;
+        theKeywords[n].set = TRUE;
         break;
       }
     }
@@ -214,8 +215,8 @@ void setAngleSet(char *value, void *pointer)
   else if (strstr(value, "SET_GL_")) {
     if (sscanf(value, "SET_GL_%dX%d", &Ninclination, &Nazimuth) != 2) {
       sprintf(messageStr,
-	      "\n  Invalid Gauss-Legandre format for keyword ANGLE_SET: %s",
-	      value);
+              "Invalid Gauss-Legandre format for keyword ANGLE_SET: %s",
+              value);
       Error(ERROR_LEVEL_2, "setAngleSet", messageStr);
     }
     angleSet.set = SET_GL;
@@ -223,26 +224,26 @@ void setAngleSet(char *value, void *pointer)
     angleSet.Nazimuth = Nazimuth;
 
     sprintf(messageStr,
-	    "\n  Found Gauss-Legendre angleset with "
-	    "Ninclination = %d and Nazimuth = %d", 
-	    Ninclination, Nazimuth);
+            " Found Gauss-Legendre angleset with "
+            "Ninclination = %d and Nazimuth = %d\n\n",
+            Ninclination, Nazimuth);
     Error(MESSAGE, "setAngleSet", messageStr);
 
     if (Ninclination <= 0  || Ninclination > NMAXINCLINATION) {
       sprintf(messageStr,
-	      "\n  Invalid value for Ninclination in angleset: %d",
-	      Ninclination);
+              "Invalid value for Ninclination in angleset: %d",
+              Ninclination);
       Error(ERROR_LEVEL_2, "setAngleSet", messageStr);
     }
     if (Nazimuth <= 0  || Nazimuth > NMAXAZIMUTH) {
       sprintf(messageStr,
-	      "\n  Invalid value for Nazimuth in angleset: %d",
-	      Nazimuth);
+              "Invalid value for Nazimuth in angleset: %d",
+              Nazimuth);
       Error(ERROR_LEVEL_2, "setAngleSet", messageStr);
     }
   } else {
     sprintf(messageStr,
-	    "\n  Invalid value for keyword ANGLE_SET: %s", value);
+            "Invalid value for keyword ANGLE_SET: %s", value);
     Error(ERROR_LEVEL_2, "setAngleSet", messageStr);
   }
   memcpy(pointer, &angleSet, sizeof(AngleSet));
@@ -269,8 +270,6 @@ void setStokesMode(char *value, void *pointer)
     StokesMode = NO_STOKES;
   else if (!strcmp(value, "FIELD_FREE"))
     StokesMode = FIELD_FREE;
-  else if (!strcmp(value, "POLARIZATION_FREE"))
-    StokesMode = POLARIZATION_FREE;
   else if (!strcmp(value, "FULL_STOKES"))
     StokesMode = FULL_STOKES;
   else {
@@ -329,7 +328,7 @@ void setThreadValue(char *value, void *pointer)
     
     if ((return_value = pthread_setconcurrency(Nthreads)))
       Error(ERROR_LEVEL_2, routineName,
-	    "Failed to set concurrency level for threads.");
+	    "Failed to set concurrency level for threads");
     else {
       sprintf(messageStr, "Setting thread concurrency to %d", Nthreads);
       Error(WARNING, routineName, messageStr);
@@ -354,7 +353,7 @@ void setInterpolate_3D(char *value, void *pointer)
     order = BICUBIC_3D;
   else {
     sprintf(messageStr,
-	    "\n  Invalid value for keyword INTERPOLATE_3D: %s", value);
+            "Invalid value for keyword INTERPOLATE_3D: %s", value);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
   memcpy(pointer, &order, sizeof(enum order_3D));
@@ -378,7 +377,7 @@ void set_S_Interpolation(char *value, void *pointer)
     interpolation = S_BEZIER3;
   else {
     sprintf(messageStr,
-	    "Invalid value for keyword S_INTERPOLATION: %s\n", value);
+	    "Invalid value for keyword S_INTERPOLATION: %s", value);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
   memcpy(pointer, &interpolation, sizeof(enum S_interpol));
@@ -422,7 +421,7 @@ void setstartValue(char *value, void *pointer)
     startvalue = OLD_J;
   else {
     sprintf(messageStr,
-             "Invalid value for keyword STARTING_J: %s", value);
+            "Invalid value for keyword STARTING_J: %s", value);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
 
@@ -446,7 +445,7 @@ void setnesolution(char *value, void *pointer)
     nesolution = ITERATION;
   } else {
     sprintf(messageStr,
-             "Invalid value for keyword SOLVE_NE: %s", value);
+            "Invalid value for keyword SOLVE_NE: %s", value);
     Error(ERROR_LEVEL_2, routineName, messageStr);
   }
 

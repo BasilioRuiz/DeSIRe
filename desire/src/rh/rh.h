@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Thu May 24 16:17:36 2018 --
+       Last modified: Tue Apr 28 17:22:37 2020 --
 
        --------------------------                      ----------RH-- */
 
@@ -19,13 +19,16 @@
 #include <rpc/types.h>
 #include <pthread.h>
 
+// 02/02/21 epm: C memory leak detection library.
+// #include "extern/cMemDbg.h"
+
 enum Topology       {ONE_D_PLANE, TWO_D_PLANE, SPHERICAL_SYMMETRIC,
                      THREE_D_PLANE};
 enum FeautrierOrder {STANDARD, FEAUTRIER_HERMITE};
 enum Interpolation  {LINEAR, SPLINE, EXP_SPLINE};
 enum solution       {UNKNOWN=-1, LTE_POPULATIONS, ZERO_RADIATION,
                      OLD_POPULATIONS, NEW_J, OLD_J};
-enum StokesMode     {NO_STOKES, FIELD_FREE, POLARIZATION_FREE, FULL_STOKES};
+enum StokesMode     {NO_STOKES, FIELD_FREE, FULL_STOKES};
 enum VoigtAlgorithm {ARMSTRONG, RYBICKI, HUI_ETAL, HUMLICEK, LOOKUP};
 
 
