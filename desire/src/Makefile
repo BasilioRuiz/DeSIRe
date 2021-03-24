@@ -312,21 +312,22 @@ install:
 #	rm -f mreadi2.f mreadi3.f mreadi33.f
 #	10/10/20 epm: Suprimo write_keyword_input_RH().
 #	rm -f write_keyword_input_RH.f
-#	11/11/20 epm: Suprimo read_* de 3 modulos que ya no se usan.
-#	rm -f read_keyword_input_RH.f read_atmos_RH.f read_model_atmos.f
-#	11/11/20 epm: Con los modelos por memoria no funciona 'conversion'.
-#	rm -f rh/rhf1d/conversion ../bin/conversion
-#	11/11/20 epm: Por si acaso cqn tiene una version pasada por brc.
-#	¡Cuidado!: Parece ser que en algunos Mac el comando 'rm' no distingue
-#	entre mayusculas y minusculas y elimina el fichero "hpopulations.f".
-#	rm -f Hpopulations.f
-#	
 #	10/10/20 epm: Borro ficheros del directorio run que ya no se usan.
 #	@find ../run/example ../run/example2 ../run/example_visp \
 #	       -name "abundance.input" -exec rm {} \; -or \
 #	       -name "kurucz.input" -exec rm {} \; -or \
 #	       -name "*.kur" -exec rm {} \; -or \
 #	       -name "*.wave" -exec rm {} \;
+#	11/11/20 epm: Suprimo read_* de 3 modulos que ya no se usan.
+#	rm -f read_keyword_input_RH.f read_atmos_RH.f read_model_atmos.f
+#	11/11/20 epm: Con los modelos por memoria no funciona 'conversion'.
+#	rm -f rh/rhf1d/conversion ../bin/conversion
+#	11/11/20 epm: Por si acaso cqn tiene una version pasada por brc.
+#	Cuidado! Parece ser que en algunos Mac el comando 'rm' no distingue
+#	entre mayusculas y minusculas y elimina el fichero "hpopulations.f".
+#	rm -f Hpopulations.f
+#	04/04/21 epm: Borro un fichero que se ha colado no se de donde.
+	@rm -f nstar
 
 #	Finalmente borramos objetos y recompilamos.
 	@find . -name "*.a" -exec rm {} \;
