@@ -202,7 +202,14 @@ int solveray( int argc, char *argv[],
       
     strcpy(input.background_File, input.background_ray_File);
     Background(analyze_output=FALSE, equilibria_only=FALSE);
-  } else {
+  }
+  else {
+
+    // 04/04/20 epm: The variable 'input.background_File' is null,
+    // so exit showing a clearer message.
+    Error(ERROR_LEVEL_2, argv[0],
+          "DeSIRe does not work with no magnetized static atmosphere");
+
     Background(analyze_output=FALSE, equilibria_only=TRUE);
 
     if ((atmos.fd_background =

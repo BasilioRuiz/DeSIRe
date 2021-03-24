@@ -35,6 +35,7 @@
 #             (epm) Nuevos modulos para las poblaciones de H:
 #                   hpopulations.f, lee_hydro.f, mread4.f.
 # 02/02/21  : (epm) Libreria externa para detectar fugas de memoria.
+# 03/03/21  : (epm) Paso el compilador al Makefile de RH.
 #
 # ****************************************************************************
 
@@ -59,7 +60,7 @@
 ifeq ($(fc),gfortran)
 FC       = gfortran
 FFLAGS   = -Ofast -ffixed-line-length-none -fno-automatic \
-           -ffpe-summary=invalid,zero,overflow
+           -ffpe-summary=invalid,zero,overflow -std=legacy
 ARCHLIBS = -lpthread
 else
 FC       = ifort
@@ -268,7 +269,7 @@ $(FILEMAKE): $(FILECONF)
 # G) Reconstruccion de las librerias de RH.
 #
 rhf1d:
-	$(MAKE) -C rh/rhf1d
+	$(MAKE) -C rh/rhf1d FC=$(FC)
 
 #
 # H) Reconstruccion de la libreria de deteccion de fugas de memoria.
@@ -286,52 +287,54 @@ all:  desire  modelador3  PemufromPgT_i  PgmufromPeT_i
 #
 install:
 #	10/10/19 epm: Limpieza en la distribucion (solve1d no funciona).
-	rm -f rh/rhf1d/iter_1d.c rh/rhf1d/solve1d.c rh/rhf1d/solve1d
-	rm -f ../bin/solve1d
+#	rm -f rh/rhf1d/iter_1d.c rh/rhf1d/solve1d.c rh/rhf1d/solve1d
+#	rm -f ../bin/solve1d
 #	11/11/19 epm: Limpieza en la distribucion (codigo RH nuevo).
-	rm -f rh/rhf1d/bezier.c rh/rhf1d/bezier.h
-	rm -f rh/rhf1d/piecestokes.c rh/rhf1d/piecewise.c
+#	rm -f rh/rhf1d/bezier.c rh/rhf1d/bezier.h
+#	rm -f rh/rhf1d/piecestokes.c rh/rhf1d/piecewise.c
 #	04/04/20 epm: Limpieza en la distribucion (no mas ejecutables de RH).
-	rm -f rh/rhf1d/backgrcontr rh/rhf1d/rhf1d rh/rhf1d/solveray
-	rm -f ../bin/backgrcontr ../bin/rhf1d ../bin/solveray
+#	rm -f rh/rhf1d/backgrcontr rh/rhf1d/rhf1d rh/rhf1d/solveray
+#	rm -f ../bin/backgrcontr ../bin/rhf1d ../bin/solveray
 #	04/04/20 epm: Directorio no funcional al suprimir las salidas de RH.
-	rm -fr rh/idl
+#	rm -fr rh/idl
 #	04/04/20 epm: Fichero renombrado (rh_desire.c -> rh_sir.c).
-	rm -f rh/rhf1d/rh_desire.c
+#	rm -f rh/rhf1d/rh_desire.c
 #	05/05/20 epm: Suprimo los siguientes modulos porque no son usados.
-	rm -f leeuveobs.f mensaje.f model.f nodos2.f util.c
+#	rm -f leeuveobs.f mensaje.f model.f nodos2.f util.c
 #	07/07/20 epm: Suprimo leelineasii() y el ejecutable lande.
-	rm -f leelineasii.f sublande.f sublande2.f lande.f lande
-	rm -f ../bin/lande
+#	rm -f leelineasii.f sublande.f sublande2.f lande.f lande
+#	rm -f ../bin/lande
 #	08/08/20 epm: Fichero renombrado (leelineasiii.f -> leelineas.f).
-	rm -f leelineasiii.f
+#	rm -f leelineasiii.f
 #	08/08/20 epm: Suprimo write_abun_RH()y las rutinas de Planck.
-	rm -f write_abun_RH.f dtplanck.f planck.f plank2.f
+#	rm -f write_abun_RH.f dtplanck.f planck.f plank2.f
 #	09/09/20 epm: Ficheros renombrados (mreadi<n>.f -> mread<n>.f).
-	rm -f mreadi2.f mreadi3.f mreadi33.f
+#	rm -f mreadi2.f mreadi3.f mreadi33.f
 #	10/10/20 epm: Suprimo write_keyword_input_RH().
-	rm -f write_keyword_input_RH.f
+#	rm -f write_keyword_input_RH.f
 #	11/11/20 epm: Suprimo read_* de 3 modulos que ya no se usan.
-	rm -f read_keyword_input_RH.f read_atmos_RH.f read_model_atmos.f
+#	rm -f read_keyword_input_RH.f read_atmos_RH.f read_model_atmos.f
 #	11/11/20 epm: Con los modelos por memoria no funciona 'conversion'.
-	rm -f rh/rhf1d/conversion ../bin/conversion
+#	rm -f rh/rhf1d/conversion ../bin/conversion
 #	11/11/20 epm: Por si acaso cqn tiene una version pasada por brc.
-	rm -f Hpopulations.f
-
+#	¡Cuidado!: Parece ser que en algunos Mac el comando 'rm' no distingue
+#	entre mayusculas y minusculas y elimina el fichero "hpopulations.f".
+#	rm -f Hpopulations.f
+#	
 #	10/10/20 epm: Borro ficheros del directorio run que ya no se usan.
-	@find ../run/example ../run/example2 ../run/example_visp \
-	       -name "abundance.input" -exec rm {} \; -or \
-	       -name "kurucz.input" -exec rm {} \; -or \
-	       -name "*.kur" -exec rm {} \; -or \
-	       -name "*.wave" -exec rm {} \;
+#	@find ../run/example ../run/example2 ../run/example_visp \
+#	       -name "abundance.input" -exec rm {} \; -or \
+#	       -name "kurucz.input" -exec rm {} \; -or \
+#	       -name "*.kur" -exec rm {} \; -or \
+#	       -name "*.wave" -exec rm {} \;
 
 #	Finalmente borramos objetos y recompilamos.
-	find . -name "*.a" -exec rm {} \;
-	find . -name "*.o" -exec rm {} \;
+	@find . -name "*.a" -exec rm {} \;
+	@find . -name "*.o" -exec rm {} \;
 	$(MAKE) fc=$(FC) all
 #	04/04/20 epm: Ya no distribuimos los ejecutables de RH.
 #	11/11/20 epm: Con los modelos por memoria no funciona 'conversion'.
-#	$(MAKE) -C rh/rhf1d conversion
+#	$(MAKE) -C rh/rhf1d FC=$(FC) conversion
 
 
 # ****************************************************************************
@@ -386,6 +389,17 @@ install:
 #     "-fautomatic", uses the stack for local variables smaller than the value
 #     given by "-fmax-stack-var-size".  Use the option "-frecursive" to use no
 #     static memory.
+#
+#
+# -std=legacy
+#     Specify the standard to which the program is expected to conform, which
+#     may be one of ‘f95’, ‘f2003’, ‘f2008’, ‘f2018’, ‘gnu’, or ‘legacy’.
+#     The default value for std is ‘gnu’, which specifies a superset of the
+#     latest Fortran standard that includes all of the extensions supported
+#     by GNU Fortran, although warnings will be given for obsolete extensions
+#     not recommended for use in new code. The ‘legacy’ value is equivalent
+#     but without the warnings for obsolete extensions, and may be useful for
+#     old non-standard programs.
 #
 #
 # ============================================================================

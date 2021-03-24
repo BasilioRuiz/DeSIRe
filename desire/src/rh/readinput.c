@@ -313,7 +313,7 @@ void readInput()
       if (input.StokesMode == NO_STOKES) {
         sprintf(messageStr, "%s",
               "Keyword STOKES_MODE == NO_STOKES\n"
-              " Set to FIELD_FREE or FULL_STOKES\n"
+              " Set to FIELD_FREE or FULL_STOKES"
               " when doing polarization calculations");
         Error(ERROR_LEVEL_1, routineName, messageStr);
       }
@@ -333,7 +333,7 @@ void readInput()
     }
     if ((input.StokesMode == FIELD_FREE ||
          input.StokesMode == FULL_STOKES) &&
-        input.backgr_pol == FALSE) {
+         input.backgr_pol == FALSE) {
       Error(ERROR_LEVEL_2, routineName,
             "Should not run STOKES_MODE == FIELD_FREE or FULL_STOKES\n "
             "when no magnetic field is read and "

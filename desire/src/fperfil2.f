@@ -318,6 +318,7 @@ c ************************* atmosfera 1 ***************************************
                        end do 
                     end do
                  end if
+                 if(abs(atmos1LG(5*ntau+1)) .lt. 1)atmos1LG(5*ntau+1)=1
                  call departures(label_ID_model,RH_model,RH_magneticfield,1,atmos1LG,
      &                           ntau,ntotal_lines,beta1_1,beta2_1,stok_RH_1)
                  if(imassortau .eq. 0)then         
@@ -446,6 +447,7 @@ c ************************* atmosfera 2 ***************************************
                        end do 
                     end do
                  end if
+                 if(abs(atmos2LG(5*ntau+1)) .lt. 1)atmos2LG(5*ntau+1)=1
                  call departures(label_ID_model,RH_model,RH_magneticfield,2,atmos2LG,
      &                           ntau,ntotal_lines,beta1_2,beta2_2,stok_RH_2) 
                  if(imassortau .eq. 0)then  

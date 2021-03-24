@@ -18,12 +18,13 @@ XARCH  =
 ## --- If no f90 compiler is available comment out -DHAVE_F90
 
 CC       = gcc
-CFLAGS   = -m64 -DHAVE_F90 ##-Wall 
+CFLAGS   = -m64 -DHAVE_F90
 
 
 ## --- Macros for F90 alternative routines --           ------------- ##
+#      03/03/21 epm: FC comes from the main Makefile in src directory.
 
-F90C     = gfortran ## ifort
+F90C     = $(FC)
 F90FLAGS = -m64
 
 
@@ -32,6 +33,7 @@ F90FLAGS = -m64
 ARFLAGS  = rvs
 ARCHINC  =
 
+
 ## --- GNU make does not automatically define the .f90 suffix and
 ##     corresponding suffix rule --                    -------------- ##
 
@@ -39,5 +41,6 @@ ARCHINC  =
 
 .f90.o:
 	$(F90C) -c $(F90FLAGS) $<
+
 
 ## ---                                                 -------------- ##

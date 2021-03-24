@@ -7,8 +7,8 @@
 //
 
 
-#include <stdio.h>    // printf()
-#include <stdlib.h>   // EXIT_SUCCESS
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "cMemDbg.h"  // after standard headers
 
