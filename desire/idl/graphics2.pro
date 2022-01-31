@@ -2,7 +2,7 @@
 ;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-;		     PROCEDURE GRAPHICS & RELATED ROUTINES
+;		     PROCEDURE GRAPHICS2 & RELATED ROUTINES
 
 ;Purpose: Plotting of model atmosphere and Stokes profile files with the 
 ;format required and/or produced by the Inversion of the Radiative Transfer
@@ -10,7 +10,7 @@
 
 ;Category: Widgets.
 
-;Calling sequence: GRAPHICS
+;Calling sequence: GRAPHICS2
 
 ;Common blocks: No previous common blocks required. See below for description
 ;		of internal ones.
@@ -154,6 +154,7 @@ end
 ;***************************************************************************
 ;***************************************************************************
 function reordena,name1,name2
+common exten,ext
 
 n1=0
 n2=0
@@ -184,7 +185,7 @@ for i=0,n1-1 do begin
             name22=[name22(0:d-1)]			  ;
          endif else name22=[name22(0:d-1),name22(d+1:*)]  ;
       endelse
-      name11(i)=name1(i)+'\per'
+      name11(i)=name1(i)+'\'+ext
    endif else name11(i)=name1(i)
 endfor
 
@@ -192,10 +193,11 @@ endfor
 
 n22=n_elements(name22)
 
-for i=0,n22-1 do name22(i)=name22(i)+'.per'
+puntoext='.'+ext
+for i=0,n22-1 do name22(i)=name22(i)+puntoext
 
 name=[name11,name22]
-if name22(0) eq '.per' then name=name11
+if name22(0) eq puntoext then name=name11
 
 return,name
 end
@@ -244,7 +246,7 @@ end
 pro mensaje,texto
 
 mensa=widget_base(/column)
-cartel=widget_text(mensa,value=texto,font='lucidasans-12',xsize=20,/scroll)
+cartel=widget_text(mensa,value=texto,font='lucidasans-12',/scroll)
 boton=widget_button(mensa,value='OK')
 
 bell
@@ -587,6 +589,7 @@ common variables,imag,istokes,win,ips,itau,dm,dp
 common etiquetas,etiquetax,etiquetay,etiquestox,etiquestoy
 common escalas,maxmod,minmod,maxper,minper,iscale
 common todoslosparametros,tlpmod
+common exten,ext
 ;___________________________________________________________________________
 ;				       Distinguimos entre modelos y perfiles
 ;___________________________________________________________________________
@@ -646,7 +649,7 @@ if dp(0) ne -1 then begin
       barpos=strpos(lisper(i),'\')
       dotpos=strpos(lisper(i),'.')
       if barpos ne -1 then begin
-         lisper(i)=strmid(lisper(i),0,dotpos)+'.per'
+         lisper(i)=strmid(lisper(i),0,dotpos)+'.'+ext
       endif
       lisper(i)=directorio+'/'+lisper(i)
    endfor
@@ -1302,6 +1305,7 @@ common escalas,maxmod,minmod,maxper,minper,iscale
 common ventcw,av,st,ib,qb,ub,vb,pp    ;(CW)
 common variacw,allstokes,allmag       ;
 common oldcw, rold, gold, bold        ;
+common exten,ext
 ;---------------------------------------------------------------------------
 ;                                  ********Identificacion de sucesos********
 ;---------------------------------------------------------------------------
@@ -1453,7 +1457,7 @@ if (m eq 0) then begin						       ;(14)
 ;   if itau eq 1 then begin                                    ;(LB)
       dirlis1='ls '+strtrim(directorio,2)+'/*.mod'
 ;   endif else dirlis1='ls '+strtrim(directorio,2)+'/*.moz'   ;(LB)
-   dirlis2='ls '+strtrim(directorio,2)+'/*.per'
+   dirlis2='ls '+strtrim(directorio,2)+'/*.'+ext
    spawn,dirlis1,listado11,/SH   ; (CW) Bug al cambiar de dir
    spawn,dirlis2,listado12,/SH   ; 
    listado2=''				
@@ -1539,7 +1543,7 @@ if m eq 9 then begin						       ;(19)
       itau=1
       etiquetax='!6log (!7s!6)'
 ;      dirlis1='ls '+strtrim(directorio,2)+'/*.mod'  ;no considero nuevos ficheros
-;      dirlis2='ls '+strtrim(directorio,2)+'/*.per'
+;      dirlis2='ls '+strtrim(directorio,2)+'/*.'+ext
 ;      spawn,dirlis1,listado11,/SH  ; (CW) Bug al cambiar de dir
 ;      spawn,dirlis2,listado12,/SH  ;
 ;      listado2=''				
@@ -1552,7 +1556,7 @@ if m eq 9 then begin						       ;(19)
       itau=0
       etiquetax='!6z (km)'
 ;      dirlis1='ls '+strtrim(directorio,2)+'/*.moz'  ;no considero nuevos ficheros
-;      dirlis2='ls '+strtrim(directorio,2)+'/*.per'
+;      dirlis2='ls '+strtrim(directorio,2)+'/*.'+ext
 ;      spawn,dirlis1,listado11,/SH  ; (CW) Bug al cambiar de dir
 ;      spawn,dirlis2,listado12,/SH  ;
 ;      listado2=''				
@@ -1644,7 +1648,8 @@ end
 
 ;Purpose: Widget creator.
 
-;Arguments: None
+;Arguments:
+;       -extension: profile filename extension (default '.per').
 
 ;Common blocks:
 ;	-VENTANAS: See DIBUPAN.PRO above
@@ -1659,7 +1664,7 @@ end
 ;***************************************************************************
 ;***************************************************************************
 
-pro graphics2
+pro graphics2,extension
 
 common ventanas,lista1,lista2,menu,direc,supermenu,pantalla,pintor
 common ficheros,listado1,listado2,directorio
@@ -1671,6 +1676,8 @@ common escalas,maxmod,minmod,maxper,minper,iscale
 common ventcw,av,st,ib,qb,ub,vb,pp    ;(CW)
 common variacw,allstokes,allmag       ;
 common oldcw, rold, gold, bold        ;
+common exten,ext
+
 ;loadct,2  -> Pasar de usar palette definida  (CW)
 ;           
 tvlct,rold,gold,bold, /get   ; colores que tiene antes de taumenu (CW)
@@ -1680,6 +1687,15 @@ g=[0,255,0  ,140,216,235,235,0  ,148,126,0  ]  ; negro, blanco y 9 mas
 b=[0,255,0  ,234,0  ,0  ,228,200,0  ,0  ,201]  ;
 tvlct,r,g,b                                    ; la carga en memoria 
 ;
+
+;10/10/21 epm: Leemos la extension de los perfiles (defecto '.per').
+if (n_params(0) ge 1) then begin
+   ext=strtrim(extension,2)
+endif else begin
+   ext='per'
+endelse
+;Quita el punto en caso de que lo tuviera.
+if (strmid(ext,0,1) eq '.') then ext=strmid(ext,1,strlen(ext))
 
 imag=bytarr(10)
 istokes=bytarr(4)
@@ -1718,7 +1734,8 @@ dm=-1
 dp=-1
 
 spawn,'ls *.mod',listado11,/SH   ;(CW) Bug de caracteres raros en el path
-spawn,'ls *.per',listado12,/SH   ;
+spawn,'ls *.'+ext,listado12,/SH
+
 if ((listado11(0) eq '') and (listado12(0) eq '')) then begin
    texto='Neither model nor profile files in current directory'
    mensaje,texto
@@ -1727,109 +1744,75 @@ endif
 listado1=reordena(listado11,listado12)
 listado2=strarr(1)
 spawn,'pwd',directorio,/NOSHELL   ;(CW) Bug de caracteres raros en el path 
-;directorio='/scratch/carlos/artic/grad/BvGF/US/pru'
-;directorio='/scratch/carlos/artic/grad/BVgGgFg/US/pruSirnew'
-;directorio='/scratch/carlos/artic/mu/BVcteGg/US
-;directorio='/scratch/carlos/artic/mu/BVcteGgFg/US
 
+supermenu=widget_base(space=20,title='Model atmospheres menu 1.2')
 
-;supermenu=widget_base(space=20,title='Model atmospheres menu 1.2',xsize=370,ysize=820)  ;(CW)
-supermenu=widget_base(space=20,title='Model atmospheres menu 1.2',xsize=380,ysize=740)  ;(CW) brc
 menu=widget_base(supermenu,/column,space=10)
-d1=widget_base(menu,/column,space=10,xsize=350)
-;d2=widget_label(d1,value='Working directory',$
-;    font='lucidasans-bolditalic-12')
+d1=widget_base(menu,/column,space=10,xsize=380)
 direc=widget_text(d1,/editable,value=directorio,uvalue=0,$
-font='lucidasans-12',/scroll)
+      font='lucidasans-12',/scroll)
+
 listas=widget_base(menu,/row,space=10)
-l1=widget_base(listas,/column,space=10,xsize=160)   
-;eti1=widget_label(l1,value='    Files    ',$
-;     font='lucidasans-bolditalic-10')
-lista1=widget_list(l1,value=listado1,uvalue=1,ysize=9,$  ;(CW) ventana files
-font='lucidasans-12')
-l2=widget_base(listas,/column,space=10,xsize=160)
-;eti2=widget_label(l2,value='       Selected       ',$   
-;    font='lucidasans-bolditalic-10')
-lista2=widget_list(l2,value=listado2,uvalue=2,ysize=9,$  ;(CW) brc (antes 10 en vez de 53)
-font='lucidasans-12')
+l1=widget_base(listas,/column,space=10,xsize=180)
+lista1=widget_list(l1,value=listado1,uvalue=1,ysize=9,font='lucidasans-12')
+l2=widget_base(listas,/column,space=10,xsize=180)
+lista2=widget_list(l2,value=listado2,uvalue=2,ysize=9,font='lucidasans-12')
 
 par=widget_base(menu,/column,space=10)
-;eti3=widget_label(par,value=' Physical Quantities ',font=$
-;     'lucidasans-bolditalic-10')
+pp=widget_base(par,/nonexclusive)
 
-;xmenu,['Temperature','Electronic pressure','Microturbulence (Gas pressure)'$
-;,'Magnetic field strength','Line of sight velocity',$
-;'Magnetic inclination (Density)',$
-;'Magnetic azimuth (Absorption coefficient)'],par,/nonexclusive,$
-;font='lucidasans-10',uvalue=intarr(7)+3   
-;
-;xmenu,[' ALL'],par,/nonexclusive,$          ;(CW)
-;font='lucidasans-bolditalic-12',uvalue=8+3 ;
-
-pp=widget_base(par,/nonexclusive)        ;(CW)
-temp=widget_button(pp,value='Temperature',font='lucidasans-bold-12',uvalue=3)
+temp=widget_button(pp,value='Temperature',$
+     font='lucidasans-bold-12',uvalue=3)
 pres=widget_button(pp,value='Electronic pressure',$
-font='lucidasans-12',uvalue=3)
+     font='lucidasans-12',uvalue=3)
 mic =widget_button(pp,value='Microturbulence',$
-font='lucidasans-12',uvalue=3)
+     font='lucidasans-12',uvalue=3)
 fld =widget_button(pp,value='Magnetic field strength',$
-font='lucidasans-bold-12',uvalue=3)
+     font='lucidasans-bold-12',uvalue=3)
 velo=widget_button(pp,value='Line of sight velocity',$
-font='lucidasans-bold-12',uvalue=3)
+     font='lucidasans-bold-12',uvalue=3)
 incl=widget_button(pp,value='Magnetic inclination',$
-font='lucidasans-bold-12',uvalue=3)
+     font='lucidasans-bold-12',uvalue=3)
 azim=widget_button(pp,value='Magnetic azimuth',$
-font='lucidasans-bold-12',uvalue=3)
+     font='lucidasans-bold-12',uvalue=3)
 zeta=widget_button(pp,value='Geometrical height',$
-font='lucidasans-12',uvalue=3)
+     font='lucidasans-12',uvalue=3)
 pgas=widget_button(pp,value='Gas pressure',$
-font='lucidasans-12',uvalue=3)
+     font='lucidasans-12',uvalue=3)
 dens=widget_button(pp,value='Density',$
-font='lucidasans-12',uvalue=3)
-
-
-am=widget_button(pp,value=' ALL',$
-font='lucidasans-bolditalic-12',uvalue=11)  ;(CW)
+     font='lucidasans-12',uvalue=3)
+am  =widget_button(pp,value=' ALL',$
+     font='lucidasans-bolditalic-12',uvalue=11)
 
 parerr=widget_base(menu,/column)
-pperr=widget_base(parerr,/nonexclusive)        ;(CW)
+pperr=widget_base(parerr,/nonexclusive)
 uncer=widget_button(pperr,value=' NO error bars',$
-font='lucidasans-12',uvalue=33)
-
+      font='lucidasans-12',uvalue=33)
 
 stokes=widget_base(menu,/column)
-;eti4=widget_label(stokes,value='Stokes Parameters',font=$
-;     'lucidasans-bolditalic-12')
-st=widget_base(stokes,/row,space=30,/nonexclusive)
+st=widget_base(stokes,/row,space=8,/nonexclusive)
 ib=widget_button(st,value='  I  ',font='lucidasans-bold-12',uvalue=4)
 qb=widget_button(st,value='  Q  ',font='lucidasans-bold-12',uvalue=4)
 ub=widget_button(st,value='  U  ',font='lucidasans-bold-12',uvalue=4)
 vb=widget_button(st,value='  V  ',font='lucidasans-bold-12',uvalue=4)
+av=widget_button(st,value=' ALL ',font='lucidasans-bolditalic-12',uvalue=4)
 
-av=widget_button(st,value=' ALL ',font='lucidasans-bolditalic-12',uvalue=4);(CW)
-
-ac=widget_base(menu,/row,space=10)
-
-nueva=widget_button(ac,value='Reset',font='lucidasans-12'$
-,uvalue=5)
-
+ac=widget_base(menu,/row,space=12)
+nueva=widget_button(ac,value='Reset',font='lucidasans-12',uvalue=5)
+;
 var=widget_base(ac,/column)
 zeta=widget_button(var,value='  z  ',font='lucidasans-bold-12',uvalue=9)
-;taudep=widget_button(var,value='  t  ',font='symbol15',uvalue=9)   ;!brc
-taudep=widget_button(var,value=' tau ',font='lucidasans-bold-12',uvalue=9)    ;brc
-
+taudep=widget_button(var,value=' tau ',font='lucidasans-bold-12',uvalue=9)
+;
 dibu=widget_button(ac,value='Plot',font='lucidasans-bold-12',uvalue=6)
-
-
 escribe=widget_button(ac,value='Print',font='lucidasans-12',uvalue=10)
 escala=widget_button(ac,value='Scale',font='lucidasans-12',uvalue=17)
 bye=widget_button(ac,value='Quit',font='lucidasans-bold-12',uvalue=8)
 
-pintor=widget_base(xoffset=390,title='Model Atmospheres & Profiles Display')
-pantalla=widget_draw(pintor,xsize=621,ysize=740,/frame)
+pintor=widget_base(xoffset=480,title='Model Atmospheres & Profiles Display')
+pantalla=widget_draw(pintor,xsize=1000,ysize=800,/frame)
 
 widget_control,supermenu,/realize
-
 xmanager,'taumenu',supermenu
 
 end

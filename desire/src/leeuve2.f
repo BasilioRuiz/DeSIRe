@@ -1,72 +1,86 @@
 c leeuve2 lee un fichero de datos de parametros de stokes :vobs
-	
-	subroutine leeuve2(idis,vobs,ist,ntl,nlin,npas,dl,stok)
+
+        subroutine leeuve2(idis,vobs,ist,ntl,nlin,npas,dl,stok)
         implicit real*4 (a-h,o-z)
 
-	include 'PARAMETER'
-	real*4 stok(*),dl(*),si(kld),sq(kld),su(kld),sv(kld)
-	integer npas(*),nlin(*),ist(*),idis
-	character vobs*(*)
+        include 'PARAMETER'
+        real*4 stok(*),dl(*),si(kld),sq(kld),su(kld),sv(kld)
+        real*4 continuohNLTEarr(kld)
+        integer npas(*),nlin(*),ist(*),idis,icontinuo_normz
+        character vobs*(*)
+c       05/05/21 brc: Common to set on/off the continuum normalization in leeuve2
+        common/icontnormalz/icontinuo_normz !icontinuo_normz=0 input/output profiles are in SI units
+        common/continuosNLTEarr/continuohNLTEarr 
+        
+        ican=56
 
-	ican=56
+        if(idis.eq.0)then
+            open(ican,file=vobs,status='old',err=991)
+            k=0
+            if(icontinuo_normz .eq. 1)then
+               do i=1,ntl
+                  do j=1,npas(i)
+                     k=k+1
+                     read(ican,*,err=992)a,dl(k),si(k),sq(k),su(k),sv(k)
+                     nlin(i)=nint(a)
+                  end do
+               end do
+            else
+                do i=1,ntl
+                  do j=1,npas(i)
+                     k=k+1
+                     con=continuohNLTEarr(k)
+                     read(ican,*,err=992)a,dl(k),sii,sqi,suu,svv
+                     si(k)=sii/con
+                     sq(k)=sqq/con
+                     su(k)=suu/con
+                     sv(k)=svv/con                     
+                     nlin(i)=nint(a)
+                  end do
+               end do
+            end if   
+            call sfromiquv(ist,k,si,sq,su,sv,stok)
+        else
+           open(ican,file=vobs)
+           k=0
+           do i=1,ntl
+              do j=1,npas(i)
+                 k=k+1
+              end do
+           end do
+           call iquvfroms(ist,k,si,sq,su,sv,stok)
+           k=0
+           if(icontinuo_normz .eq. 1)then           
+              do i=1,ntl
+                 do j=1,npas(i)
+                    k=k+1
+                    write(ican,993)nlin(i),dl(k),si(k),sq(k),su(k),sv(k)
+                 end do
+              end do
+           else
+              do i=1,ntl
+                 do j=1,npas(i)
+                    k=k+1
+                    con=continuohNLTEarr(k)                     
+                    write(ican,993)nlin(i),dl(k),si(k)*con,sq(k)*con,su(k)*con,sv(k)*con
+                 end do
+              end do           
+           end if
+       end if
+       close(ican)
+       return
 
-	if(idis.eq.0)then
-c	   ican=23
-c	   mensajito=' containing the observed/stray light profiles'
-c	   call cabecera(ican,vobs,mensajito,ifail)
-c	   if(ifail.eq.1)goto 991
-		
-	        open(ican,file=vobs,status='old',err=991)
-		k=0
-		do i=1,ntl
-		   do j=1,npas(i)
-			k=k+1
-			read(ican,*,err=992)a,dl(k),si(k),sq(k),su(k),sv(k)
-	                nlin(i)=nint(a)
-		   end do
-		end do
-	        call sfromiquv(ist,k,si,sq,su,sv,stok)
-	else
-c           print*,'estoy en leeuve2 ntl=',ntl
-		open(ican,file=vobs)
-		k=0
-		do i=1,ntl
-c                       print*,'estoy en leeuve2 i npas =',i,npas(i)
-		   do j=1,npas(i)
-			k=k+1
-	           end do
-	        end do
-c                print*,'estoy en leeuve2  voy a llamar a iquvfroms'
-	        call iquvfroms(ist,k,si,sq,su,sv,stok)
-c                print*,'estoy en leeuve2  voy a escribir',vobs
-	        k=0
-		do i=1,ntl
-		   do j=1,npas(i)
-	              k=k+1
-c                      print*,        nlin(i),dl(k),si(k),sq(k),su(k),sv(k)
-                      write(ican,993)nlin(i),dl(k),si(k),sq(k),su(k),sv(k)
-c                      print*,nlin(i),dl(k),si(k),sq(k),su(k),sv(k)
-		   end do
-		end do
-c                print*,'estoy en leeuve2  voy a salir',vobs
-c                stop
+c      Mensajes de error.
+991    call error(KSTOP,'leeuve2','The file containing the observed/stray'
+     & //         ' light profiles does not exist\n File: '//vobs)
 
-	end if
-	close(ican)
-	return
+992    call error(KSTOP,'leeuve2','Incorrect format in the file containing'
+     & //         ' the observed/stray light profiles\n File: '//vobs)
 
+c      Formato de escritura.
+993    format(1x,i5,1x,f11.4,1x,4(e14.7,1x))
 
-c	Mensajes de error
-991	call error(KSTOP,'leeuve2','The file containing the observed/stray'
-     &  //         ' light profiles does not exist\n File: '//vobs)
-
-992	call error(KSTOP,'leeuve2','Incorrect format in the file containing'
-     &  //         ' the observed/stray light profiles\n File: '//vobs)
-
-c       formato de escritura
-993     format(1x,i5,1x,f11.4,1x,4(e14.7,1x))
-
-	end
+       end
 
 c______________________________________________________________________
 c sfromiquv guarda en stok los vectores si,sq,su,sv segun ist(4)

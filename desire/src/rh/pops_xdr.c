@@ -99,54 +99,53 @@ void writePopulations( Atom *atom )
 {
    const char routineName[] = "writePopulations";
 
-   char  *id         = (char *) atmos.ID;
+   char  *atmosid    = (char *) atmos.ID;
    int    nlevel     = atom->Nlevel;
    int    nspace     = atmos.Nspace;
    off_t  offset     = 0;
    size_t npop       = atom->Nlevel * atmos.Nspace * sizeof(double);
    size_t recordsize = sizeof(atmos.ID) + sizeof(atom->Nlevel) +
                        sizeof(atmos.Nspace) + npop + npop;
-   int   i;
-   void *tmp;   // avoid memory leak
+   int    i;
 
+   // 04/04/20 epm: Save the atom population in memory rather than disk.
+   // I am using realloc(NULL,...) to not free this memory in case of
+   // calling FreeMemoryLeakNoRealloc().
    if (pmem == NULL)
    {
-     pmem = (void **) realloc(pmem, atmos.Nactiveatom * sizeof(void *));
+     pmem = (void **) realloc(NULL, atmos.Nactiveatom * sizeof(void *));
      for (i = 0; i < atmos.Nactiveatom; i++) pmem[i] = NULL;
    }
-
-   if ((tmp = realloc(pmem[atom->activeindex], recordsize)) != NULL)
+   if (pmem != NULL && pmem[atom->activeindex] == NULL)
    {
-      pmem[atom->activeindex] = tmp;
-      memcpy(pmem[atom->activeindex] + offset, id, sizeof(atmos.ID));
-      offset += sizeof(atmos.ID);
-      memcpy(pmem[atom->activeindex] + offset, &nlevel, sizeof(atom->Nlevel));
-      offset += sizeof(atom->Nlevel);
-      memcpy(pmem[atom->activeindex] + offset, &nspace, sizeof(atmos.Nspace));
-      offset += sizeof(atmos.Nspace);
-      if (atom->n[0] != NULL)
-      {
-         memcpy(pmem[atom->activeindex] + offset, atom->n[0], npop);
-         offset += npop;
-      }
-      else   // exit if true populations do not exist
-      {
-         sprintf(messageStr,
-                 "Error writing populations: true populations do not exist");
-         Error(ERROR_LEVEL_1, routineName, messageStr);
-      }
-      if (atom->nstar[0] != NULL)   // but we can live without LTE values
-      {
-         memcpy(pmem[atom->activeindex] + offset, atom->nstar[0], npop);
-         offset += npop;
-      }
+      pmem[atom->activeindex] = realloc(NULL, recordsize);
    }
-   else
+   if (pmem == NULL || pmem[atom->activeindex] == NULL)
    {
-      sprintf(messageStr, "Pointer null writing populations for"
-              " atom %s (offset %lld, size %zu)",
-              atom->ID, (long long) offset, recordsize);
+      sprintf(messageStr, "Memory problem writing populations for atom %s",
+              atom->ID);
       Error(ERROR_LEVEL_1, routineName, messageStr);
+   }
+   memcpy(pmem[atom->activeindex] + offset, atmosid, sizeof(atmos.ID));
+   offset += sizeof(atmos.ID);
+   memcpy(pmem[atom->activeindex] + offset, &nlevel, sizeof(atom->Nlevel));
+   offset += sizeof(atom->Nlevel);
+   memcpy(pmem[atom->activeindex] + offset, &nspace, sizeof(atmos.Nspace));
+   offset += sizeof(atmos.Nspace);
+   if (atom->n[0] != NULL)
+   {
+      memcpy(pmem[atom->activeindex] + offset, atom->n[0], npop);
+      offset += npop;
+   }
+   else   // exit if true populations do not exist
+   {
+      Error(ERROR_LEVEL_1, routineName,
+            "Error writing populations: true populations do not exist");
+   }
+   if (atom->nstar[0] != NULL)   // but we can live without LTE values
+   {
+      memcpy(pmem[atom->activeindex] + offset, atom->nstar[0], npop);
+      offset += npop;
    }
 }
 
@@ -157,12 +156,12 @@ void writePopulations_OLD(Atom *atom)
   FILE *fp_out;
   XDR   xdrs;
 
-  // 07/06/19 epm: We don't need this anymore.
-  // FILE *f;
-  // register int i, k;
-  // char filetxt[strlen(atom->popsoutFile) + 4 + 1];
-  // strcpy(filetxt, atom->popsoutFile);
-  // strcat(filetxt,".txt");
+  // /* BRC and DOS playing */
+  FILE *f;
+  register int i, k;
+  char filetxt[strlen(atom->popsoutFile) + 4 + 1];
+  strcpy(filetxt, atom->popsoutFile);
+  strcat(filetxt,".txt");
 
   if ((fp_out = fopen(atom->popsoutFile, "w")) == NULL) {
     sprintf(messageStr, "Unable to open output file %s", atom->popsoutFile);
@@ -181,24 +180,20 @@ void writePopulations_OLD(Atom *atom)
   xdr_destroy(&xdrs);
   fclose(fp_out);
 
-  // 07/06/19 epm: We don't need this anymore.
   // /* BRC and DOS playing */
-  //
-  // if ((f = fopen(filetxt, "w")) == NULL)
-  // {
-  //   printf("Error opening file in pops_xdr.c!!!\n");
-  //   exit(1);
-  // }
-  // for (k = 0;  k < atmos.Nspace;  k++)
-  // {
-  //   for (i = 0;  i < atom->Nlevel;  i++)
-  //   {
-  //     fprintf(f, "%d %d %lf\n", i, k, atom->n[i][k] / atom->nstar[i][k]);
-  //   }
-  // }
-  // fclose(f);
-  //
-  // /* BRC and DOS playing (end) */
+  if ((f = fopen(filetxt, "w")) == NULL)
+  {
+    sprintf(messageStr, "Error opening file %s", filetxt);
+    Error(ERROR_LEVEL_1, routineName, messageStr);
+  }
+  for (k = 0;  k < atmos.Nspace;  k++)
+  {
+    for (i = 0;  i < atom->Nlevel;  i++)
+    {
+      fprintf(f, "%d %d %lf\n", i, k, atom->n[i][k] / atom->nstar[i][k]);
+    }
+  }
+  fclose(f);
 }
 /* ------- end ---------------------------- writePopulations.c ------ */
 
@@ -208,7 +203,7 @@ void readPopulations( Atom *atom )
 {
    const char routineName[] = "readPopulations";
 
-   char   id[sizeof(atmos.ID)];
+   char   atmosid[sizeof(atmos.ID)];
    int    nlevel;
    int    nspace;
    off_t  offset     = 0;
@@ -218,7 +213,7 @@ void readPopulations( Atom *atom )
 
    if (pmem != NULL && pmem[atom->activeindex] != NULL)
    {
-      memcpy(id, pmem[atom->activeindex] + offset, sizeof(atmos.ID));
+      memcpy(atmosid, pmem[atom->activeindex] + offset, sizeof(atmos.ID));
       offset += sizeof(atmos.ID);
       memcpy(&nlevel, pmem[atom->activeindex] + offset, sizeof(atom->Nlevel));
       offset += sizeof(atom->Nlevel);
@@ -231,9 +226,8 @@ void readPopulations( Atom *atom )
       }
       else   // exit if true populations do not exist
       {
-         sprintf(messageStr,
-                 "Error reading populations: true populations do not exist");
-         Error(ERROR_LEVEL_2, routineName, messageStr);
+         Error(ERROR_LEVEL_2, routineName,
+               "Error reading populations: true populations do not exist");
       }
       if (atom->nstar[0] != NULL)   // but we can live without LTE values
       {
@@ -242,8 +236,8 @@ void readPopulations( Atom *atom )
       }
 
       // 04/04/20 epm: Do not compare these two variables because, if we have
-      // OLD_POPULATIONS, 'ID' is delayed respect to 'atmosID' but it's right.
-      // if (memcmp(id, atmos.ID, strlen(atmos.ID)) != 0)
+      // OLD_POPULATIONS, 'atmosid' is delayed respect to 'ID' but it's right.
+      // if (memcmp(atmosid, atmos.ID, strlen(atmos.ID)) != 0)
       // {
       //    sprintf(messageStr, "Populations were computed with different"
       //                        " atmosphere (%s) than the current one", id);

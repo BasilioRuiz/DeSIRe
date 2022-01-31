@@ -49,6 +49,7 @@ ADDRH_OBJS = anglequad.o \
              rh_chrono.o \
              rh_close.o \
              rh_glob.o \
+             rh_save.o \
              rh_sir.o \
              rhf1d.o \
              riiplane.o \

@@ -27,7 +27,7 @@ c_____________________________________________________________________________
         common/latlong/deglat,deglon
 c       Usamos este common compartido con write_atmos_RH_tau() para salvar
 c       las variables en el (en vez de usar save) y ahorrar algo de memoria.
-        common/saveatmos/T,elec_dens,vz,vmic,log_mass,B,gamma,phi
+        common/saveatmos/log_mass,T,elec_dens,vz,vmic,B,gamma,phi
 
         epsil=1.e-6
         bolr=1.3806488e-16
@@ -121,11 +121,6 @@ c       Escritura del campo magnetico.
            i=i+1
         end do
 
-c       Si corresponde, cambiamos de LoS a local (Z).
-        if(abs(deglat).gt.epsil .or. abs(deglon).gt.epsil)then
-           call taulinea5sub(1,deglat,deglon,gamma,phi,ntau)
-        endif
-
 c       RH_mag='Temporary_field.mod'
 c       if(RH_mag.ne.'none')then
 c          open(ican,file=RH_mag)
@@ -180,7 +175,7 @@ c_____________________________________________________________________________
         common/latlong/deglat,deglon
 c       Usamos este common compartido con write_atmos_RH() para salvar
 c       las variables en el (en vez de usar save) y ahorrar algo de memoria.
-        common/saveatmos/T,elec_dens,vz,vmic,log_tau,B,gamma,phi
+        common/saveatmos/log_tau,T,elec_dens,vz,vmic,B,gamma,phi
 
         epsil=1.e-6
         bolr=1.3806488e-16
@@ -263,11 +258,6 @@ c       Escritura del campo magnetico.
            if(B(i).gt.0) nB=ntau
            i=i+1
         end do
-
-c       Si corresponde, cambiamos de LoS a local (Z).
-        if(abs(deglat).gt.epsil .or. abs(deglon).gt.epsil)then
-           call taulinea5sub(1,deglat,deglon,gamma,phi,ntau)
-        endif
 
 c       RH_mag  ='Temporary_field.mod'
 c       if(RH_mag.ne.'none')then

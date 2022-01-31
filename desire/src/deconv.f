@@ -14,7 +14,7 @@ c el vector a deconvolucionar entra por medio del common vobservado
       real*4 frec,ex,cota,paso,sigma,pi,c,s
       real*4 v1(m1),v2(m1),expo(m1)
       integer npass(*),ifiltro,nlins,isigno,linea
-      character*100 msg
+      character*20 msg1,msg2,msg3
       common/ifiltro/ifiltro
       data ivez/0/
 
@@ -48,9 +48,14 @@ c rellenamos hasta 'ntot' con ceros
 	  i2=i1+n2
 
           if(n2.gt.ntot)then
-             write(msg,'(a,i5,a,i5,a)') 'Line ',j,' has more than ',
-     &             ntot,' frecuencies'
-             call error(KSTOP,'deconv',msg)
+             write(msg1,*) j
+             write(msg2,*) n2
+             write(msg3,*) ntot
+             call error(KSTOP,'deconv','Line '//trim(adjustl(msg1))//' has'
+     &       //         ' more frequencies ('//trim(adjustl(msg2))//') than'
+     &       //         ' m1 = '//trim(adjustl(msg3))//'\n'
+     &       //         ' Decrease the number of frequencies or change'
+     &       //         ' the PARAMETER file')
           end if
 
 	  if(n2.gt.1)then
@@ -73,7 +78,6 @@ c rellenamos hasta 'ntot' con ceros
 	    do i3=i1+1,i2
 		v2(i3)=v1(i3-i1)
 	    end do
-
 
 	    do i=1,ntot/2
 		frec=(i-1)/(paso*ntot)
@@ -359,7 +363,7 @@ c ntot=numero de puntos que quiero
         integer ntlpsf,nlipsf,npaspsf(kl)
         
         character*100 filtro,psfper
-        character*200 msg
+        character*20  msg1,msg2
 
 	common/filtro/filtro
 	common/ftransformada/ftrans
@@ -378,9 +382,12 @@ c leemos el fichero filtro
 
         if( nstokes .ne.1 .and. nstokes .ne.2 .and. 
      &      nstokes .ne.3 .and. nstokes .ne.4 )then
-          write(msg,'(a,i5,a,i5,a)') 'PSF file should have the same number (',
-     &          ntlpsf,') of spectral lines\n than the .per file (',nlin,')'
-          call error(KSTOP,'psf_variablePSF',msg)
+           write(msg1,*) ntlpsf
+           write(msg2,*) nlin
+           call error(KSTOP,'psf_variablePSF','PSF file should have the'
+     &     //         ' same number ('//trim(adjustl(msg1))//') of'
+     &     //         ' spectral lines\n than the .per file'
+     &     //         ' ('//trim(adjustl(msg2))//')')
         end if
         
 c interpolating

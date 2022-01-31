@@ -10,43 +10,37 @@ c_____________________________________________________________________________
         implicit real*4 (a-h,o-z)
         include 'PARAMETER'
 
-        integer*4   ist(4),nlin(kl),npas(kl),nble(kl)
-        integer*4   ntau,ntl,nlines
+        integer*4 ist(4),nlin(kl),npas(kl),nble(kl)
+        integer*4 ntau,ntl,nlines
 
-        real*8      wavenm,wlengt_air,wlengt_vac,wavedbl_arr(kl)
-        real*8      aloggamma_rad,aloggamma_4,aloggamma_6
-        real*8      energy_low,energy_up
-        real*8      eVtocm_1
-        real*8      w_vac_fn  !funcion en departures.f
-        parameter   (eVtocm_1=8065.5443)
+        real*8    wavenm,wlengt_air,wlengt_vac,wavedbl_arr(kl)
+        real*8    aloggamma_rad,aloggamma_4,aloggamma_6
+        real*8    energy_low,energy_up
+        real*8    eVtocm_1
+        real*8    w_vac_fn  !funcion en departures.f
+        parameter (eVtocm_1=8065.5443)
 
 c       Otras variables de los commons.
-        real*8      elemcode_arr(kl)
-        real*8      loggf8_arr(kl),tam1_arr(kl),tam2_arr(kl)
-        real*4      gf_arr(kl),energy_arr(kl)
-        integer*4   mult1_arr(kl),mult2_arr(kl)
-        integer*4   nlow_i(kl), nup_i(kl),linea_nlte(kl)
-        character   design1_arr(kl)*1,design2_arr(kl)*1
-        character   atom_nlte(kl)*2
+        real*8    elemcode_arr(kl)
+        real*8    loggf8_arr(kl)
+        real*4    gf_arr(kl),energy_arr(kl)
+        integer*4 nlow_i(kl), nup_i(kl),linea_nlte(kl)
+        character atom_nlte(kl)*2
 
 c       Variables a pasar a RH.
-        real*8      field1(kl),field2(kl),field3(kl),field4(kl),field5(kl)
-        real*8      field7(kl),field8(kl),field10(kl),field11(kl),field12(kl)
-        integer*4   field6a(kl),field9a(kl)
-        character*1 field6b(kl),field9b(kl)
+        real*8    field1(kl),field2(kl),field3(kl),field4(kl)
+        real*8    field5(kl),field6(kl),field7(kl),field8(kl)
 
 c       Salva los valores cuando esta subrutina termine.
 c       (Es innecesario si se compila con -fno-automatic)
-        save field1,field2,field3,field4,field5,field6a,field6b
-        save field7,field8,field9a,field9b,field10,field11,field12
+        save field1,field2,field3,field4,field5,field6,field7,field8
 
         common/responde2/ist,ntau,ntl,nlin,npas,nble
         common/wavearrdble/wavedbl_arr
         common/elemcode/elemcode_arr
         common/loggfarr/gf_arr,energy_arr
         common/loggfarr8/loggf8_arr
-        common/descriptionlevels/tam1_arr,tam2_arr,mult1_arr,mult2_arr,design1_arr,design2_arr
-        common/niveles/nlow_i,nup_i,atom_nlte,linea_nlte
+        common/niveles/nlow_i,nup_i,linea_nlte,atom_nlte
 
         ixx=0
         nlines=0
@@ -68,28 +62,21 @@ c       (Es innecesario si se compila con -fno-automatic)
                  aloggamma_4=-6.00d0
                  aloggamma_6=-7.60d0
 
-                 field1(nlines)  = wavenm
-                 field2(nlines)  = loggf8_arr(ixx)
-                 field3(nlines)  = elemcode_arr(ixx)
-                 field4(nlines)  = energy_low
-                 field5(nlines)  = tam1_arr(ixx)
-                 field6a(nlines) = mult1_arr(ixx)
-                 field6b(nlines) = design1_arr(ixx)
-                 field7(nlines)  = energy_up
-                 field8(nlines)  = tam2_arr(ixx)
-                 field9a(nlines) = mult2_arr(ixx)
-                 field9b(nlines) = design2_arr(ixx)
-                 field10(nlines) = aloggamma_rad
-                 field11(nlines) = aloggamma_4
-                 field12(nlines) = aloggamma_6
+                 field1(nlines) = wavenm
+                 field2(nlines) = loggf8_arr(ixx)
+                 field3(nlines) = elemcode_arr(ixx)
+                 field4(nlines) = energy_low
+                 field5(nlines) = energy_up
+                 field6(nlines) = aloggamma_rad
+                 field7(nlines) = aloggamma_4
+                 field8(nlines) = aloggamma_6
 
               end if
            end do
         end do
 
-        call sirkurucz(nlines,field1,field2,field3,field4,field5,
-     &                        field7,field8,field10,field11,field12,
-     &                        field6a,field6b,field9a,field9b)
+        call sirkurucz(nlines,field1,field2,field3,field4,
+     &                        field5,field6,field7,field8)
 
         return
         end

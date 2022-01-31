@@ -5,7 +5,7 @@
 #
 #      Version:       rh2.0
 #      Author:        Han Uitenbroek (huitenbroek@nso.edu)
-#      Last modified: Tue Jan  8 12:42:42 2013 --
+#      Last modified: Thu May  6 23:21:11 2021 --
 #
 ##     --------------------------                      ----------RH-- ##
 
@@ -17,13 +17,13 @@ XARCH  =
 
 
 CC       = gcc
-CFLAGS   = -m64 -I../
+CFLAGS   = -march=native -I../
 
 
 ## --- If f90 compiler is not available replace loader with cc (LD = cc)
 
 LD       = gcc
-LDFLAGS  = -m64 -L../
+LDFLAGS  = -march=native -L../
 
 
 #      --                                              -------------- ##

@@ -5,7 +5,7 @@
 #
 #      Version:       rh2.0
 #      Author:        Han Uitenbroek (huitenbroek@nso.edu)
-#      Last modified: Thu May 31 09:11:05 2018 --
+#      Last modified: Fri May  7 18:11:28 2021 --
 #
 ##     --------------------------                      ----------RH-- ##
 
@@ -17,7 +17,7 @@ XARCH  =
 
 
 CC       = gcc
-CFLAGS   = -O2 -m64 -I../
+CFLAGS   = -O2 -march=native -I../
 
 ifneq ("$(wildcard /usr/include/tirpc)","")
     CFLAGS += -I/usr/include/tirpc
@@ -27,7 +27,7 @@ endif
 ## --- If f90 compiler is not available replace loader with cc (LD = cc)
 
 LD       = gcc
-LDFLAGS  = -O2 -m64 -L../
+LDFLAGS  = -O2 -march=native -L../
 
 
 #      --                                              -------------- ##

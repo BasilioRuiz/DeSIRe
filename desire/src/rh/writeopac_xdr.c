@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Thu Feb 11 12:14:11 2021 --
+       Last modified: Fri May 15 03:09:38 2009 --
 
        --------------------------                      ----------RH-- */
 
@@ -50,7 +50,7 @@ extern char messageStr[];
 void writeOpacity(void)
 {
   const char routineName[] = "writeOpacity";
-  register int nspect, mu, n;
+  register int nspect, mu;
 
   bool_t  to_obs, initialize, crosscoupling, boundbound, polarized,
     PRD_angle_dep, result = TRUE;
@@ -58,11 +58,9 @@ void writeOpacity(void)
   FILE   *fp_out;
   XDR     xdrs;
   ActiveSet *as;
-  Element *element;
 
-  // 02/02/21 epm: Change the if to reach the memory cleaning.
-  if (strcmp(input.opac_output, "none") != 0) {
-     
+  if (!strcmp(input.opac_output, "none")) return;
+
   if ((fp_out = fopen(input.opac_output, "w")) == NULL) {
     sprintf(messageStr, "Unable to open output file %s",
 	    input.opac_output);
@@ -145,15 +143,5 @@ void writeOpacity(void)
   free(as_rn);
   xdr_destroy(&xdrs);
   fclose(fp_out);
-
-  } // end if (strcmp(input.opac_output, "none") != 0)
-
-  /* --- Clean memory for the elements array --        -------------- */
-
-  for (n = 0;  n < atmos.Nelem;  n++) {
-    element = &atmos.elements[n];
-    if (element->Nmolecule > 0)
-      free(element->mol_index);
-  }
 }
 /* ------- end ---------------------------- writeOpacity.c ---------- */

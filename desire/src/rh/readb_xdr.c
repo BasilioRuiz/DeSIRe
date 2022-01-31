@@ -46,7 +46,7 @@
 extern InputData input;
 extern char messageStr[];
 
-// 11/11/20 epm: Structure to pass the atmospheric magnetic field from SIR.
+// 11/11/20 epm: Structure to load the atmospheric magnetic field from SIR.
 extern SIRatmos siratmos;
 
 

@@ -34,7 +34,6 @@ c       real*4 atmosoutold(kt16)
         real*4 atmos1LG(kt12),atmos2LG(kt12)  !,tauRH_step(kt)
 c       real*4 atmos1LGold(kt12)
 c para los perfiles y f. respuesta
-        real*8 conhsra_RHtable            !,conhsra_RH
 c       real*4 conhsra
         real*4 scal(kld4),scal1(kld4),scal2(kld4),dscal(*),sin01(kld4),sin02(kld4),stray(kld4)
         real*4 scal_corregida(kld4)
@@ -62,11 +61,10 @@ c departure coefficients
         integer icallingRH1,icallingRH2
         real*8 beta1_1(kl,kt), beta2_1(kl,kt)   !,pe_dep1(kt)
         real*8 beta1_2(kl,kt), beta2_2(kl,kt)   !,pe_dep2(kt)
-        real*4 hydro1(6,kt),hydro2(6,kt),popH(6),hydroRH(6,kt)
+        real*4 hydro1(6,kt),hydro2(6,kt),popH(6),hydroRH(6*kt)
         real*4 betaH1(6,kt),betaH2(6,kt)
 c       real*4 pe1_change(kt),pe2_change(kt),pg1_change(kt),pg2_change(kt)
 c       real*4 atmosnew(kt16)
-c       data (tauRH_step(i), i=1,kt)/kt*1.0/
 
         save betaH1,betaH2  !conserva los valores para la siguiente entrada
         
@@ -107,9 +105,9 @@ c       common/atmos1LGold/atmos1LGold
         common/scalemodelRH/imassortau  !integer    0=logtau, 1=mass column from deSIRe
 c       common/tauRH_step/tauRH_step
 c       common/atmosSIRfromRH/atmosnew,pe1_change,pe2_change,pg1_change,pg2_change  
-
 c       common/ileoNLTE/ileoNLTE
 
+c       data (tauRH_step(i), i=1,kt)/kt*1.0/
         data store_ntot/1/
         data idiff/0/
 c       data ivezfperfil/0/
@@ -172,22 +170,22 @@ c             if(ivezfperfil.eq.1)then
              do i=1,ntl
                 npass(i)=npas(i)
              end do
-                 do i=2,4
+             do i=2,4
                 ist(i)=0
              end do
              ist(1)=1
           end if
               ntotal=0
           iii=0
-                 do i=1,ntl
-                 ntotal=ntotal+npas(i)
+          do i=1,ntl
+             ntotal=ntotal+npas(i)
              do ii=1,nble(i)
                 iii=iii+1 
              end do
              ntlblends=iii
-              end do
-              ists=ist(1)+ist(2)+ist(3)+ist(4)
-              ntotal4=ntotal*ists
+          end do
+          ists=ist(1)+ist(2)+ist(3)+ist(4)
+          ntotal4=ntotal*ists
 
 c duplicado del calculo en comprime2
            vmin=7.e5
@@ -257,7 +255,7 @@ c        peso1=1.     !luz difusa com velo
               mnod2tot(i)=m(i+8)
            end do
         else
-             do i=1,8
+           do i=1,8
 c             mnod1(i)=m(i)
 c             mnod2(i)=m(i+8)
               if(mprimera(i).gt.1.and.iautomatico.eq.1)then
@@ -322,11 +320,11 @@ c ************************* atmosfera 1 ***************************************
                  call departures(label_ID_model,RH_model,RH_magneticfield,1,atmos1LG,
      &                           ntau,ntotal_lines,beta1_1,beta2_1,stok_RH_1)
                  if(imassortau .eq. 0)then         
-                    call load_hpop_rh(ntau,hydroRH)
+                    call rhhpop(ntau,hydroRH)
                     do i=1,ntau
                        do j=1,6
-                          betaH1(j,i)=hydroRH(j,i)/hydro1(j,i)
-                       end do 
+                          betaH1(j,i)=hydroRH((i-1)*6+j)/hydro1(j,i)
+                       end do
                     end do
                  end if   
                  if(vmac1.gt.0. .or. ifiltro.ge.1)then
@@ -392,11 +390,11 @@ c              endif
                     call departures(label_ID_model,RH_model,RH_magneticfield,1,atmos1LG,
      &                           ntau,ntotal_lines,beta1_1,beta2_1,stok_RH_1)
                     if(imassortau .eq. 0)then       
-                       call load_hpop_rh(ntau,hydroRH)
+                       call rhhpop(ntau,hydroRH)
                        do i=1,ntau
                           do j=1,6
-                             betaH1(j,i)=hydroRH(j,i)/hydro1(j,i)
-                          end do 
+                             betaH1(j,i)=hydroRH((i-1)*6+j)/hydro1(j,i)
+                          end do
                        end do
                     end if
                  end if   
@@ -451,11 +449,11 @@ c ************************* atmosfera 2 ***************************************
                  call departures(label_ID_model,RH_model,RH_magneticfield,2,atmos2LG,
      &                           ntau,ntotal_lines,beta1_2,beta2_2,stok_RH_2) 
                  if(imassortau .eq. 0)then  
-                    call load_hpop_rh(ntau,hydroRH)
+                    call rhhpop(ntau,hydroRH)
                     do i=1,ntau
                        do j=1,6
-                          betaH2(j,i)=hydroRH(j,i)/hydro2(j,i)
-                       end do 
+                          betaH2(j,i)=hydroRH((i-1)*6+j)/hydro2(j,i)
+                       end do
                     end do
                  end if
                  if(vmac2.gt.0. .or. ifiltro.ge.1)then
@@ -492,11 +490,11 @@ c                 if(vmac2 .lt. 1.e-7)vmac2=1.e-7
                     call departures(label_ID_model,RH_model,RH_magneticfield,2,atmos2LG,
      &                           ntau,ntotal_lines,beta1_2,beta2_2,stok_RH_2) 
                     if(imassortau .eq. 0)then
-                       call load_hpop_rh(ntau,hydroRH)
+                       call rhhpop(ntau,hydroRH)
                        do i=1,ntau
                           do j=1,6
-                             betaH2(j,i)=hydroRH(j,i)/hydro2(j,i)
-                          end do 
+                             betaH2(j,i)=hydroRH((i-1)*6+j)/hydro2(j,i)
+                          end do
                        end do
                     end if 
                     if(vmac2.gt.0 .or. ifiltro.ge.1)then
@@ -608,7 +606,6 @@ c *******************reevaluamos el numero de nodos y escribimos el vector deriv
                     rp1(i)=rp1(i)/2./fill1
                  end do
               end if
-
             
               fill=fill1*peso1
               call sub1(mnod1tot(1),difer,npos,vmac1,fill,rt1,k,
@@ -648,7 +645,6 @@ c *******************reevaluamos el numero de nodos y escribimos el vector deriv
 c calculamos la convolucion de las funciones respuesta
               fill=fill1*peso1
 
-
               call sub2(mnod1tot(1),difer,npos,vmac1,fill,dlamda0s,ist,rt1,k,
      &                  dscal,atmos1(ntau+1),mprimera(1)) !tempe.
               call sub2(mnod1tot(2),difer,npos,vmac1,fill,dlamda0s,ist,rp1,k,  
@@ -657,8 +653,6 @@ c calculamos la convolucion de las funciones respuesta
      &                  dscal,atmos1(3*ntau+1),mprimera(3)) !micro.
               call sub2(mnod1tot(4),difer,npos,vmac1,fill,dlamda0s,ist,rh1,k,
      &                  dscal,atmos1(4*ntau+1),mprimera(4)) !campo
-
-
 
               if(mnod1tot(5).gt.0)then
                  do i=1,ntau
@@ -669,7 +663,6 @@ c calculamos la convolucion de las funciones respuesta
               call sub2(mnod1tot(5),difer,npos,vmac1,fill,dlamda0s,ist,rv1,k,
      &                  dscal,vof,mprimera(5)) !veloc.
 
-
               if(mnod1tot(6).gt.0)then
                  do i=1,ntau
                     gam1(i)=1.
@@ -679,7 +672,6 @@ c calculamos la convolucion de las funciones respuesta
               call sub2(mnod1tot(6),difer,npos,vmac1,fill,dlamda0s,ist,rg1,k,
      &                  dscal,gam1,mprimera(6)) !incli.
      
-
               if(mnod1tot(7).gt.0)then
                  do i=1,ntau
                     fi1(i)=1.
@@ -729,7 +721,6 @@ c ************************* atmosfera 2 ***************************************
               call sub1(mnod2tot(5),difer,npos,vmac2,fill,rv2,k,
      &                  dscal,vof,mprimera(13)) !veloc.
 
-
               call cero1(mnod2tot(6),ntotal4,k,dscal)            !inclinacion  
               call cero1(mnod2tot(7),ntotal4,k,dscal)            !azimuth 
               call mult1(mnod2tot(8),ntotal4,k,fill,vmac2,sin02,dscal) !macro
@@ -738,7 +729,6 @@ c ************************* atmosfera 2 ***************************************
                   end do
 
            else  !o sea si hay campo2 
-
 
 c Dado que dlamda0 entra en el common via blends2 la sentencia siguiente 
 c no puede colocarse antes de la llamada a blends2  
@@ -760,7 +750,6 @@ c no puede colocarse antes de la llamada a blends2
                     rp2(i)=-rp2(i)/2./fill2
                  end do
               end if
-
 
 c calculamos la convolucion de las funciones respuesta
               fill=fill2*peso1
@@ -820,7 +809,6 @@ c como tenemos modf. multiplicativas el factor es fill2*(fill2-1)
 
         end if
 
-
 c calculamos la funcion respuesta al peso de la luz difusa
 c la variable es peso2/(1.-peso2). La derivada de peso2 respecto 
 c a la variable es (1.-peso2)^2 Y teniendo en cuenta pert. mult.
@@ -856,23 +844,16 @@ c _____________________________________________________________________________
         common/primera2/ntotal,ntotal4,ists
         common/iautomatico/iautomatico
         common/ifiltro/ifiltro
-c !!!!!!!!!esto seria lo correcto pero es mas lento y no se nota la mejora
-c        do i=1,mi
-c           npun=ntotal*(i-1)+1
-c           if(vmac.gt.0)call deconv(rt(npun),1,ntl,npas,dlamda0,dlamda,vmac)
-c        end do
 
         if(iautomatico.eq.1.and.mp.gt.1.and.mi.gt.1)call automatico(mi,mp,ntotal,difer,npos,rt,t) 
 
-c TRABAJO con las FR sin convolucionar en todo tau !!!!!!!!!!
         do i=1,mi
            npun=ntotal*(i-1)+1
            if(vmac.gt.0 .or. ifiltro .ge. 1)then
-c              if(vmac.lt.1.e-7)vmac=1.e-7 
+c             El argumento rt(npun) pasa el array a partir de ese indice.
               call deconv(rt(npun),1,ntl,npas,dlamda0,dlamda,vmac)
            end if
         end do 
-c !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         do i=1,mi
            npun=ntotal*(i-1)+1
@@ -905,19 +886,13 @@ c _____________________________________________________________________________
         common/primera2/ntotal,ntotal4,ists
         common/iautomatico/iautomatico
         common/ifiltro/ifiltro
-c !!!!!!!!!esto seria lo correcto pero es mas lento y no se nota la mejora
-c        do i=1,mi
-c           npun=ntotal4*(i-1)+1
-c          if(vmac.gt.0)call deconv(rt(npun),1,ntls,npass,dlamda0s,dlamdas,vmac)
-c        end do 
 
-         if(iautomatico.eq.1.and.mp.gt.1.and.mi.gt.1)call automatico(mi,mp,ntotal4,difer,npos,rt,t) 
+        if(iautomatico.eq.1.and.mp.gt.1.and.mi.gt.1)call automatico(mi,mp,ntotal4,difer,npos,rt,t) 
 
-c TRABAJO con las FR sin convolucionar en todo tau !!!!!!!!!!
-             do i=1,mi
-                npun=ntotal4*(i-1)+1
-                if(vmac.gt.0 .or. ifiltro .ge. 1)then
-c              if(vmac.lt.1.e-7)vmac=1.e-7 
+        do i=1,mi
+           npun=ntotal4*(i-1)+1
+           if(vmac.gt.0 .or. ifiltro .ge. 1)then
+c             El argumento rt(npun) pasa el array a partir de ese indice.
               call deconv(rt(npun),1,ntls,npass,dlamda0s,dlamdas,vmac)
            end if   
         end do 
@@ -968,7 +943,6 @@ c _____________________________________________________________________________
 c        atomic Number returns the atomic number corresponding to a given symbol
         integer atomic_number,iel
         character*2 symbol  
-
 
         CHARACTER*2 ATM(92)/'H','HE','LI','BE','B','C','N','O','F','NE',
      *'NA','MG','AL','SI','P','S','CL','AR','K','CA','SC','TI','V','CR',

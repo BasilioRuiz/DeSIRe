@@ -325,7 +325,16 @@ void readInput()
   } else {
 
     /* --- No magnetic field input specified --        -------------- */
-    
+
+    // 11/11/21 epm: If no magnetic field, forze STOKES_MODE = NO_STOKES.
+    // This makes possible atmospheres with two components with and without B.
+    if (input.StokesMode != NO_STOKES) {
+      Error(WARNING, routineName,
+            "Overwriting keyword STOKES_MODE = NO_STOKES as no "
+            "magnetic field is read");
+      input.StokesMode = NO_STOKES;
+    }
+
     if (atmos.B_char != 0.0) {
       Error(WARNING, routineName,
             "Ignoring value of keyword B_STRENGTH_CHAR when no "

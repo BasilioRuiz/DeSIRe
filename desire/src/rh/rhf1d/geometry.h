@@ -2,7 +2,7 @@
 
        Version:       rh2.0, 1-D plane-parallel
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Thu May 31 14:45:26 2018 --
+       Last modified: Fri May  7 17:07:29 2021 --
 
        --------------------------                      ----------RH-- */
 
@@ -31,6 +31,7 @@ void getAngleQuad(Geometry *geometry);
 void getBoundary(Geometry *geometry);
 void MULTIatmos(Atmosphere *atmos, Geometry *geometry);
 void writeGeometry(Geometry *geometry);
+void freeGeometry(Geometry *geometry);
 
 
 /* --- Formal solution related --                      -------------- */

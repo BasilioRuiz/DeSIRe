@@ -13,7 +13,7 @@ C -------------------------------------------------------------- *
 C Last Update: 18-APR-86.                                        *  
 C*****************************************************************  
       FUNCTION VOIGT(A,VV,J)
-      implicit real*4 (a-h,o-z)
+      IMPLICIT REAL*4 (A-H,O-Z)
       COMPLEX Z 
       DIMENSION XDWS(28),YDWS(28)   
       DATA A0,A1,A2,A3,A4,A5,A6,B0,B1,B2,B3,B4,B5,B6/   
@@ -91,8 +91,8 @@ C convertida en rutina por Basilio Ruiz (1993)                   *
 C -------------------------------------------------------------- *  
 C Last Update: 22-jun 93.                                        *  
 C*****************************************************************  
-      subroutine VOIGT2(A,VV,H,F)
-      	implicit real*4 (a-h,o-z)
+      SUBROUTINE VOIGT2(A,VV,H,F)
+      IMPLICIT REAL*4 (A-H,O-Z)
       COMPLEX Z 
       DIMENSION XDWS(28),YDWS(28)   
       DATA A0,A1,A2,A3,A4,A5,A6,B0,B1,B2,B3,B4,B5,B6/   

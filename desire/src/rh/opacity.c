@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Mon Jan 16 20:02:51 2012 --
+       Last modified: Mon May 17 17:00:37 2021 --
 
        --------------------------                      ----------RH-- */
 
@@ -786,7 +786,7 @@ flags MolecularOpacity(double lambda, int nspect, int mu, bool_t to_obs,
 	    backgrflags.hasline = TRUE;
 	    if (mrt->polarizable) {
 	      backgrflags.ispolarized = TRUE;
-	      if (mrt->zm == NULL) mrt->zm = MolZeeman(mrt);
+	      if (mrt->zm == NULL) MolZeeman(mrt);
 	    }
 
 	    for (k = 0;  k < atmos.Nspace;  k++) {

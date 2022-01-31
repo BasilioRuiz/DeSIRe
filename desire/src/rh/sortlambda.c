@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Fri Dec  6 09:35:11 2019 --
+       Last modified: Fri May  7 18:08:00 2021 --
 
        --------------------------                      ----------RH-- */
 
@@ -140,10 +140,7 @@ void SortLambda()
 
   if (atmos.Nactiveatom > 0)
   {
-    // 04/04/20 epm: Allocate memory only once.
-    if (atmos.activeatoms == NULL)
-      atmos.activeatoms = (Atom **) malloc(atmos.Nactiveatom *
-                                           sizeof(Atom *));
+    atmos.activeatoms = (Atom **) malloc(atmos.Nactiveatom * sizeof(Atom *));
     for (n = 0; n < atmos.Natom; n++)
     {
       atom = &atmos.atoms[n];

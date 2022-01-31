@@ -463,9 +463,9 @@ double VoigtLookup(double a, double v)
   /* --- Populate the lookup tables on initialization -- ------------ */
 
   if (initialize) {
-    a_table     = (double *) realloc(a_table, N_A * sizeof(double));
-    v_table_lin = (double *) realloc(v_table_lin, N_V_LIN * sizeof(double));
-    v_table_log = (double *) realloc(v_table_log, N_V_LOG * sizeof(double));
+    a_table     = (double *) malloc(N_A * sizeof(double));
+    v_table_lin = (double *) malloc(N_V_LIN * sizeof(double));
+    v_table_log = (double *) malloc(N_V_LOG * sizeof(double));
 
     table_lin = matrix_double(N_A, N_V_LIN);
     table_log = matrix_double(N_A, N_V_LOG);

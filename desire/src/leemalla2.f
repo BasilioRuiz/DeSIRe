@@ -17,6 +17,7 @@ c nble :numero de blends de cada linea
         real*4 dlamdaobs(*),dlamda(kld),dini,dipa,difi,dinii(kl),dipaa(kl),difii(kt)
         integer indice(*),nddd(50),blanco      !,epsiloni
         character mallaobs*(*),mensajito*31
+        character msg1*20,msg2*20
         common/nciclos/nciclos
         common/contraste/contr
 
@@ -43,14 +44,15 @@ c nble :numero de blends de cada linea
            if(ierror.eq.1)goto 8   !si he llegado al final del fichero
            if(blanco.ne.1)then
               numlin=numlin+1
-
               if(numlin.gt.kl.or.ntonto.gt.kl)then
+                 write(msg1,*) min(numlin,ntonto)
+                 write(msg2,*) kl
                  call error(KSTOP,'leemalla2','The number of lines in the'
-     &           //         ' wavelength grid is larger than the\n current'
-     &           //         ' limit. Decrease this number or change the'
-     &           //         ' PARAMETER file')
+     &           //         ' wavelength grid ('//trim(adjustl(msg1))//') is'
+     &           //         ' larger than kl = '//trim(adjustl(msg2))//'\n'
+     &           //         ' Decrease the number of lines or change'
+     &           //         ' the PARAMETER file')
               end if
-
               nblee(numlin)=ntonto
               dinii(numlin)=ddinii
               dipaa(numlin)=ddipaa

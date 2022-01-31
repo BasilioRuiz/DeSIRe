@@ -1,5 +1,5 @@
       SUBROUTINE POLINT(XA,YA,N,X,Y,DY)
-      implicit real*4 (a-h,o-z)
+      IMPLICIT REAL*4 (A-H,O-Z)
       PARAMETER (NMAX=10) 
       DIMENSION XA(N),YA(N),C(NMAX),D(NMAX)
       NS=1

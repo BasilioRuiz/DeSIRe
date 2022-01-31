@@ -19,7 +19,7 @@ c    &  covar(mfit,mfit),alpha(mfit,mfit),atry(mmx),beta(mfit),da(mmx)
 
         common/tol/tol
         common/alamda0/alamda0
-        common/allc/all
+c        common/allc/all
         common/ochisq/ochisq
         common/sigrealchi/sigreal,chireal,sumsq
         common/repeticion/factorrep !factor de lambda para evitar repeticiones
@@ -36,7 +36,7 @@ c       common/ifies/iga1,ifi11,iga2,ifi22
 
         data it/0/
 
-        all=alamda
+c        all=alamda
         xpi=3.14159265
 
         if(alamda.lt.0.)then

@@ -5,7 +5,7 @@
 #
 #      Version:       rh2.0
 #      Author:        Han Uitenbroek (huitenbroek@nso.edu)
-#      Last modified: Thu Dec  3 16:19:48 2020 --
+#      Last modified: Fri May  7 18:11:08 2021 --
 #
 ##     --------------------------                      ----------RH-- ##
 
@@ -18,7 +18,7 @@ XARCH  =
 ## --- If no f90 compiler is available comment out -DHAVE_F90
 
 CC       = gcc
-CFLAGS   = -O2 -m64 -DHAVE_F90
+CFLAGS   = -O2 -march=native -DHAVE_F90
 
 ifneq ("$(wildcard /usr/include/tirpc)","")
     CFLAGS += -I/usr/include/tirpc
@@ -29,7 +29,7 @@ endif
 #      03/03/21 epm: FC comes from the main Makefile in src directory.
 
 F90C     = $(FC)
-F90FLAGS = -O2 -m64
+F90FLAGS = -O2 -march=native
 
 
 ## -- Library settings --                               ------------- ##

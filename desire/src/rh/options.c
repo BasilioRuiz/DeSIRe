@@ -24,7 +24,7 @@
 extern CommandLine commandline;
 extern char messageStr[];
 
-// 04/04/20 epm: Structure to pass some command line flags to RH.
+// 04/04/20 epm: Structure to load some command line flags from SIR.
 extern SIRflags sirflags;
 
 

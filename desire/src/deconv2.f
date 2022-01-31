@@ -14,7 +14,7 @@ c n es el numero de puntos
       real*4 frec,ex,cota,paso,sigma,pi,c,s
       real*4 v1(m1),v2(m1),expo(m1)
       integer npass(*),ifiltro,nlins,isigno,linea
-      character*100 msg
+      character*20 msg1,msg2,msg3
       common/ifiltro/ifiltro
       data ivez/0/
 
@@ -37,9 +37,14 @@ c rellenamos hasta 'ntot' con ceros
 	  i2=i1+n2
 
           if(n2.gt.ntot)then
-             write(msg,'(a,i5,a,i5,a)') 'Line ',j,' has more than ',
-     &             ntot,' wavelengths'
-             call error(KSTOP,'deconv2',msg)
+             write(msg1,*) j
+             write(msg2,*) n2
+             write(msg3,*) ntot
+             call error(KSTOP,'deconv2','Line '//trim(adjustl(msg1))//' has'
+     &       //         ' more wavelengths ('//trim(adjustl(msg2))//') than'
+     &       //         ' m1 = '//trim(adjustl(msg3))//'\n'
+     &       //         ' Decrease the number of wavelengths or change'
+     &       //         ' the PARAMETER file')
           end if
 
 	  if(n2.gt.1)then

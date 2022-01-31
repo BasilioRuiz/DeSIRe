@@ -1,5 +1,5 @@
       SUBROUTINE LOCATE(XX,N,X,J)
-      implicit real*4 (a-h,o-z)
+      IMPLICIT REAL*4 (A-H,O-Z)
 
       DIMENSION XX(N)
       JL=0

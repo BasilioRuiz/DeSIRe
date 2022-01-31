@@ -31,6 +31,10 @@ c 2.10 (10/10/20): Wavetable and some keywords through memory from SIR to RH.
 c 2.11 (11/11/20): Atmospheric model and magnetic field through memory.
 c 3.03 (03/03/21): Some corrections about weights, chi**2 not getting better,
 c                  and allowing not even-spaced models in optical depth.
+c 3.05 (05/05/21): Some bugs corrected. Input and output are LoS models.
+c                  New continuum evaluation. New option without normalization.
+c 3.06 (06/06/21): Han's release memory. DCs in stimulated emission.
+c 3.11 (11/11/21): JJ coupling. PARAMETER adjusted, align common data.
 c
 c_____________________________________________________________________________
 c
@@ -42,7 +46,6 @@ c     DIMENSIONES
       parameter (kl4=4*kl,kld4=4*kld)
       parameter (kldt=kld*kn,kldt4=4*kldt)
       parameter (mmax=16*kn+2,kldn=mmax*kld4)
-c     parameter (mfitmax=200)  !incluido en PARAMETER
       parameter (kn16=16*kn+4,kt11=11*kt+2,kt12=11*kt+3)
 
 c     PARA LA MALLA
@@ -59,7 +62,7 @@ c     PARA LA ATMOSFERA
       integer ntau,ierror,nrays
       integer startj,NEW_J,OLD_J
       real*4  atmos(kt16),atmosr(kt16),atmosrlin(kt16),atmosr_old(kt16)
-      real*4  atmosout(kt16),atmoslin(kt16),tau(kt)
+      real*4  atmosout(kt16),atmoslin(kt16),tau(kt),atmosb(kt16)
 c     real*4  atmosoutold(kt16)
       real*4  pg1(kt),z1(kt),ro1(kt),T1(kt),Pe1(kt)
       real*4  pg2(kt),z2(kt),ro2(kt),T2(kt),Pe2(kt)
@@ -72,7 +75,7 @@ c     PARA EL PERFIL
       real*4  stok(kld4),sig(kld4),stray(kld4),sigd(kld4) !sigd es copia de sig
       real*4  pesos(kld4),ymodobs_RH(kld4)
       real*4  scal(kld4),smax(kl,4),vic(kl),perfil(kld4)
-      integer npasobs(kl),numberfrec(4),ntl
+      integer npasobs(kl),numberfrec(4),ntl,icontinuo_normz
       real*4  dlamdaobs(kld),dlamdacheck(kld)
 
 c     PARA LA INVERSION
@@ -89,14 +92,15 @@ c     PARA LOS ERRORES
       real*4  maximo
 
 c     PARA EL FICHERO LOG
-      integer nguvec(500),posicionciclo(20),mvec(500,18),mvecmax(18)
+      integer nguvec(500),posicionciclo(20),mvec(500,18)   !,mvecmax(18)
       real*4  addvec(500),snchivec(500),chprintvec(500),amac1vec(500),amac2vec(500)
       real*4  amic1vec(500),amic2vec(500),fill2vec(500),contrastevec(500)
       real*4  porcienvector(500)
       real*4  snpr(20),chisnpr(20)
 
 c     CADENAS
-      character cha1*2,cha2*2,chag*1,chamod*4,chaper*4,chaerr*4,chalog*4,ca(18)*3
+      character cha1*2,cha2*2,chag*1,chamod*4,chaerr*4,chalog*4,ca(18)*3
+      character chaper*4
       character chaweight*4,chahyd*4  
       character chasnychi*4
       character*100 uveobs,uveout
@@ -106,7 +110,7 @@ c     CADENAS
       character*100 malla,control,controlb,fcontrol,modelerr1,modelerr2,difusa
       character*100 pesos_file
       character*100 snychi
-      character*100 filtro,psfper,extensionfiltro
+      character*100 filtro,psfper,extensionfiltro,extensionperfil
       character*100 mreadc2,mreadc4
       character*100 nomlineas,fichabun
       character*100 mas_or_tau
@@ -123,10 +127,9 @@ c     21/06/19 epm: Command line.
       character*100 arg
       integer*4 flagv, flagquiet, flagtime, flagnolog
 
-c     05/05/20 epm: Error message.
+c     05/05/20 epm: Error messages.
+      character*20  msg1,msg2
       character*400 msg
-
-      data NEW_J /3/, OLD_J /4/  !see enum solution in "rh.h"
 
 c     COMUNES
       common/responde2/ist,ntau,ntl,nlin,npas,nble
@@ -150,12 +153,12 @@ c     common/atmosferaoutold/atmosoutold
 c     common/nlte/nlte
       common/contraste/contr
       common/repeticion/factorrep  !factor de diag para evitar repeticiones
-      common/nciclos/nciclos       !para marquardt2, leeuve3, leemodi22
+      common/nciclos/nciclos       !para marquardt2, leeuve3, leemodi222
       common/posiciones/npos
       common/calerr/icalerr  !si calculo errores=1 else =0 (para amp2)
       common/difusa/stray
 c     El common siguiente es para pasarle a marquardt2 los indices iniciales y 
-c     finales de las perturbaciones a gamma y fi aditivas
+c     finales de las perturbaciones a gamma y fi aditivas.
 c     common/ifies/iga1,ifi11,iga2,ifi22 
       common/ifies/ipa1,ipa11,iga1,ifi11,ipa2,ipa22,iga2,ifi22
       common/ieliminofrec/ielimino  !para el print de la S/N en marquardt2
@@ -176,7 +179,7 @@ c     common/ifies/iga1,ifi11,iga2,ifi22
 c     common/departcoef/beta1,beta2
       common/zetas/pg1,z1,ro1,pg2,z2,ro2  !para el calculo de z,pg y ro en amp22 y amp22err
       common/pgmag/ipgmag
-c     17/06/19 brc: common repetido con valores absolutos.
+c     17/06/19 brc: Common repetido con valores absolutos.
 c     common/mu/cthabs
       common/anguloheliocent/xmu  !for equisubmu and related routines
                                   !to evaluate equ. hidr. in the z direction,
@@ -196,6 +199,11 @@ c     common/mu/cthabs
 
 c     05/05/20 epm: Common to save command line flags.
       common/commandline/flagv,flagquiet
+      
+c     05/05/21 brc: Common to set on/off the continuum normalization.
+      common/icontnormalz/icontinuo_normz  !icontinuo_normz=0 input/output profiles are in SI units
+
+      data NEW_J/3/, OLD_J/4/  !see enum solution in "rh.h"
 
 c_____________________________________________________________________________
 
@@ -249,7 +257,7 @@ c     04/04/20 epm: Pass some command line flags to RH.
       call error(KLINE,'','')
       call error(KLINE,'',' __________________________________________________________ ')
       call error(KLINE,'','|                                                          |')
-      CARTEL=             '|            DeSIRe version 3.03  (03/Mar/2021)            |'
+      CARTEL=             '|            DeSIRe version 3.11  (11/Nov/2021)            |'
       call error(KLINE,'',CARTEL)
       call error(KLINE,'','|__________________________________________________________|')
       call error(KLINE,'','')
@@ -289,9 +297,9 @@ c     Se define el fichero log
 
 c     Se leen las condiciones de ejecucion
 
-      do i=1,18
-         mvecmax(i)=0  !para los errores
-      end do
+c      do i=1,18
+c         mvecmax(i)=0  !para los errores
+c      end do
       nciclos=1
       ici=0
       ll=0
@@ -357,7 +365,7 @@ c     Se leen las condiciones de ejecucion
 
          imassortau=0  !RH reads tau models (when imassortau=1 RH reads mass column models)
          if(mas_or_tau(1:1) .eq. 'm' .or. mas_or_tau(1:1) .eq. 'M')imassortau=1
-         
+
          if(nrays.le.0)nrays=3  !default value
          nciclos=int(rciclos)
          if(new_evaluation .eq. 0 .and. ici .eq. nciclos)new_evaluation=1
@@ -367,6 +375,7 @@ c        if(rnlte_th.lt.0)then
 c           inew=0  !in RH: Using old values of background op & J. In SIR NO evaluating .per after every cycle 
 c           rnlte_th=-1*rnlte_th
 c        end if
+         maxnumnodos=0
          do inum=1,18
             numerical(inum)=0  !RF for parameter i numerically evaluated in NLTE
             if(m(inum).ge.1000)then
@@ -378,7 +387,15 @@ c        end if
 c              numerical(inum)=1  !in this case we are NOT evaluating RF because the perturbation i
 c                                 !taken equal to the other atmosphere
             endif
+            if(m(inum).gt.maxnumnodos)maxnumnodos=m(inum)
          end do
+         if(maxnumnodos.gt.kn)then
+            write(msg1,*) kn
+            call error(KSTOP,'desire','The number of nodes in some variable'
+     &      //         ' is larger than kn = '//trim(adjustl(msg1))//'\n'
+     &      //         ' Decrease the number of nodes or change the PARAMETER'
+     &      //         ' file')
+         end if
 
          call error(KLINE,'','')
          call extension3(coorfile,extensioncoor,n)
@@ -510,6 +527,14 @@ c        Definimos los nombres de los ficheros de salida
          call quitaex3(pesos_file,ixt3)
          call concatena(pesos_file,chaweight,pesos_file)
          
+c        Determining if the observed file ends on .per or .spc
+         call extension3(uveobs,extensionperfil,n)
+         icontinuo_normz=1  !in this case input/output profiles are normalized to HSRA QS continuum
+         if(extensionperfil(1:n).ne. 'per')then
+            icontinuo_normz=0 !in this case input/output profiles are in SI units
+            chaper='.'//extensionperfil(1:3)
+         endif         
+         
          ncifno=1
          ncifnoOUT=1
 c        if(ici.gt.9)ncifnoOUT=2
@@ -595,7 +620,7 @@ c        if(ici.gt.10)ncifno=2
 
          if(ifiltro.eq.1)then
             call extension3(filtro,extensionfiltro,n)
-            if(extensionfiltro(1:n).eq.'per')then
+            if(extensionfiltro(1:n) .eq. extensionperfil(1:n))then
                psfper=filtro
                ifiltro=2
             endif
@@ -631,8 +656,8 @@ c           10/10/20 epm: Pass some keywords to RH.
             call sirkeywords(nrays,startj)
          end if 
 
-         call leeabun(0)
-         call leemallab(malla,ntl,nli,nlin,npas,dlamda,nble)
+         if(ici.eq.1)call leeabun(0)
+         if(ici.eq.1)call leemallab(malla,ntl,nli,nlin,npas,dlamda,nble)
 
 c        #1) Transformation of model format from multi-RH to SIR format
 c        if(multiformat1.ne.0 .and. ici.lt.2)then
@@ -642,24 +667,21 @@ c        end if  !#1) end if(multiformat1.ne.0 .and. ici.lt.2)
          if(ici.eq.1)call leemodi222(0,modelin1,modelin2,atmos,ntau,ierror,
      &                               z1,pg1,ro1,z2,pg2,ro2)
 
-         if(m(2).eq.0)then
-            do i=1,ntau
-               tau(i)=atmos(i)
-               T1(i)=atmos(ntau+i)
-               Pe1(i)=atmos(2*ntau+i)
-            end do
+         do i=1,ntau
+            tau(i)=atmos(i)
+            T1(i)=atmos(ntau+i)
+            Pe1(i)=atmos(2*ntau+i)
+            T2(i)=atmos(9*ntau+2+i)
+            Pe2(i)=atmos(10*ntau+2+i)               
+         end do
+         if(m(2).eq.0 .and. ici.eq.1)then
             if(ncontpg.eq.0) call equisubmu(ntau,tau,T1,Pe1,pg1,z1,ro1)
             if(ncontpg.ne.0) call equisubmu_cont(ntau,tau,T1,Pe1,pg01,pg1,z1,ro1)
             do i=1,ntau
                atmos(2*ntau+i)=Pe1(i)
             end do
          end if
-         if(imodel2.eq.1 .and. m(10).eq.0 .and. nciclos.ge.1)then
-            do i=1,ntau
-               tau(i)=atmos(8*ntau+2+i)
-               T2(i)=atmos(9*ntau+2+i)
-               Pe2(i)=atmos(10*ntau+2+i)
-            end do
+         if(imodel2.eq.1 .and. m(10).eq.0 .and. ici.eq.1)then
             if(ncontpg.eq.0)call equisubmu(ntau,tau,T2,Pe2,pg2,z2,ro2)
             if(ncontpg.ne.0)call equisubmu_cont(ntau,tau,T2,Pe2,pg02,pg2,z2,ro2)
             do i=1,ntau
@@ -672,53 +694,49 @@ c        end if  !#1) end if(multiformat1.ne.0 .and. ici.lt.2)
             if(imodel2 .eq. 1)call lee_hydro(mod_hyd_in2,ihydro2,ntau,tau,T2,Pe2,hydro2) !reading H populations model2 if exist (ihidro2=1)
          end if
 
-c        ---------------------------------------------
-c        Calculo de la atmosfera en la linea de vision
-c        ---------------------------------------------
-         il=0
-         call taulinea4(il,imodel2,deglon,deglat,vx,vy,atmos,z1,pg1,ro1,z2,
-     &                  pg2,ro2,ntau)
-
          if(ierror.eq.2)then  !no podemos invertir el modelo 2
             do jj=9,17
                m(jj)=0
             end do
          endif
+         if(ici.eq. 1)then
+            if(atmos(16*ntau+5).gt.1e-5 .or. m(18).ne.0)then
+               if(istray.ne.0)then
+                  call leeuveobsindic(difusa,ist,ntl,nliobs,nlin,npasobs,dlamdaobs,nble,stray)
 
-         if(atmos(16*ntau+5).gt.1e-5 .or. m(18).ne.0)then
-            if(istray.ne.0)then
-               call leeuveobsindic(difusa,ist,ntl,nliobs,nlin,npasobs,dlamdaobs,nble,stray)
-
-               ntlcheck=ntl  !para comprobar que difusa tiene las mismas lambdas que perf. obs.
-               do l=1,nliobs
-                  dlamdacheck(l)=dlamdaobs(l)
-               end do
-               do l=1,ntl
-                  nlincheck(l)=nlin(l)
-               end do
+                  ntlcheck=ntl  !para comprobar que difusa tiene las mismas lambdas que perf. obs.
+                  do l=1,nliobs
+                     dlamdacheck(l)=dlamdaobs(l)
+                  end do
+                  do l=1,ntl
+                     nlincheck(l)=nlin(l)
+                  end do
 
 c              Por si no tenemos el fichero con la malla en sintesis:
 c              (si lo tenemos, estas variables se machacan luego y no pasa nada)
-               nli=nliobs
-               do i=1,ntl
-                  npas(i)=npasobs(i)
-               end do
-               do i=1,nli
-                  nposi(i)=i
-                  dlamda(i)=dlamdaobs(i)
-               end do
+                  nli=nliobs
+                  do i=1,ntl
+                     npas(i)=npasobs(i)
+                  end do
+                  do i=1,nli
+                     nposi(i)=i
+                     dlamda(i)=dlamdaobs(i)
+                  end do
 
-            else
-               if(atmos(16*ntau+5).gt.0.)then
-                  call error(KWARN,'desire','As the stray light file does not'
-     &            //         ' exist,\n the stray light factor is being'
+               else
+                  if(atmos(16*ntau+5).gt.0.)then
+                     call error(KWARN,'desire','As the stray light file does'
+     &            //         ' not exist,\n the stray light factor is being'
      &            //         ' changed to zero')
+                  end if
+                  atmos(16*ntau+5)=0.
+                  m(18)=0  !LB (si no casca, porque trato de invertir una variable = cero)
                end if
-               atmos(16*ntau+5)=0.
-               m(18)=0  !LB (si no casca, porque trato de invertir una variable = cero)
             end if
+            do i=1,16*ntau+5
+              atmosb(i)=atmos(i)
+            end do
          end if
-
 c        -------------------------
 c        Para el calculo de las FR
 c        -------------------------
@@ -746,59 +764,56 @@ c           end if
          end if
 
 c        ---------------------------------------------------------------
+         if(ici.eq.1)then
+            imaya=meves(malla,100)       !(LRB)
 
-         imaya=meves(malla,100)       !(LRB)
-
-         if(nciclos.lt.1)then
-            uveout=uveobs
-            if(imaya.eq.1)then  !si tenemos malla
-               call leemallab(malla,ntl,nli,nlin,npas,dlamda,nble)
-               nliobs=nli
-               do i=1,ntl
-                  npasobs(i)=npas(i)
-               end do
-               do i=1,nli
-                  nposi(i)=i
-                  dlamdaobs(i)=dlamda(i)
-               end do
-            else
-               if(istray.eq.1)then
-                  call error(KWARN,'desire','The wavelength grid is being'
-     &            //         ' generated automatically\n from the stray'
-     &            //         ' light profile. No blends are considered')
+            if(nciclos.lt.1)then
+               uveout=uveobs
+               if(imaya.eq.1)then  !si tenemos malla
+                  call leemallab(malla,ntl,nli,nlin,npas,dlamda,nble)
+                  nliobs=nli
+                  do i=1,ntl
+                     npasobs(i)=npas(i)
+                  end do
+                  do i=1,nli
+                     nposi(i)=i
+                     dlamdaobs(i)=dlamda(i)
+                  end do
                else
-                  call error(KSTOP,'desire','In synthesis mode, you must'
-     &            //         ' specify the wavelength grid')
+                  if(istray.eq.1)then
+                     call error(KWARN,'desire','The wavelength grid is being'
+     &               //         ' generated automatically\n from the stray'
+     &               //         ' light profile. No blends are considered')
+                  else
+                     call error(KSTOP,'desire','In synthesis mode, you must'
+     &               //         ' specify the wavelength grid')
+                  endif
+               endif
+            else
+               if(imaya.eq.0)then
+                  call error(KWARN,'desire','The wavelength grid is being'
+     &            //         ' generated automatically\n from the observed'
+     &            //         ' profiles. No blends are considered')
+
+                  call leeuveobsindic(uveobs,ist,ntl,nliobs,nlin,npasobs,
+     &                             dlamdaobs,nble,stok)
+                  nli=nliobs
+                  do i=1,ntl
+                     npas(i)=npasobs(i)
+                  end do
+                  do i=1,nli
+                     nposi(i)=i
+                     dlamda(i)=dlamdaobs(i)
+                  end do
+               else
+                  call leeuveobsindic(uveobs,ist,ntl,nliobs,indice,npasobs,
+     &                             dlamdaobs,nble,stok)
+                  call leemalla2(malla,ntl,nli,nliobs,nlin,npasobs,npas,
+     &                        dlamdaobs,dlamda,nble,nposi,indice)
                endif
             endif
-
-         else
-            if(imaya.eq.0)then
-               call error(KWARN,'desire','The wavelength grid is being'
-     &         //         ' generated automatically\n from the observed'
-     &         //         ' profiles. No blends are considered')
-
-               call leeuveobsindic(uveobs,ist,ntl,nliobs,nlin,npasobs,
-     &                             dlamdaobs,nble,stok)
-               nli=nliobs
-               do i=1,ntl
-                  npas(i)=npasobs(i)
-               end do
-               do i=1,nli
-                  nposi(i)=i
-                  dlamda(i)=dlamdaobs(i)
-               end do
-            else
-               call leeuveobsindic(uveobs,ist,ntl,nliobs,indice,npasobs,
-     &                             dlamdaobs,nble,stok)
-               call leemalla2(malla,ntl,nli,nliobs,nlin,npasobs,npas,
-     &                        dlamdaobs,dlamda,nble,nposi,indice)
-            endif
-
-         endif
-
+         end if
          if(atmos(16*ntau+5).gt.0.)then  !comprobaciones varias, esto es si tenemos difusa
-
             if(ntlcheck.ne.ntl)then
                call error(KSTOP,'desire','The number of lines'
      &         //         ' in the files containing the observed\n'
@@ -857,134 +872,134 @@ c        Print these values on screen.
 c        ---------------------
 c        Sentencias de control
 c        ---------------------
-
-         if(ierror.ne.0.and.contr.gt.-1.e-6)then
-            contr=-1.e-6
-            call error(KWARN,'desire','No contrast calculation can be done'
+         if(ici .eq. 1)then  !acabo en 982
+            if(ierror.ne.0.and.contr.gt.-1.e-6)then
+               contr=-1.e-6
+               call error(KWARN,'desire','No contrast calculation can be done'
      &      //         ' without two models')
-         end if
+            end if
 
-         nfrecmax=0
-         ntlblends=0
-         do i=1,ntl
-            nfrecmax=max0(nfrecmax,npas(i))  !numero max. de frec.
-            nlinsn(i)=nlin(ntlblends+1)
-            do j=1,nble(i)
-               ntlblends=ntlblends+1
+            nfrecmax=0
+            ntlblends=0
+            do i=1,ntl
+               nfrecmax=max0(nfrecmax,npas(i))  !numero max. de frec.
+               nlinsn(i)=nlin(ntlblends+1)
+               do j=1,nble(i)
+                  ntlblends=ntlblends+1
+               end do
             end do
-         end do
 
-         if (ntlblends.gt.kl) then
-            write(msg,'(a,i3,a,i3,a)') 'The number of lines (',ntlblends,
+            if (ntlblends.gt.kl) then
+               write(msg,'(a,i3,a,i3,a)') 'The number of lines (',ntlblends,
      &            ') is larger than the current limit kl = ',kl,
      &            '\n Decrease this number or change the PARAMETER file'
-            call error(KSTOP,'desire',msg)
-         end if
-         if (nli.gt.kld) then
-            write(msg,'(a,i5,a,i5,a)') 'The number of wavelengths (',nli,
+               call error(KSTOP,'desire',msg)
+            end if
+            if (nli.gt.kld) then
+               write(msg,'(a,i5,a,i5,a)') 'The number of wavelengths (',nli,
      &            ') is larger than the current limit kld = ',kld,
      &            '\n Decrease the number of wavelengths or change the PARAMETER file'
-            call error(KSTOP,'desire',msg)
-         end if
-         if (nfrecmax.gt.kld) then
-            write(msg,'(a,i5,a)') 'There is a line with more wavelengths'
-     &      //    ' than the current limit kld = ',kld,'\n Decrease the'
-     &      //    ' number of wavelengths or change the PARAMETER file'
-            call error(KSTOP,'desire',msg)
-         end if
-         if (ntau.gt.kt) then
-            write(msg,'(a,i4,a)') 'The model has more depth points than the'
-     &      //    ' current limit kt = ',kt,'\n Decrease the number of grid'
-     &      //    ' points or change the PARAMETER file'
-            call error(KSTOP,'desire',msg)
-         end if
+               call error(KSTOP,'desire',msg)
+            end if
+            if (nfrecmax.gt.kld) then
+               write(msg,'(a,i5,a)') 'There is a line with more wavelengths'
+     &         //    ' than the current limit kld = ',kld,'\n Decrease the'
+     &         //    ' number of wavelengths or change the PARAMETER file'
+               call error(KSTOP,'desire',msg)
+            end if
+            if (ntau.gt.kt) then
+               write(msg,'(a,i4,a)') 'The model has more depth points than the'
+     &         //    ' current limit kt = ',kt,'\n Decrease the number of grid'
+     &         //    ' points or change the PARAMETER file'
+               call error(KSTOP,'desire',msg)
+            end if
+            
+c           05/05/21 brc: New routine for avoiding multiple line readings.
+c           Reads all the spectral information and make some calculations.
+c           Sends the information via common to blends2, blendscon2, departures
+c           and fperfil2. Input via common: responde2
+            call spectra()
+            if(nciclos .ge. 1. and. icontinuo_normz .eq. 0) then !input profiles in SI
+                call renormaliza(ist,ntl,npas,stok)
+            end if
 
-c        Definimos nlins,ntls,npass,dlamda0s,dlamdas
-         ntls=0
-         nb=0
-         k4=0
-         k4c=0
-         do i=1,ntl
-            vic(i)=1.  !inicializo i del continuo
-            do ii=1,4
-               smax(i,ii)=1./sn
+c           Definimos nlins,ntls,npass,dlamda0s,dlamdas
+            ntls=0
+            nb=0
+            k4=0
+            k4c=0
+            do i=1,ntl
+               vic(i)=1.  !inicializo i del continuo
+               do ii=1,4
+                  smax(i,ii)=1./sn
+               end do
             end do
-         end do
 
-         ii=0
-         vmax=-2.
-         vmin=2.
-         areaVazul=0.
-         areaVroja=0.
-         ipolaridad=1
-         do i=1,4
-            do j=1,ist(i)
-               iinli=ii*nli
-               ii=ii+1
-               k3=0
-               k3c=0
-               suma=0
-               jj=0
-               do k=1,ntl
-                  do jble=1,nble(k)
-                     nb=nb+1
-                     jj=jj+1
-                     nlins(nb)=nlin(jj)
-                  end do
-                  ntls=ntls+1
-                  npass(ntls)=npas(k)
-                  do l=1,npasobs(k)
-                     k3=k3+1
-                     k4=k4+1
-                     npos(k4)=nposi(k3)+iinli
-                     sk4=stok(k4)
-                     pesos(k4)=1.00
+            ii=0
+            vmax=-2.
+            vmin=2.
+            do i=1,4
+               do j=1,ist(i)
+                  iinli=ii*nli
+                  ii=ii+1
+                  k3=0
+                  k3c=0
+                  jj=0
+                  do k=1,ntl
+                     do jble=1,nble(k)
+                        nb=nb+1
+                        jj=jj+1
+                        nlins(nb)=nlin(jj)
+                     end do
+                     ntls=ntls+1
+                     npass(ntls)=npas(k)
+                     do l=1,npasobs(k)
+                        k3=k3+1
+                        k4=k4+1
+                        npos(k4)=nposi(k3)+iinli
+                        sk4=stok(k4)
+                        pesos(k4)=1.00
 
-                     if(sk4.gt.cotaminima)then
-                        if(i.eq.1 .and. nciclos.gt.0)then
-                           xmax=-1.
-                           do lll=1,npasobs(k)
-                              if(xmax.le.stok(k4-l+lll))xmax=stok(k4-l+lll)
-                           end do
-                           vic(k)=xmax  !i continuo
-                           sss=abs( vic(k)-sk4 )
-                        else
-                           sss=abs(sk4)
+                        if(sk4.gt.cotaminima)then
+                           if(i.eq.1 .and. nciclos.gt.0)then
+                              xmax=-1.
+                              do lll=1,npasobs(k)
+                                 if(xmax.le.stok(k4-l+lll))xmax=stok(k4-l+lll)
+                              end do
+                              vic(k)=xmax  !i continuo
+                              sss=abs( vic(k)-sk4 )
+                           else
+                              sss=abs(sk4)
+                           end if
+                           if(sss.gt.smax(k,i))smax(k,i)=sss
                         end if
-                        if(sss.gt.smax(k,i))smax(k,i)=sss
-                     end if
 
-                  end do  !fin del do en frecuencias obs
-                  do l=1,npas(k)
-                     k3c=k3c+1
-                     k4c=k4c+1
-                     dlamdas(k4c)=dlamda(k3c)
-                  end do  !fin del do en frecuencias malla
+                     end do  !fin del do en frecuencias obs
+                     do l=1,npas(k)
+                        k3c=k3c+1
+                        k4c=k4c+1
+                        dlamdas(k4c)=dlamda(k3c)
+                     end do  !fin del do en frecuencias malla
 
-               end do  !fin del do en lineas
-            end do  !fin del do en j
-         end do  !fin del do en i
+                  end do  !fin del do en lineas
+               end do  !fin del do en j
+            end do  !fin del do en i
 
-         if(nciclos.gt.0)call leepesos(pesos_file,ist,pesos)
+            if(nciclos.gt.0)call leepesos(pesos_file,ist,pesos)
 
-         maximo=smax(1,1)
-         do k=1,ntl
-            if(smax(k,1).gt.maximo)maximo=smax(k,1)
-         enddo
+            maximo=smax(1,1)
+            do k=1,ntl
+               if(smax(k,1).gt.maximo)maximo=smax(k,1)
+            enddo
 
-         do k=1,ntl
-            if(smax(k,1).lt..01 .and. nciclos.gt.0)then
-               write(msg,'(a,i2)') 'Weight is being changed for the line ',k
-               call error(KWARN,'desire',msg)
-               smax(k,1)=maximo
-            endif
-         enddo
-
-c        07/07/20 brc: New routine for avoiding multiple line readings.
-c        Reads all the spectral information and make some calculations.
-c        Sends the information via common to blends2, blendscon2, departures
-c        and fperfil2. Input via common: responde2
-         if(ici.eq.1) call spectra()
+            do k=1,ntl
+               if(smax(k,1).lt..01 .and. nciclos.gt.0)then
+                  write(msg,'(a,i2)') 'Weight is being changed for the line ',k
+                  call error(KWARN,'desire',msg)
+                  smax(k,1)=maximo
+               endif
+            enddo
+         end if !viene de 853
 
          nfrecs=k4
 
@@ -1032,16 +1047,18 @@ c        Para controlar el maximo numero de nodos en modo automatico ("*" en m(i
          end do
 
          if(mfit.gt.mfitmax .and. nciclos .gt. 0)then
-            write(msg,'(a,i4,a,i4,a)')
-     &            'The number of free parameters (',mfit,
-     &            ')\n is larger than the current limit mfitmax (',mfitmax,
-     &            ')\n Decrease the number of free parameters'
-            call error(KSTOP,'desire',msg)
+            write(msg1,*) mfit
+            write(msg2,*) mfitmax
+            call error(KSTOP,'desire','The number of free parameters'
+     &      //         ' ('//trim(adjustl(msg1))//') is larger than'
+     &      //         ' mfitmax = '//trim(adjustl(msg2))//'\n'
+     &      //         ' Decrease the number of free parameters or change'
+     &      //         ' the PARAMETER file')
          end if
 
 c        Escribe en atmosr los valores de atmos en los nodos
          if(nciclos.ne.0)call comprime2(ntau,m,atmos,atmosr)
-
+     
          nfree=nfrecs-mfit
 
          write(msg,'(a,i8,1x,i6,1x,i8)')
@@ -1056,58 +1073,55 @@ c        Escribe en atmosr los valores de atmos en los nodos
             call error(KSTOP,'desire',msg)
          end if
 
-         k40=0
-         ntotal4=0
-         ielimino=0
-         sigmamax=1.e15
+         if(ici.eq.1)then
+            k40=0
+            ntotal4=0
+            ielimino=0
+            sigmamax=1.e15
 
-         do i=1,4
-            numberfrec(i)=0
-            do j=1,ist(i)
-               indicei=0
-               sigc=1./(sn*sqrt(pist(i)))
-               do k=1,ntl
-c                 Numero de ldo para cada stokes invertido (0 si no se invierte)
-                  numberfrec(i)=numberfrec(i)+npasobs(k)
-
-                  sigc2=sigc*sqrt(smax(k,i)/vic(k))
-                  do l=1,npasobs(k)
-                     k40=k40+1
-                     indicei=indicei+1
-
-                     if(pesos(k40).gt.1.e-10)pesos_inv=1./pesos(k40)
-                     if(pesos(k40).le.1.e-10)pesos_inv=1.e10
-                     sig(k40)=sigc2
-
-                     if(stok(k40).lt.cotaminima)then
-                        sigx=sigmamax
-                        sig(k40)=sigx
-                        ielimino=ielimino+1
+            do i=1,4
+               numberfrec(i)=0
+               do j=1,ist(i)
+                  indicei=0
+                  sigc=1./(sn*sqrt(pist(i)))
+                  do k=1,ntl
+                     numberfrec(i)=numberfrec(i)+npasobs(k) !umero de ldo para cada stokes invertido (0 si no se invierte)
+                     sigc2=sigc*sqrt(smax(k,i)/vic(k))
+                     do l=1,npasobs(k)
+                        k40=k40+1
+                        indicei=indicei+1
+                        if(pesos(k40).gt.1.e-10)pesos_inv=1./pesos(k40)
+                        if(pesos(k40).le.1.e-10)pesos_inv=1.e10
+                        sig(k40)=sigc2
+                        if(stok(k40).lt.cotaminima)then
+                           sigx=sigmamax
+                           sig(k40)=sigx
+                           ielimino=ielimino+1
+                        end if
+                        sig(k40)=sig(k40)*pesos_inv
+                        sigd(k40)=sig(k40)
+                     end do
+                     do l=1,npas(k)
+                        ntotal4=ntotal4+1
+                     end do
+                  end do
+                  if(contr.gt.-1.e5)then
+                     if(i.eq.1)then
+                        sig(k40)=4.*sig(k40-1)/sqrt(float(k3)*pist(i))
+                     else
+                        sig(k40)=sigmamax/sqrt(pist(i))
                      end if
-                     sig(k40)=sig(k40)*pesos_inv
                      sigd(k40)=sig(k40)
-                  end do
-                  do l=1,npas(k)
-                     ntotal4=ntotal4+1
-                  end do
-               end do
-               if(contr.gt.-1.e5)then
-                  if(i.eq.1)then
-                     sig(k40)=4.*sig(k40-1)/sqrt(float(k3)*pist(i))
-                  else
-                     sig(k40)=sigmamax/sqrt(pist(i))
                   end if
-                  sigd(k40)=sig(k40)
-               end if
+               end do
             end do
-         end do
 
-         if(ielimino.gt.0)then
-            write(msg,'(a,f5.1,a,i3,a)') 'Being smaller than ',cotaminima,
+            if(ielimino.gt.0)then
+               write(msg,'(a,f5.1,a,i3,a)') 'Being smaller than ',cotaminima,
      &            ', ',ielimino,' data points are not considered for inversion'
-            call error(KWARN,'desire',msg)
-         endif
-
+               call error(KWARN,'desire',msg)
+            endif
+         end if
          if(nciclos.gt.0)then
             if(iauto.eq.0)then
                call error(KLINE,'',linlarga)
@@ -1124,6 +1138,9 @@ c                 Numero de ldo para cada stokes invertido (0 si no se invierte)
             end if
          end if
 
+         chireal_store=chireal
+         sumsq_store=sumsq
+               
 c        ===============================================================
 c                        Empieza el ciclo iterativo
 c        ===============================================================
@@ -1211,8 +1228,6 @@ c              end if
             call marquardt2(stok,sig,nfrecs,atmosr,m,mfit,
      &                      covar,alpha,chisq,diag,iamplio,beta)
 
-c           iRH1_store(it)=IRH1
-c           iRH2_store(it)=IRH2
             if(nciclos.gt.0)then
                deltaT1_rel=0.
                do inod=1,m(1)
@@ -1284,17 +1299,17 @@ c           Copiamos la primera sintesis del primer ciclo en perfil.
                ngu=ngu+1
                chi0=chisq
 
-c              Copiamos la atmosfera de salida (via common) atmosout en atmos
-c              para no machacar el common y la duplicamos en atmoslin para
-c              pasarla al centro del disco con taulinea4. La inversion se
-c              realiza en la linea de vision pero los modelos de entrada y
-c              salida estan en el centro del disco
-c              do i=1,16*ntau+5
-c                 atmosoutold(i)=atmos(i)
-c              end do
-c              iamplioold=1
+               chireal_store=chireal
+               sumsq_store=sumsq
+
+c Copiamos la atmosfera de salida (via common) atmosout en atmos
+c para no machacar el common y la duplicamos en atmoslin 
+c La inversion se realiza en la linea de vision, en radianes, pero
+c los modelos de entrada y salida se escriben en disco en grados 
+
                do i=1,16*ntau+5
                   atmos(i)=atmosout(i)
+                  atmosb(i)=atmosout(i)
                end do
 
                do i=1,ntau
@@ -1317,19 +1332,22 @@ c             Si amplio copio en la variable perfil el perfil sintetico.
                   end do
               end if    
 
-               fill2=atmos(16*ntau+4)
-               amac1=atmos(8*ntau+1)
-               amac2=atmos(16*ntau+3)
-               amic1=atmos(3*ntau+1)*1.e-5
-               amic2=atmos(11*ntau+3)*1.e-5
-               porcien=atmos(16*ntau+5)
+               fill2=atmosb(16*ntau+4)
+               amac1=atmosb(8*ntau+1)
+               amac2=atmosb(16*ntau+3)
+               amic1=atmosb(3*ntau+1)*1.e-5
+               amic2=atmosb(11*ntau+3)*1.e-5
+               porcien=atmosb(16*ntau+5)
 
                contraste=contr
                if(nlin(ntlblends).eq.0)contraste=scal(nliobs)
                contraste=(1+contraste)/(1.-contraste)
 
                call comprime2(ntau,m,atmos,atmosr)
-
+               do j=1,mfit
+                  atmosrlin(j)=atmosr(j)
+               end do 
+               
                if(ngu.lt.25)then
                   cotavar=exp((-42+float(ngu))/3.)-1.e-4
                   if(cotavar.gt.0.0033)cotavar=0.0033
@@ -1385,7 +1403,7 @@ c              if(isigo.eq.1)posicionciclo(ici)=ll
                kv=0
                do i=1,18
                   mvec(ll,i)=m(i)
-                  if(mvecmax(i).lt.m(i))mvecmax(i)=m(i)
+c                  if(mvecmax(i).lt.m(i))mvecmax(i)=m(i)
                end do
 
                if(iauto.eq.0) then
@@ -1406,9 +1424,16 @@ c        ===============================================================
 c                        Acaba el ciclo iterativo
 c        ===============================================================
 
+         chireal=chireal_store
+         sumsq=sumsq_store
+
          do i=1,16*ntau+5
-            atmoslin(i)=atmos(i)
+            atmos(i)=atmosb(i)
+            atmosout(i)=atmosb(i)
          end do
+         do j=1,mfit
+            atmosr(j)=atmosrlin(j)
+         end do 
 
          if(ngu.eq.0)then
 
@@ -1441,8 +1466,6 @@ c               call leeuve2(1,uveout,ist,ntl,nlinsn,npasobs,dlamdaobs,ymodobs_R
 c            else
 c             if(new_evaluation .eq. 1)call leeuve2(1,uveout,ist,ntl,nlinsn,npasobs,dlamdaobs,perfil)
 c            end if
-c            call taulinea4(0,imodel2,deglon,deglat,vx,vy,atmos,z1,pg1,ro1,z2,
-c     &                     pg2,ro2,ntau)
 c            do i=1,16*ntau+5
 c               atmoslin(i)=atmos(i)
 c            end do
@@ -1452,99 +1475,22 @@ c        else    !03/03/21 brc: quito este else y
 
             if(rnlte_th.ge.10. .and. new_evaluation .eq. 1)then
                call leeuve2(1,uveout,ist,ntl,nlinsn,npasobs,dlamdaobs,perfil)
+               call leemodi222(1,modelout1,modelout2,atmosb,ntau,ierror,
+     &                         z1,pg1,ro1,z2,pg2,ro2)
             end if
 
-            mfit=0
-
-            if(mvecmax(1).gt.0)mfit=mfit+mvecmax(1)
-            ipa1=mfit   !ipa1 es el indice anterior a la gamma comp. 1
-            if(mvecmax(2).gt.0)mfit=mfit+mvecmax(2)
-            ipa11=mfit
-            do i=3,5
-               if(mvecmax(i).gt.0)mfit=mfit+mvecmax(i)
-            end do
-            iga1=mfit   !iga1 es el indice anterior a la gamma comp. 1
-            if(mvecmax(6).gt.0)mfit=mfit+mvecmax(6)
-            if(mvecmax(7).gt.0)mfit=mfit+mvecmax(7)
-            ifi11=mfit  !ifi11 es el indice ultimo de la fi comp. 1
-
-            do i=8,9
-               if(mvecmax(i).gt.0)mfit=mfit+mvecmax(i)
-            end do
-            ipa2=mfit   !ipa2 es el indice anterior a la gamma comp. 2
-            if(mvecmax(10).gt.0)mfit=mfit+mvecmax(10)
-            ipa22=mfit
-            do i=11,13
-               if(mvecmax(i).gt.0)mfit=mfit+mvecmax(i)
-            end do
-            iga2=mfit   !iga2 es el indice anterior a la gamma comp. 2
-            if(mvecmax(14).gt.0)mfit=mfit+mvecmax(14)
-            if(mvecmax(15).gt.0)mfit=mfit+mvecmax(15)
-            ifi22=mfit  !ifi22 es el indice ultimo de la fi comp. 1
-            do i=16,18
-               if(mvecmax(i).gt.0)mfit=mfit+mvecmax(i)
-            end do
-
-c           call comprime2(ntau,mvecmax,atmoslin,atmosr)
-c           do j=1,mfit
-c              atmosrlin(j)=atmosr(j)
-c           end do
-c           IRH1=1
-c           if(imodel2.eq.1)IRH2=1
-c           iamplio=1
-c           call marquardt2(stok,sig,nfrecs,atmosrlin,m,mfit,
-c     &                     covar,alpha,chisq,diag,iamplio,beta)
-
-            do j=1,mfit
-               atmosrlin(j)=atmosr(j)
-            end do
-
-c           if(iauto.eq.1)then  !if comentado
-               do i=1,ntau
-                  tau(i)=atmos(i)
-                  T1(i)=atmos(ntau+i)
-                  Pe1(i)=atmos(2*ntau+i)
-               end do
-
-               if(ncontpg.eq.0 .and. m(2).eq.0) call equisubmu(ntau,tau,T1,Pe1,pg1,z1,ro1)
-               if(ncontpg.ne.0 .and. m(2).eq.0) call equisubmu_cont(ntau,tau,T1,Pe1,pg01,pg1,z1,ro1)
-               do i=1,ntau
-                  atmos(i)=tau(i)
-                  atmos(ntau+i)=T1(i)
-                  atmos(2*ntau+i)=Pe1(i)
-               end do
-
-               if(imodel2.eq.1)then
-                  do i=1,ntau
-                     tau(i)=atmos(8*ntau+2+i)
-                     T2(i)=atmos(9*ntau+2+i)
-                     Pe2(i)=atmos(10*ntau+2+i)
-                  end do
-                  if(ncontpg.eq.0 .and. m(10).eq.0)call equisubmu(ntau,tau,T2,Pe2,pg2,z2,ro2)
-                  if(ncontpg.ne.0 .and. m(10).eq.0)call equisubmu_cont(ntau,tau,T2,Pe2,pg02,pg2,z2,ro2)
-                  do i=1,ntau
-                     atmos(8*ntau+2+i)=tau(i)
-                     atmos(9*ntau+2+i)=T2(i)
-                     atmos(10*ntau+2+i)=Pe2(i)
-                  end do
-               end if
-c           end if  !end if(iauto.eq.1) comentado
 
 c           ---------------------------------------------------------
 c           Hacemos una sintesis NLTE
 
             ievaluo=0
-            call taulinea4(1,imodel2,deglon,deglat,vx,vy,atmos,z1,pg1,ro1,
-     &                     z2,pg2,ro2,ntau)
-c           call leemodi222(1,modelout1,modelout2,atmos,ntau,ierror,
-c    &                      z1,pg1,ro1,z2,pg2,ro2)
+            call leemodi222(1,modelout1,modelout2,atmos,ntau,ierror,
+     &                      z1,pg1,ro1,z2,pg2,ro2)
      
             if(rnlte_th.lt.10. .and. new_evaluation .ne. 0)ievaluo=1
             if(chprint .le. umbralchi)ievaluo=1
 
-            if(ievaluo.eq.1)then
-               call leemodi222(1,modelout1,modelout2,atmos,ntau,ierror,
-     &                      z1,pg1,ro1,z2,pg2,ro2)
+            if(ievaluo.eq.1)then            
                IRH1=1
                if(imodel2.eq.1)IRH2=1
                iamplio=1
@@ -1556,64 +1502,29 @@ c              if(ici.eq.nciclosor)then
                      numerical(inum)=0
                   end do
 c              end if
-c              iprimeravezor=iprimeravez
-c              iprimeravez=0
-               g=-1
-               nciclos=0
-
-               if(m(2).eq.0)then
-                  do i=1,ntau
-                     tau(i)=atmos(i)
-                     T1(i)=atmos(ntau+i)
-                     Pe1(i)=atmos(2*ntau+i)
-                  end do
-                  if(ncontpg.eq.0) call equisubmu(ntau,tau,T1,Pe1,pg1,z1,ro1)
-                  if(ncontpg.ne.0) call equisubmu_cont(ntau,tau,T1,Pe1,pg01,pg1,z1,ro1)
-                  do i=1,ntau
-                     atmos(2*ntau+i)=Pe1(i)
-                  end do
-c                 call taulinea4(0,imodel2,deglon,deglat,vx,vy,atmos,z1,pg1,ro1,z2,pg2,ro2,ntau)
-               end if
-               if(imodel2.eq.1 .and. m(10).eq.0 .and. nciclos.ge.1)then
-                  do i=1,ntau
-                     tau(i)=atmos(8*ntau+2+i)
-                     T2(i)=atmos(9*ntau+2+i)
-                     Pe2(i)=atmos(10*ntau+2+i)
-                  end do
-                  if(ncontpg.eq.0)call equisubmu(ntau,tau,T2,Pe2,pg2,z2,ro2)
-                  if(ncontpg.ne.0)call equisubmu_cont(ntau,tau,T2,Pe2,pg02,pg2,z2,ro2)
-                  do i=1,ntau
-                     atmos(10*ntau+2+i)=Pe2(i)
-                  end do
-               end if
-
-               call taulinea4(0,imodel2,deglon,deglat,vx,vy,atmos,z1,pg1,ro1,z2,pg2,ro2,ntau)
-
-               if(ngu .ne. 0)call marquardt2(stok,sig,nfrecs,atmosrlin,m,mfit,
+ 
+               if(ngu .ne. 0)call marquardt2(stok,sig,nfrecs,atmosr,m,mfit,
      &                                       covar,alpha,chisq,diag,iamplio,beta)
 
                call leeuve2(1,uveout,ist,ntl,nlinsn,npasobs,dlamdaobs,ymodobs_RH)
-c              iprimeravez=iprimeravezor
+
                diag=diagor
                nciclos=nciclosor
-c              if(ici.eq.nciclosor)then
-                  do inum=1,18
-                     numerical(inum)=numericalor(inum)
-                  end do
-c              end if
-
-c              11/11/20 epm: No es necesario las poblaciones de H en disco.
-c              if(imassortau .eq. 0)then 
-c                 call write_hydro(mod_hyd_out1,ntau,tau,hydro1)
-c                 if(imodel2.eq.1)call write_hydro(mod_hyd_out2,ntau,tau,hydro2)
-c              end if
+               do inum=1,18
+                  numerical(inum)=numericalor(inum)
+               end do
  
+               if(iauto.eq.0) then
+                  write(msg,1002)ngu,add,snchi,chprint,amac1,amac2,
+     &                           amic1,amic2,fill2,contraste,porcien
+                  call error(KLITE,'',msg)
+               end if
+               if(iauto.eq.1) then
+                  write(msg,2002)ngu,add,snchi,chprint,(m(jj),jj=1,18)
+                  call error(KLITE,'',msg)
+               end if
+
             end if  !end if(ievaluo.eq.1)
-
-c           ievaluo=0
-c           ------------------------------------------------------------
-
-c        end if  !03/03/21 brc: termino el if(ngu.eq.0) en la linea 1446
 
          close(ican)
 
@@ -1779,8 +1690,8 @@ c        dir04=abs(diagon(ir)-diagon(ir-4))
 c        dir05=abs(diagon(ir)-diagon(ir-5))
 c
 c        if(dir01 .lt. 1.e-12 .and.dir02 .lt. 1.e-12 .and.
-c     &     dir03 .lt. 1.e-12 .and.dir04 .lt. 1.e-12 .and.
-c     &     dir05 .lt. 1.e-12 )factorrep=1.
+c    &      dir03 .lt. 1.e-12 .and.dir04 .lt. 1.e-12 .and.
+c    &      dir05 .lt. 1.e-12 )factorrep=1.
 c     end if
 
       if(diag0.gt.0)then
@@ -2379,3 +2290,39 @@ c System, an angle P clock side (to the west) around Z axis a angle P
        end
 
 c_____________________________________________________________________________
+
+c renormaliza divide los perfiles observados por el continuo RH del HSRA
+
+        subroutine renormaliza(ist,ntl,npas,stok)
+
+        implicit real*4 (a-h,o-z)
+        include 'PARAMETER'
+        real*4 stok(*),si(kld),sq(kld),su(kld),sv(kld)
+        real*4 continuohNLTEarr(kld)
+        integer ntl,k,n,npas(*),ist(*)
+        common/continuosNLTEarr/continuohNLTEarr 
+
+        n=0
+        do i=1,ntl
+           do j=1,npas(i)
+              n=n+1
+           end do
+        end do      
+        call iquvfroms(ist,n,si,sq,su,sv,stok)
+        k=0
+        do i=1,ntl
+           do j=1,npas(i)
+              k=k+1
+              con=continuohNLTEarr(k)
+              si(k)=si(k)/con
+              sq(k)=sq(k)/con
+              su(k)=su(k)/con
+              sv(k)=sv(k)/con                    
+           end do  
+        end do           
+        call sfromiquv(ist,n,si,sq,su,sv,stok)   
+
+        return
+        end
+
+c_____________________________________________________________________________               

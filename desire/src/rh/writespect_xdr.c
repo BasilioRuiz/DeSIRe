@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Thu Feb 11 12:18:36 2021 --
+       Last modified: Fri May  7 10:52:13 2021 --
 
        --------------------------                      ----------RH-- */
 
@@ -154,10 +154,34 @@ void writeSpectrum(Spectrum *spectrum)
       close(spectrum->fd_J20);
     }
   }
+}
+/* ------- end ---------------------------- writeSpectrum.c --------- */
 
-  /* --- Clean up memory allocations --                -------------- */
+
+/* ------- begin -------------------------- freeSpectrum.c ---------- */
+
+void freeSpectrum(Spectrum *spectrum)
+{
+  register int nspect, nact;
+
+  ActiveSet *as;
+  
+  /* --- Clean up memory allocations for the Spectrum structure -- -- */
 
   free(spectrum->lambda);
+
+  if (atmos.NPRDactive > 0 && input.PRD_angle_dep)
+    free(spectrum->PRDindex);
+  
+  freeMatrix((void **) spectrum->I);
+  freeMatrix((void **) spectrum->J);
+  
+  if (atmos.Stokes || input.backgr_pol) {
+    freeMatrix((void **) spectrum->Stokes_Q);
+    freeMatrix((void **) spectrum->Stokes_U);
+    freeMatrix((void **) spectrum->Stokes_V);
+  }
+  if (input.backgr_pol) freeMatrix((void **) spectrum->J20);
 
   for (nspect = 0; nspect < spectrum->Nspect; nspect++) {
     as = &spectrum->as[nspect];
@@ -171,6 +195,8 @@ void writeSpectrum(Spectrum *spectrum)
           free(as->upper_levels[nact]);
       }
     }
+    if (atmos.Nactiveatom > 0) free(as->art);
+    
     /* --- Reallocate space for the molecular transition arrays -- -- */
 
     for (nact = 0; nact < atmos.Nactivemol; nact++)
@@ -180,6 +206,9 @@ void writeSpectrum(Spectrum *spectrum)
         free(as->mrt[nact]);
       }
     }
+    if (atmos.Nactivemol > 0) free(as->mrt);
   }
+  free(spectrum->as);
 }
-/* ------- end ---------------------------- writeSpectrum.c --------- */
+
+/* ------- end ---------------------------- freeSpectrum.c ---------- */

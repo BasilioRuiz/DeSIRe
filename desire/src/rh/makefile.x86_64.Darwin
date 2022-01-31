@@ -5,7 +5,7 @@
 #
 #      Version:       rh2.0
 #      Author:        Han Uitenbroek (huitenbroek@nso.edu)
-#      Last modified: Tue Jan  8 12:42:21 2013 --
+#      Last modified: Thu May  6 23:21:46 2021 --
 #
 ##     --------------------------                      ----------RH-- ##
 
@@ -18,14 +18,14 @@ XARCH  =
 ## --- If no f90 compiler is available comment out -DHAVE_F90
 
 CC       = gcc
-CFLAGS   = -m64 -DHAVE_F90
+CFLAGS   = -march=native -DHAVE_F90
 
 
 ## --- Macros for F90 alternative routines --           ------------- ##
 #      03/03/21 epm: FC comes from the main Makefile in src directory.
 
 F90C     = $(FC)
-F90FLAGS = -m64
+F90FLAGS = -march=native
 
 
 ## -- Library settings --                               ------------- ##

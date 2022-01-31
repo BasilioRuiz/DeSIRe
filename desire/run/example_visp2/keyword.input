@@ -1,0 +1,178 @@
+## ------- file: ----------------------------------- keyword.input -- ##
+#
+#       Version:      rh1.0, 1-D plane-parallel
+#
+## ------------------------------------------------------------ RH -- ##
+
+
+##################### REQUIRED KEYWORDS ################################
+
+# Input files for all atoms and molecules.
+
+  ATOMS_FILE     = input/atoms.input
+  MOLECULES_FILE = input/molecules.input
+
+# Set number of maximum iterations and convergence limit.
+
+  N_MAX_ITER = 200
+  ITER_LIMIT = 1.0E-4
+
+
+##################### OPTIONAL KEYWORDS ###############################
+
+# Input Stokes mode. Options are: NO_STOKES, FIELD_FREE and FULL_STOKES
+# (default is NO_STOKES).
+
+  STOKES_MODE = FIELD_FREE
+
+# 12/03/20 cqn: The value DELO_PARABOLIC does not work well in simulations.
+# Use DELO_BEZIER3 (default value) until DELO_PARABOLIC be corrected.
+
+  S_INTERPOLATION_STOKES = DELO_BEZIER3
+
+# Parameters for Ng convergence acceleration (defaults: NG_DELAY = 0,
+# NG_ORDER = 0 => no acceleration, NG_PERIOD = 1).
+
+  NG_DELAY  = 10
+  NG_ORDER  = 2
+  NG_PERIOD = 6
+
+# Set HYDROGEN_LTE = TRUE if hydrogen in the background has to be
+# treated with LTE populations (default is FALSE).
+
+  HYDROGEN_LTE = TRUE
+
+# ----------------------------------------------------------------------
+
+# Row of statistical equilibrium equation that is to be eliminated to
+# enforce particle conservation. If set to -1 the row with the largest
+# population from the previous iteration will be eliminated at each
+# spatial location (default is -1).
+
+##I_SUM = -1
+
+# Maximum number of iterations to initialize scattering radiation
+# field in the background (default is 5).
+
+##N_MAX_SCATTER = 5
+
+# PRD specific parameters. PRD_N_MAX_ITER is the maximum number of
+# PRD iterations per main iteration. PRD_ITER_LIMIT is the convergence
+# limit of PRD iterations in each main iteration. If PRD_ITER_LIMIT is
+# negative, the dpopsmax of the current main iteration is taken as the
+# PRD convergence limit (defaults: PRD_N_MAX_ITER = 3,
+# PRD_ITER_LIMIT = 1.0E-2).
+
+##PRD_N_MAX_ITER = 3
+##PRD_ITER_LIMIT = 1.0E-2
+
+# PRD_NG_* are the Ng accelleration parameters for PRD iterations
+# (defaults: PRD_NG_DELAY = 0, PRD_NG_ORDER = 0, PRD_NG_PERIOD = 0).
+
+##PRD_NG_DELAY  = 0
+##PRD_NG_ORDER  = 0
+##PRD_NG_PERIOD = 0
+
+# If PRD_ANGLE_DEP is set to TRUE angle-dependent PRD is used
+# (default is FALSE).
+
+##PRD_ANGLE_DEP = FALSE
+
+# Enable cross-redistribution between PRD levels that share a common
+# upper level. If set to TRUE the RH code determines automatically
+# which levels to include (default is FALSE).
+
+##XRD = FALSE
+
+# Turn on hydrostatic equilibrium iterations (default is FALSE).
+
+##HYDROSTATIC = FALSE
+
+# Apply multiplicative factor to all background metals. METALLICITY
+# is specified in terms of dex, ie -1.0 means a tenfold decrease in
+# metals (default is 0.0).
+
+##METALLICITY = 0.0
+
+# Solve for electron density if SOLVE_NE is set to ONCE or ITERATION.
+# Options are: NONE, ONCE, ITERATION (default is NONE).
+
+##SOLVE_NE = NONE
+
+# KURUCZ_PF_DATA should point to the file with Kurucz partition function
+# tables (as function of T) for the first 100 peridic table elements.
+# It is needed when either SOLVE_NE is set or LTE lines are
+# synthesized/inverted (default is ../../var/Kurucz/pf_Kurucz.input).
+
+##KURUCZ_PF_DATA = ../../var/Kurucz/pf_Kurucz.input
+
+# 21/06/19 epm: Directory where Barklem data files are located
+# (default is ../../var/Barklem).
+
+##BARKLEM_DIR = ../../var/Barklem
+
+# Data file for background opacity fudge to compensate for missing
+# UV line haze. When set to none no data is read (default is none).
+
+##OPACITY_FUDGE = none
+
+# Output files for atmosphere, geometry and spectrum data.
+# When set to none no output is produced (defaults are none).
+
+##ATMOS_OUTPUT    = none
+##GEOMETRY_OUTPUT = none
+##SPECTRUM_OUTPUT = none
+
+# Output files for opacities, radiative rates, collisional rates and
+# damping. When set to none no output is produced (defaults are none).
+# For keyword OPACITY_OUTPUT and emissivity of active transitions of
+# the solution is written to the specified file.
+# For keyword RADRATE_OUTPUT radiative rates for active transitions are
+# written to the specified file.
+# For keyword COLLRATE_OUTPUT collisional rates for active transitions are
+# written to the specified file.
+# For keyword DAMPING_OUTPUT damping parameters for active transitions are
+# written to the specified file, as well as the broadening velocity
+# for the specific atom.
+
+##OPACITY_OUTPUT  = none
+##RADRATE_OUTPUT  = none
+##COLLRATE_OUTPUT = none
+##DAMPING_OUTPUT  = none
+
+# If VACUUM_TO_AIR is set to TRUE wavelengths at and above
+# VACUUM_TO_AIR_LIMIT (see spectrum.h) will be converted to air
+# wavelength in the output files (default is TRUE).
+
+##VACUUM_TO_AIR = TRUE
+
+# Reference wavelength in [nm]. When not specified or set to 0.0 no
+# additional wavelength point will be added (default is 500.0).
+
+##LAMBDA_REF = 500.0
+
+# Typical value of micro-turbulence in [km/s]. Used in getlambda.c
+# to convert doppler units to real wavelengths (default is 5.0).
+
+##VMICRO_CHAR = 5.0
+
+# Typical value of magnetic field in Tesla (1 T = 1.0E+4 Gauss)
+# (default is 0.0).
+
+##B_STRENGTH_CHAR = 0.0
+
+# Include scattering polarization in the background (default is FALSE).
+
+##BACKGROUND_POLARIZATION = FALSE
+
+# Boolean keyword to allow for background lines to be included in the
+# calculation (default is TRUE).
+
+##ALLOW_PASSIVE_BB = TRUE
+
+# Set this value to TRUE to get printout on CPU usage. In that case
+# may take some extra CPU usage though! (default is FALSE).
+
+##PRINT_CPU = FALSE
+
+# End

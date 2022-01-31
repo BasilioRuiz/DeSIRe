@@ -1,0 +1,25 @@
+# Nmolecules
+# Location of this file (KEYWORD_REQUIRED) is set in "keyword.input".
+
+  12
+
+# Molecules
+# First molecule model in the list should always be H2.
+#
+# model file                          ACT/PAS   INITIAL_SOLUTION
+# (path from our execution dir)
+
+  ../../var/Molecules/H2.molecule     PASSIVE   LTE_POPULATIONS
+  ../../var/Molecules/C2.molecule     PASSIVE   LTE_POPULATIONS
+  ../../var/Molecules/CH.molecule     PASSIVE   LTE_POPULATIONS
+  ../../var/Molecules/CN.molecule     PASSIVE   LTE_POPULATIONS
+  ../../var/Molecules/CO.molecule     PASSIVE   LTE_POPULATIONS
+  ../../var/Molecules/H2+.molecule    PASSIVE   LTE_POPULATIONS
+  ../../var/Molecules/H2O.molecule    PASSIVE   LTE_POPULATIONS
+  ../../var/Molecules/N2.molecule     PASSIVE   LTE_POPULATIONS
+  ../../var/Molecules/NH.molecule     PASSIVE   LTE_POPULATIONS
+  ../../var/Molecules/NO.molecule     PASSIVE   LTE_POPULATIONS
+  ../../var/Molecules/O2.molecule     PASSIVE   LTE_POPULATIONS
+  ../../var/Molecules/OH.molecule     PASSIVE   LTE_POPULATIONS
+
+#end

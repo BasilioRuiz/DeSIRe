@@ -13,9 +13,9 @@
 #
 # Nota      : Aunque basicamente esta codificado en Fortran 77, hay unas
 #             pocas funciones mas avanzadas.
-#             get_command_argument() => Fortran 2003
-#             iachar()               => Fortran 95
-#             trim() y len_trim()    => Fortran 90
+#             get_command_argument()        => Fortran 2003
+#             iachar()                      => Fortran 95
+#             trim(), len_trim(), adjustl() => Fortran 90
 #
 # 27/01/04  : Primera version.
 # 12/11/15  : El compilador a usar puede entrar por linea de comandos.
@@ -36,6 +36,7 @@
 #                   hpopulations.f, lee_hydro.f, mread4.f.
 # 02/02/21  : (epm) Libreria externa para detectar fugas de memoria.
 # 03/03/21  : (epm) Paso el compilador al Makefile de RH.
+# 05/05/21  : (epm) Borro taulinea*.f ya que ahora solo hay modelos LoS.
 #
 # ****************************************************************************
 
@@ -55,7 +56,7 @@
 # utilizar la opcion que salva las variables locales en memoria estatica
 # (si las capturamos y no ponemos -fno-automatic, gfortran produce un SIGFPE).
 # 06/06/20 epm: Se puede evitar el error del linker si 'kld' de PARAMETER
-# es muy grande (>= 1000). Leer los comentarios del final.
+# es muy grande (>= 10000). Leer los comentarios del final.
 
 ifeq ($(fc),gfortran)
 FC       = gfortran
@@ -206,10 +207,6 @@ LIBSRC =amp2.f \
 	svbksb.f \
 	svdcmp2.f \
 	svdmatriz2.f \
-	taulinea.f \
-	taulinea2.f \
-	taulinea4.f \
-	taulinea4sub.f\
 	thermosub.f \
 	voigt.f \
 	write_atmos_RH.f \
@@ -258,9 +255,10 @@ $(LIB): $(LIBOBJ)
 	$(AR) $(ARFLAGS) $@ $?
 
 #
-# F) Reconstruccion de la libreria de DeSIRe.
+# F) Compilacion de la libreria de DeSIRe + desire.f si se modifica PARAMETER.
 #
 $(FILEMAKE): $(FILECONF)
+	$(COMPILE.f) $(MAIN1SRC)
 	$(COMPILE.f) $(LIBSRC)
 	$(AR) $(ARFLAGS) $(LIB) $(LIBOBJ)
 	@touch $@
@@ -322,12 +320,15 @@ install:
 #	rm -f read_keyword_input_RH.f read_atmos_RH.f read_model_atmos.f
 #	11/11/20 epm: Con los modelos por memoria no funciona 'conversion'.
 #	rm -f rh/rhf1d/conversion ../bin/conversion
-#	11/11/20 epm: Por si acaso cqn tiene una version pasada por brc.
-#	Cuidado! Parece ser que en algunos Mac el comando 'rm' no distingue
-#	entre mayusculas y minusculas y elimina el fichero "hpopulations.f".
+#	11/11/20 epm: Borro Hpopulations.f por si cqn tiene una version
+#	pasada por brc. !Cuidado!: parece ser que en algunos Mac el comando
+#	'rm' no distingue entre mayusculas y minusculas y elimina el fichero
+#	hpopulations.f (que es el que sirve).
 #	rm -f Hpopulations.f
-#	04/04/21 epm: Borro un fichero que se ha colado no se de donde.
+#	04/04/21 epm: Borro un fichero que se me ha colado no se de donde.
 	@rm -f nstar
+#	05/05/21 epm: Borro taulinea*.f ya que solo trabajamos en LoS.
+	@rm -f taulinea.f taulinea2.f taulinea4.f taulinea4sub.f
 
 #	Finalmente borramos objetos y recompilamos.
 	@find . -name "*.a" -exec rm {} \;
@@ -394,11 +395,11 @@ install:
 #
 # -std=legacy
 #     Specify the standard to which the program is expected to conform, which
-#     may be one of ‘f95’, ‘f2003’, ‘f2008’, ‘f2018’, ‘gnu’, or ‘legacy’.
-#     The default value for std is ‘gnu’, which specifies a superset of the
+#     may be one of "f95", "f2003", "f2008", "f2018", "gnu", or "legacy".
+#     The default value for std is "gnu", which specifies a superset of the
 #     latest Fortran standard that includes all of the extensions supported
 #     by GNU Fortran, although warnings will be given for obsolete extensions
-#     not recommended for use in new code. The ‘legacy’ value is equivalent
+#     not recommended for use in new code. The "legacy" value is equivalent
 #     but without the warnings for obsolete extensions, and may be useful for
 #     old non-standard programs.
 #

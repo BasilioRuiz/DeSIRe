@@ -5,6 +5,8 @@ c ntau : numero de puntos en tau
 c tau  : log10(tau)
 c ierror=0 O.K. ierror=1 el modelo 1 no existe, ierror=2 el modelo 2 no existe
 c ierror=3 no existen los modelos 1 ni 2
+C WARNING! leemodi222 reads angular variables written in degrees but the output is in radians
+C WARNING! leemodi222 writes angular variables in degrees but the input is in radians
 
         subroutine leemodi222(iesc,model1,model2,atmos,ntau,ierror,
      &                        z1,pg1,ro1,z2,pg2,ro2)
@@ -16,18 +18,18 @@ c ierror=3 no existen los modelos 1 ni 2
         real*4 pg1(*),z1(*),ro1(*)
         real*4 pg2(*),z2(*),ro2(*)
         character model1*(*),model2*(*),a*1
-        character*40 msg
+        character*20 msg1,msg2
         common/nohaycampo/nohaycampo1,nohaycampo2
         common/nciclos/nciclos   !para marquardt, leeuve3, leemodi2
         data ivez/0/
 
-        epsilon=2.e-5   
+        epsilon=2.e-5
         ican=52
-
-        if(iesc.eq.0)then
+        dtor=1.7453293005625408e-2 ! degrees to radians
+        if(iesc.eq.0)then   !reading
 
            ivez=ivez+1
-c          leemos para contar las lineas         
+c          leemos para contar las lineas
            if(ivez .eq. 1)then
               open(ican,file=model1,status='old',err=800)
               i=0
@@ -45,10 +47,13 @@ c             por si al final del fichero hay un caracter blanco
               close(ican)
            end if
            if(ntau. gt. kt)then
-              write(msg,'(i4)') kt
-              call error(KSTOP,'leemodi222','Number of depth points in the'
-     &        //         ' model is larger than kt = '//trim(msg)//'\n'
-     &        //         ' Change PARAMETER file and recompile')
+              write(msg1,*) ntau
+              write(msg2,*) kt
+              call error(KSTOP,'leemodi222','The number of depth points in'
+     &        //         ' the model ('//trim(adjustl(msg1))//') is larger'
+     &        //         ' than kt = '//trim(adjustl(msg2))//'\n'
+     &        //         ' Decrease the number of depth points or change'
+     &        //         ' the PARAMETER file')
            end if
 
 c          leemos el modelo 1
@@ -73,7 +78,7 @@ c          leemos el modelo 1
               atmos(8*ntau+1)=vmac1
               atmos(8*ntau+2)=fill1
               if(peso1.lt.(-1.*epsilon).or.peso1.gt.100.+epsilon) then
-                 call error(KSTOP,'leemodi222','Stray light of model 1'
+                 call error(KSTOP,'leemodi222','The stray light of model 1'
      &           //         ' is outside the interval [0,100]')
               endif           
               atmos(16*ntau+5)=peso1  !% de luz difusa
@@ -86,8 +91,8 @@ c          leemos el modelo 1
                  atmos(i+4*ntau)=h(i)
                  if(abs(h(i)).gt.1.)nohaycampo1=1
                  atmos(i+5*ntau)=vz(i)
-                 atmos(i+6*ntau)=gam(i)
-                 atmos(i+7*ntau)=phi(i)
+                 atmos(i+6*ntau)=gam(i)*dtor  !changing to radians
+                 atmos(i+7*ntau)=phi(i)*dtor  !changing to radians
                  if(i .gt. 1)then
                     if((z1(i) - z1(i-1)) .lt. 1.)z1(i)=z1(i-1)+1.
                  end if 
@@ -116,7 +121,7 @@ c          leemos el modelo 2
                  close(ican)
               end if
               if(ntau2.ne.ntau)then
-                 call error(KSTOP,'leemodi222','Initial models are'
+                 call error(KSTOP,'leemodi222','The initial models are'
      &           //         ' discretized in different spatial grids')
               end if
 
@@ -130,13 +135,13 @@ c          leemos el modelo 2
 
               if(abs(1-(fill1+fill2)).gt.epsilon)then
                  fill2=1.-fill1
-                 write(msg,*)fill2
+                 write(msg1,*)fill2
                  call error(KWARN,'leemodi222','For model 2, the filling'
-     &           //         ' factor is taken to be '//msg)
+     &           //         ' factor is taken to be '//adjustl(msg1))
               end if
               atmos(16*ntau+3)=vmac2
               atmos(16*ntau+4)=fill2
-                                    
+
               nohaycampo2=0
               do i=1,ntau
                  atmos(i+8*ntau+2)=tau(i)
@@ -146,8 +151,8 @@ c          leemos el modelo 2
                  atmos(i+12*ntau+2)=h(i)
                  if(abs(h(i)).gt.1.)nohaycampo2=1
                  atmos(i+13*ntau+2)=vz(i)
-                 atmos(i+14*ntau+2)=gam(i)
-                 atmos(i+15*ntau+2)=phi(i)
+                 atmos(i+14*ntau+2)=gam(i)*dtor  !changing to radians
+                 atmos(i+15*ntau+2)=phi(i)*dtor  !changing to radians
                  if(i .gt. 1)then
                     if((z2(i) - z2(i-1)) .lt. 1.)z2(i)=z2(i-1)+1.
                  end if 
@@ -156,9 +161,9 @@ c          leemos el modelo 2
               end do
               if(abs(1-(fill1+fill2)).gt.epsilon)then
                  fill2=1.-fill1
-                 write(msg,*)fill2
+                 write(msg1,*)fill2
                  call error(KWARN,'leemodi222','For model 2, the filling'
-     &           //         ' factor is taken to be '//msg)
+     &           //         ' factor is taken to be '//adjustl(msg1))
               end if
               paso2=tau(2)-tau(1)
               if(paso2.ge.0)then
@@ -174,11 +179,11 @@ c          leemos el modelo 2
      &              //         ' to be used to discretize models 1 and 2')
                  end if
               end do
-             
+
            end if !if(ierror.ne.2)
-         
+
         else
-        
+
 c          escribimos los modelos
            peso=atmos(16*ntau+5)
 
@@ -187,7 +192,9 @@ c          escribimos los modelos
            do i=1,ntau
               if(atmos(i+ntau) .lt. 500)atmos(i+ntau)=500.            !T
               if(atmos(i+ntau) .gt. 9.999e4)atmos(i+ntau)=9.999e4     !T
-              write(ican,100)(atmos(i+j*ntau),j=0,7),z1(i),pg1(i),ro1(i)
+              gamma_deg=atmos(i+6*ntau)/dtor  !inclination in degrees
+              phi_deg=atmos(i+7*ntau)/dtor    !azimuth in degrees
+              write(ican,100)(atmos(i+j*ntau),j=0,5),gamma_deg,phi_deg,z1(i),pg1(i),ro1(i)
            end do
            close(ican)
                 
@@ -197,7 +204,9 @@ c          escribimos los modelos
               do i=1,ntau
                  if(atmos(i+9*ntau+2) .lt. 500)atmos(i+9*ntau+2)=500.        !T
                  if(atmos(i+9*ntau+2) .gt. 9.999e4)atmos(i+9*ntau+2)=9.999e4 !T
-                 write(ican,100)(atmos(i+j*ntau+2),j=8,15),z2(i),pg2(i),ro2(i)
+                   gamma_deg=atmos(i+14*ntau+2)/dtor  !inclination in degrees
+                   phi_deg=atmos(i+15*ntau+2)/dtor    !azimuth in degrees                 
+                 write(ican,100)(atmos(i+j*ntau+2),j=8,13),gamma_deg,phi_deg,z2(i),pg2(i),ro2(i)
               end do
               close(ican)
            end if
@@ -217,7 +226,7 @@ c          escribimos los modelos
 802     call error(KSTOP,'leemodi222','Incorrect format in the file(s)'
      &  //         ' containing the model(s)')
 
-803     call error(KSTOP,'leemodi222','Unable to open file model 1 or 2')
+803     call error(KSTOP,'leemodi222','Unable to open the file model 1 or 2')
 
 
 900     call error(KWARN,'leemodi222','Is the file containing model 2'

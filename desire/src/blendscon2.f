@@ -19,13 +19,13 @@ c para las funciones respuesta
          real*4 x(kt)
 
 c para los perfiles 
-         real*4 atmos(*),inten(*),icont,con_i(kl)
+         real*4 atmos(*),inten(*),icont,continuoharr(kld)  !con_i(kl)
          real*4 wcon_i1(kl),wcon_i2(kl)
 
 c para la atmosfera
          real*4 tau(kt),t(kt),pe(kt),vtur(kt),vz(kt)
          real*4 taue(kt),vof(kt),logpe(kt)
-	     real*4 continuoh    
+         real*4 continuoh    
          integer mnodos(*)
 
 c para la matriz de absorcion y sus derivadas
@@ -47,10 +47,10 @@ c para los parametros atomicos y coeficientes de absorcion
          real*4 chi10_arr(kl),chi20_arr(kl),abu_arr(kl)
          integer*4 nel_arr(kl)         
          real*4 lambda_arr(kl),croot_arr(kl),wvac_arr(kl),weight_arr(kl)
-	     real loggf,nair,mvdop,meta0,ma
-	     real*4 y(kt),table(kt,16)
-	     real*4 ck5(kt),dk5(kt),ddk5(kt),zeff
-	     real*4 ckappa,ckappa5,dkappa,dkappa5,ddkappa,ddkappa5
+         real loggf,nair,mvdop,meta0,ma
+         real*4 y(kt),table(kt,16)
+         real*4 ck5(kt),dk5(kt),ddk5(kt),zeff
+         real*4 ckappa,ckappa5,dkappa,dkappa5,ddkappa,ddkappa5
          real*4 alfa,sigma 
          integer nlow,nup
 
@@ -59,7 +59,7 @@ c para el damping
          real*4 vv_arr(kl),beta_arr(kl)         
          
 c para la emisividad y la funcion fuente
-         real*8 beta1(kl,kt),beta2(kl,kt),blow,bup,bratio
+         real*8 beta1(kl,kt),beta2(kl,kt),blow,bup !,bratio
          real*8 wwwdbl,a_plck,c_plck,exalfa_plck,bpdob
          real*4 emisividad(kt,kld),emisividad_dt(kt,kld)
          real*4 bp(kt),bt(kt),bp0(kt),bt0(kt),dbp(kt)
@@ -82,7 +82,7 @@ c para hermite_c
 c para barklem
          real*4 bol,pir,v0,melectron,mhidrogeno,xmasaproton,avo,uma
          real*4 gas,coc2,coc3
-	     real*8 saha_db,dsaha_db
+         real*8 saha_db,dsaha_db
          real*8 u12_db,u23_db,u33_db
          real*8 du12_db,du23_db,du33_db
          real*8 ddu12_db,ddu23_db,ddu33_db
@@ -96,21 +96,22 @@ c lugares comunes de memoria
          common/datosdamping/chydro_arr,xmu1_arr,xmu2_arr,xmu3_arr,vv_arr,beta_arr
          common/loggfarr/gf_arr,energy_arr
          common/pot_ion/chi10_arr,chi20_arr,nel_arr,abu_arr
-	     common/piis/piis
+         common/piis/piis
          common/yder/y,dyt,dyp,alpha  !coef. de abs. del continuo y su der. t,p
          common/segunda/tau,taue,deltae,deltai,delt2i
          common/offset/voffset  !para respuestas
          common/iautomatico/iautomatico
 c        common/mu/cth                              !esto esta puesto a 1 en sir
          common/anguloheliocent/xmu 
-         common/continuos/con_i
+c        common/continuos/con_i
+         common/continuosarr/continuoharr
          
          data iprimera/0/
 
 c nble es el numero de componentes de cada linea
-	     c=2.99792458e+10 	!vel. de la luz en cm/seg
-	     piis=1./sqrt(3.1415926)
-	     g=xmu*2.7414e+4	 !gravedad cm/s^2 en fotosfera solar   
+         c=2.99792458e+10 	!vel. de la luz en cm/seg
+         piis=1./sqrt(3.1415926)
+         g=xmu*2.7414e+4	 !gravedad cm/s^2 en fotosfera solar   
          avog=6.023e23
          bol=1.3807e-16         !erg/s
          pir=3.1415926
@@ -284,7 +285,7 @@ c datos de la linea
               if(ible.eq.1)wlengt1=wlengt
               if(ible.eq.1)wlengt1dbl=wlengtdbl
               dlamda0(iln)=wlengt1
-              continuoh=con_i(iln) 
+c             continuoh=con_i(iln) 
 
 c parametros atomicos
              chi10=chi10_arr(ixx)
@@ -408,12 +409,17 @@ c un termino proporcional a la raiz cubica de la densidad de e-
                end if
 
 c introduzco la correccion por emision estimulada
-               corre=1.-exp(-1.4388/(ts*wvac))
-               dcorre=(corre-1.)*(1.4388/(ts*ts*wvac))
-               deta0=deta0*corre+eta0*dcorre
-               ddeta0=ddeta0*corre
-               eta0=eta0*corre
-               meta0=-eta0*mvdop/vdop
+              blow=beta1(ixx,i)
+              blows=real(blow)
+              bup=beta2(ixx,i)
+              c3e=1.4388/(ts*wvac)
+              corre=1.-bup*exp(-c3e)/blow
+              dcorre=(corre-1.)*c3e/ts
+ 
+              deta0=deta0*corre+eta0*dcorre
+              ddeta0=ddeta0*corre
+              eta0=eta0*corre
+              meta0=-eta0*mvdop/vdop
 
 c calculo el damping 'a' mediante Unsold
 c despreciaremos la dependencia del damping con t o pe en el calcu
@@ -488,21 +494,10 @@ c dtplanck" es la derivada de la f. de planck con temperatura.
                   bp0(i)=real(bpdob)
                   bt0(i)=real(bpdob*bpdob*a_plck*exalfa_plck/(dble(ts)*dble(ts)*c_plck))
                end if
-                
-               blow=beta1(ixx,i)
-               blows=real(blow)
-               bup=beta2(ixx,i)
-               bratio=blow/bup
-
-               if(dabs(bratio-1.) .lt. 1.d-6)then
-                  bpdob=c_plck/(exalfa_plck-1.d0)
-                  bp(i)=real(bpdob)
-                  bt(i)=real(bpdob*bpdob*a_plck*exalfa_plck/(dble(ts)*dble(ts)*c_plck))
-               else
-                  bpdob=c_plck*bup/(blow*exalfa_plck-bup)
-                  bp(i)=real(bpdob)
-                  bt(i)=real(bpdob*bpdob*a_plck*exalfa_plck*blow/(dble(ts)*dble(ts)*c_plck*bup))
-               end if
+            
+               bpdob=c_plck*bup/(blow*exalfa_plck-bup)
+               bp(i)=real(bpdob)
+               bt(i)=real(bpdob*bpdob*a_plck*exalfa_plck*blow/(dble(ts)*dble(ts)*c_plck*bup))
 
                eta0=eta0*blows
                deta0=deta0*blows
@@ -562,7 +557,7 @@ c muestreo en lambda , calculo las l.d.o. de cada punto
 	       ikk=ikk0+i
 	       if(ible.eq.nble(iln).and.i.eq.npas(iln))ikk0=ikk0+npas(iln)
 	       dlamda=(dlongd(ikk)+(wlengt1-wlengt)*1.e3)*1.e-11  !en cm.
-	   
+
 c calculo etar,etal,etap y sus derivadas
 	   do 101 j=1,ntau     !do en tau
 	      a=table(j,10)	!damping
@@ -600,7 +595,7 @@ c calculo etar,etal,etap y sus derivadas
 c calculamos la emisividad
               emisividad(j,i)=emisividad(j,i)+bp(j)*t3*etar
               emisividad_dt(j,i)=emisividad_dt(j,i)+bt(j)*t3*etar+bp(j)*(t4*etar+t3*(ettar*t11+ettvr))
-              
+          
 101	     continue !fin do en tau(estamos aun dentro del do en lamda)
 10	  continue	!fin del do en lambda(pasos)
 	end do   !fin del do en blends
@@ -633,6 +628,7 @@ c en el nodo (en 'nodos')
 c !ojo las perturbaciones son relativas a los parametros en z no a linea vision
 
         ikk1=ikk1+1
+        continuoh=continuoharr(ikk1)
 
         if(mnodos(1).ne.0)then
            if(mnodos(2).eq.0)then

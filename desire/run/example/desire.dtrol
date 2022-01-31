@@ -1,5 +1,5 @@
 Number of cycles          (*): 5.001             !0=synthesis
-Observed profiles         (*): observed.per
+Observed profiles         (*): observed.spc
 Stray light file             :                   !none=no stray light contam
 PSF file                     :                   !none=no convolution with PSF
 Wavelength grid file      (s): input/malla.grid  !none=automatic selection

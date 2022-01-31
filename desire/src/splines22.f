@@ -5,7 +5,7 @@
         parameter (kt2=kt*kn)  !lo pongo en ff, que antes tenia 5250
         real*4 a(kt,kt),x(*),y(*),tau(*),yy(*),f(kt,kt),ff(kt2)
         real*4 taure(kt),peso(5),sum(kt)
-        COMMON/FACTORSPLIN/FF
+        common/factorsplin/ff
         common/nspl_lin/nspl_lin !para seleccionar interp.lineal=(1,3 o 5) o splines=(0,2 o 4)
 
         n=no+2

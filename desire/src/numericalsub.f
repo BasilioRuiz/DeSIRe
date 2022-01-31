@@ -25,12 +25,13 @@ c ________________________________________________________________________
 c para la atmosfera
         real*4 atmosLG(kt12),atmosLGpert(kt12)
         integer nlin(kl),npas(kl),ist(4),nble(kl),nfrecuencies
-        data ivez/0/
         
         common/istatus12/istatus1,istatus2
         common/numero_LTE/nlam_LTE
        	common/responde2/ist,ntau,ntl,nlin,npas,nble
        	common/ldeo/dlamda,dlamda0
+
+        data ivez/0/
 
         ivez=ivez+1
         bol=1.3806488d-16  !erg/s

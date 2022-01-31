@@ -26,7 +26,7 @@ c       (Es innecesario si se compila con -fno-automatic)
         save w_vac
 
         common/responde2/ist,ntau,ntl,nlin,npas,nble
-        common/niveles/nlow_i,nup_i,atom_nlte,linea_nlte
+        common/niveles/nlow_i,nup_i,linea_nlte,atom_nlte
         common/wavearrdble/wavedbl_arr
         common/ldeo/dlongd,dlamda0
 

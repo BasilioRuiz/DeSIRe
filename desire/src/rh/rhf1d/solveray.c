@@ -2,7 +2,7 @@
 
        Version:       rh2.0, 1-D plane-parallel
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Fri May  1 09:57:08 2020 --
+       Last modified: Fri May  7 17:01:49 2021 --
 
        Updates (epm): Adaptation to the DeSIRe project.
                       Interoperability C-Fortran.
@@ -60,7 +60,7 @@
 
 void closefiles(void);
 
-int solveray(int argc, char *argv[], int *nspect, int *nsize, double *lambda,
+int solveray(int argc, char *argv[], int *nsize, int *nspect, double *lambda,
              double *I, double *Q, double *U, double *V, double *xmu);
 
 
@@ -73,22 +73,29 @@ extern Spectrum spectrum;
 extern InputData input;
 extern char messageStr[];
 
+// 02/07/19 epm: Boolean variables to control new RH executions.
+extern bool_t new_background;   // for background.c :: Background()
+extern bool_t new_hminus_ff;    // for hydrogen.c :: Hminus_ff()
+extern bool_t new_h2minus_ff;   // for hydrogen.c :: H2minus_ff()
+extern bool_t new_h2plus_ff;    // for hydrogen.c :: H2plus_ff()
+extern bool_t new_passive_bb;   // for metal.c :: passive_bb()
+
 
 /* ------- begin -------------------------- solveray.c -------------- */
 
 // 29/05/19 epm: Function to be called from Fortran.
-int solveray_( int *nspect, int *nsize, double *lambda, double *stokes_I,
+int solveray_( int *nsize, int *nspect, double *lambda, double *stokes_I,
                double *stokes_Q, double *stokes_U, double *stokes_V,
                double *xmu )
 {
   static char *argv[] = {"solveray"};
   int argc = sizeof(argv) / sizeof(argv[0]);
-  return(solveray(argc, argv, nspect, nsize, lambda,
+  return(solveray(argc, argv, nsize, nspect, lambda,
                   stokes_I, stokes_Q, stokes_U, stokes_V, xmu));
 }
 
 int solveray( int argc, char *argv[],
-              int *nspect, int *nsize, double *lambda, double *stokes_I,
+              int *nsize, int *nspect, double *lambda, double *stokes_I,
               double *stokes_Q, double *stokes_U, double *stokes_V,
               double *xmu )
 {
@@ -103,6 +110,13 @@ int solveray( int argc, char *argv[],
   FILE   *fp_out, *fp_ray, *fp_stokes, *fp_out_asc;
   XDR     xdrs;
   ActiveSet *as;
+
+  // 02/07/19 epm: New RH execution.
+  new_background = TRUE;
+  new_hminus_ff  = TRUE;
+  new_h2minus_ff = TRUE;
+  new_h2plus_ff  = TRUE;
+  new_passive_bb = TRUE;
 
   setOptions(argc, argv);
   getCPU(0, TIME_START, NULL);
@@ -400,12 +414,23 @@ int solveray( int argc, char *argv[],
 
   // xdr_destroy(&xdrs);
   // fclose(fp_out);
-  printTotalCPU();
 
-  // 09/09/19 epm: Just before finishing, close open writing descriptors.
+  // 09/09/19 epm: Before finishing, close open writing descriptors.
   closefiles();
 
+  // 07/05/21 han: Free memory after closing files.
+  freeSpectrum(&spectrum);
+  freeAtmos(&atmos);
+  freeGeometry(&geometry);
+
+  printTotalCPU();
+
   // 02/02/21 epm: C memory leak detection library.
+  // No puedes liberar todos los malloc porque hay algunos asignados a
+  // variables estaticas que no deben ser liberados en toda la ejecucion.
+  // Por ejemplo: hydrogen.c::467, voigt.c::466, metal.c::modulo complicado.
+  // FreeMemoryLeakNoRealloc();  // don't do that
+  // PrintMemoryLeakBlocks();
   // PrintTotalAllocatedMemory();
   // PrintMemoryReservedByCMemDbgLibrary();
 

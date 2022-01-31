@@ -96,8 +96,8 @@ void backgrOpac(int Nlambda, double *lambda)
     }
     xdrstdio_create(&xdrs, fp_out, XDR_ENCODE);
 
-    printf("%s Processing lambda = %9.3f [nm]\n",
-	   (nspect == 0) ? "\n\n " : " ", lambda[nspect]);
+    //printf("%s Processing lambda = %9.3f [nm]\n",
+    //       (nspect == 0) ? "\n\n " : " ", lambda[nspect]);
     xdr_double(&xdrs, &lambda[nspect]);
 
     write_contrib_xdr(&xdrs, "THOMSON", type = SCATTERING,

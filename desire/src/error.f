@@ -71,7 +71,7 @@ c     Format '$': no print the default new line, '/': print a new line.
          end if
 
       else if (level .eq. KSTOP) then
-         write(*, '(/,a,a,/,a,$)') "-FATAL ERROR in routine ", routine, " "
+         write(*, '(/,a,a,/,a,$)')"-TERMINATING ERROR in routine ",routine," "
          call writing(text)
          write(*, '(/,a,/)') " Exiting....."
          stop

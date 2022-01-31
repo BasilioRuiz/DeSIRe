@@ -2,7 +2,7 @@
 
        Version:       rh2.0, 1-D plane-parallel
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Thu Feb 11 12:03:51 2021
+       Last modified: Fri May  7 17:01:49 2021 --
 
        Updates (epm): Adaptation to the DeSIRe project.
                       Interoperability C-Fortran.
@@ -39,9 +39,10 @@
 /* --- Function prototypes --                          -------------- */
 
 void closefiles(void);
+void save_rhdc(void);
+void save_rhhpop(void);
 
-int rhf1d(int argc, char *argv[],
-          int *nspace, int *nlevel, int *nsize, double *coefs);
+int rhf1d(int argc, char *argv[]);
 
 
 /* --- Global variables --                             -------------- */
@@ -63,21 +64,18 @@ extern bool_t new_passive_bb;   // for metal.c :: passive_bb()
 /* ------- begin -------------------------- rhf1d() ----------------- */
 
 // 23/05/19 epm: Function to be called from Fortran.
-int rhf1d_( int *nspace, int *nlevel, int *nsize, double *coefs )
+int rhf1d_( )
 {
   static char *argv[] = {"rhf1d"};
   int argc = sizeof(argv) / sizeof(argv[0]);
-  return(rhf1d(argc, argv, nspace, nlevel, nsize, coefs));
+  return(rhf1d(argc, argv));
 }
 
-int rhf1d( int argc, char *argv[],
-           int *nspace, int *nlevel, int *nsize, double *coefs )
+int rhf1d( int argc, char *argv[] )
 {
   bool_t write_analyze_output, equilibria_only;
   double deltaJ;
   int    niter, nact;
-  int    index, i, k;
-  int    ier;
 
   Atom *atom;
   Molecule *molecule;
@@ -192,65 +190,23 @@ int rhf1d( int argc, char *argv[],
 
   getCPU(1, TIME_POLL, "Write output");
 
-  /* --- 06/06/19 epm: Save the populations in the array argument --- */
+  // 06/06/21 epm: Save RH information to SIR.
+  save_rhdc();
+  save_rhhpop();
 
-  *nspace = atmos.Nspace;
-  *nlevel = atom->Nlevel;
-  if (*nsize >= (*nspace) * (*nlevel))
-  {
-    for (index = 0, k = 0;  k < *nspace;  k++)
-    {
-      for (i = 0;  i < *nlevel;  i++)
-      {
-        coefs[index++] = atom->n[i][k] / atom->nstar[i][k];
-      }
-    }
-    ier = 0;
-  }
-  else if (*nsize == 0)   // we don't want the data
-  {
-    ier = 0;
-  }
-  else   // unsufficient memory for 'coefs'
-  {
-    ier = -1;
-  }
+  // 09/09/19 epm: Before finishing, close open writing descriptors.
+  closefiles();
+
+  // 07/05/21 han: Free memory after closing files.
+  freeSpectrum(&spectrum);
+  freeAtmos(&atmos);
+  freeGeometry(&geometry);
 
   printTotalCPU();
 
-  // 09/09/19 epm: Just before finishing, close open writing descriptors.
-  closefiles();
   // 04/04/20 epm: Print a new line at the end of rhf1d.
   Error(MESSAGE, NULL, "\n");
 
-  return(ier);
+  return(0);
 }
 /* ------- end ---------------------------- rhf1d() ----------------- */
-
-/* ------- begin -------------------------- load_hpop_rh_() --------- */
-
-// 11/11/20 epm: Function to be called from Fortran.
-void load_hpop_rh_( int *ntau, float nh[*ntau][6] )
-{
-  int i, j, k;
-  //FILE *pepe = fopen("pepe","w");
-
-  // Pass the H populations to SIR (Fortran). Be aware that Fortran and
-  // C have different conventions for storing multi-dimensional arrays.
-  // Fortran stores multi-dimensional arrays in column-major order while
-  // C arrays are stored in row-major order.
-
-  // Unlike SIR, RH's atmosphere model runs from upper layers to lower
-  // ones, so we need to turn around the array.
-  for (k = *ntau-1, i = 0;  k >= 0;  k--, i++)
-  {
-    for (j = 0;  j < 6;  j++)
-    {
-       nh[i][j] = atmos.H->n[j][k]*1e-6;  // convert to CGS system
-    }
-    //fprintf(pepe, "%15.8e %15.8e %15.8e %15.8e %15.8e %15.8e\n",
-    //        nh[i][0],nh[i][1],nh[i][2],nh[i][3],nh[i][4],nh[i][5]);
-  }
-  //fclose(pepe);
-}
-/* ------- end ---------------------------- load_hpop_rh_() --------- */

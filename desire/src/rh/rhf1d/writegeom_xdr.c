@@ -2,7 +2,7 @@
 
        Version:       rh2.0, 1-D plane-parallel
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Wed Jan 26 17:34:29 2000 --
+       Last modified: Thu May  6 23:29:38 2021 --
 
        --------------------------                      ----------RH-- */
 
@@ -74,3 +74,27 @@ void writeGeometry(Geometry *geometry)
   fclose(fp_out);
 }
 /* ------- end ---------------------------- writeGeometry.c --------- */
+
+
+/* ------- begin -------------------------- freeGeometry.c ---------- */
+
+void freeGeometry(Geometry *geometry)
+{
+  /* --- Free space allocated for the geometry structure -- --------- */
+
+  free(geometry->mux);
+  free(geometry->muy);
+  free(geometry->muz);
+  free(geometry->wmu);
+
+  free(geometry->height);
+  free(geometry->cmass);
+  free(geometry->tau_ref);
+  free(geometry->vel);
+
+  if (geometry->vboundary[TOP] == IRRADIATED)
+    freeMatrix((void **) geometry->Itop);
+  if (geometry->vboundary[TOP] == IRRADIATED)
+    freeMatrix((void **) geometry->Ibottom);
+}
+/* ------- end ---------------------------- freeGeometry.c ---------- */

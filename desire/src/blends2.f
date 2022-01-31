@@ -31,7 +31,7 @@ c para las funciones respuesta
         real*4 x(kt)
 
 c para los perfiles 
-        real*4 atmos(*),stok(*),svec(4),con_i(kl)
+        real*4 atmos(*),stok(*),svec(4),continuoharr(kld)  !con_i(kl)
 
 c para la atmosfera
         real*4 tau(kt),t(kt),pe(kt),vtur(kt),h(kt),vz(kt)
@@ -69,7 +69,7 @@ c para los parametros atomicos y coeficientes de absorcion
         real*4 ckappa,ckappa5,dkappa,dkappa5,ddkappa,ddkappa5
         
 c para la emisividad y la funcion fuente
-        real*8 beta1(kl,kt),beta2(kl,kt),blow,bup,bratio
+        real*8 beta1(kl,kt),beta2(kl,kt),blow,bup!,bratio
         real*8 wwwdbl,a_plck,c_plck,exalfa_plck,bpdob
         real*4 emisividad(kt,kld),emisividad_dt(kt,kld)
         real*4 bp(kt),bt(kt),bp0(kt),bt0(kt),dbp(kt)
@@ -80,10 +80,8 @@ c para el damping
          real*4 vv_arr(kl),beta_arr(kl)
         
 c para el patron zeeman
-        character atom*2
         parameter (mc=20)       !numero maximo de componentes zeeman
         integer mult(2),ji(2),jf(2)
-        character design(2)*1
         real*4 tam(2),abu
         real*4 dlp(mc),dll(mc),dlr(mc),sp(mc),sl(mc),sr(mc)
         real*4 dlp_arr(mc,kl),dll_arr(mc,kl),dlr_arr(mc,kl)
@@ -128,12 +126,13 @@ c lugares comunes de memoria
 c       common/mu/cth   !este esta puesto a 1 en sir
         common/anguloheliocent/xmu 
         common/pgmag/ipgmag
-        common/continuos/con_i
+c       common/continuos/con_i
         common/integrationmethod/intemethod  !integration method 0=herm_int,1=herm,2=bzr3,3=bzr3log 
         common/pot_ion/chi10_arr,chi20_arr,nel_arr,abu_arr
         common/patronzeeman/dlp_arr,dll_arr,dlr_arr,sp_arr,sl_arr,sr_arr,np_arr,nl_arr,nr_arr  
         common/componente_nlte/linea_all_nlte
-                      
+        common/continuosarr/continuoharr
+                               
         data iprimera/0/
                  
 c nble es el numero de componentes de cada linea
@@ -335,7 +334,7 @@ c       call densidad(ntau,tau,t,pe,ck5_ro,pgas,ro) !ck5_ro=kap/ro
               if(ible.eq.1)wlengt1=wlengt
               if(ible.eq.1)wlengt1dbl=wlengtdbl
               dlamda0(iln)=wlengt1
-              continuoh=con_i(iln) 
+c             continuoh=con_i(iln) 
 
 c parametros atomicos
              chi10=chi10_arr(ixx)
@@ -480,8 +479,13 @@ c un termino proporcional a la raiz cubica de la densidad de e-
            end if
            
 c introduzco la correccion por emision estimulada
-           corre=1.-exp(-1.4388/(ts*wvac))
-           dcorre=(corre-1.)*(1.4388/(ts*ts*wvac))
+           blow=beta1(ixx,i)
+           blows=real(blow)
+           bup=beta2(ixx,i)
+           c3e=1.4388/(ts*wvac)
+           corre=1.-bup*exp(-c3e)/blow
+           dcorre=(corre-1.)*c3e/ts
+ 
            deta0=deta0*corre+eta0*dcorre
            ddeta0=ddeta0*corre
            eta0=eta0*corre
@@ -566,10 +570,10 @@ c dtplanck" es la derivada de la f. de planck con temperatura.
                    bt0(i)=real(bpdob*bpdob*a_plck*exalfa_plck/(dble(ts)*dble(ts)*c_plck))
                 end if
                 
-                blow=beta1(ixx,i)
-                blows=real(blow)
-                bup=beta2(ixx,i)
-                bratio=blow/bup
+c                blow=beta1(ixx,i)
+c                blows=real(blow)
+c                bup=beta2(ixx,i)
+c                bratio=blow/bup
                 
                 if(lineaallnlte .eq. 1)then
                    bpdob=c_plck*bup/(blow*exalfa_plck-bup)
@@ -710,8 +714,8 @@ c calculamos la matriz de absorcion
               
 c calculamos la emisividad
               if(lineaallnlte .eq. 1)then
-                 emisividad(j,i)=emisividad(j,i)+bp(j)*t3*etar
-                 emisividad_dt(j,i)=emisividad_dt(j,i)+bt(j)*t3*etar+bp(j)*(t4*etar+t3*(ettar*t11+ettvr))
+                 emisividad(j,i)=emisividad(j,i)+bp(j)*t3*etap
+                 emisividad_dt(j,i)=emisividad_dt(j,i)+bt(j)*t3*etap+bp(j)*(t4*etap+t3*(ettap*t11+ettvp))
               end if
 
 c calculamos la derivada de la matriz de absorcion con gamma
@@ -958,6 +962,7 @@ c introducimos el paso en tau para pasar la integral sobre las f. resp.
 c a sumatorio y normalizmos por el continuo
 
         ikk1=ikk1+1
+        continuoh=continuoharr(ikk1)
         ikk4=ikk1-ntotal
         ikk5=ikk1-ntotal
         do isv=1,4

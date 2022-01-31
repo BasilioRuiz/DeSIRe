@@ -24,12 +24,14 @@
 
 enum Topology topology = ONE_D_PLANE;
 
-Atmosphere atmos;
-Geometry geometry;
-Spectrum spectrum;
-ProgramStats stats;
-InputData input;
-CommandLine commandline;
+// Inicializar una estructura: si en la lista aparecen menos inicializadores
+// que en la estructura los miembros restantes son inicializados a 0.
+Atmosphere atmos = {0};
+Geometry geometry = {0};
+Spectrum spectrum = {0};
+ProgramStats stats = {0};
+InputData input = {0};
+CommandLine commandline = {0};
 char messageStr[MAX_MESSAGE_LENGTH];
 
 // 02/07/19 epm: Boolean variables to control new RH executions.
@@ -40,11 +42,11 @@ bool_t new_h2plus_ff;    // for hydrogen.c :: H2plus_ff()
 bool_t new_passive_bb;   // for metal.c :: passive_bb()
 
 // 10/10/19 epm: Structure to pass Barklem data from SIR to RH.
-SIRBarklem sirbarklem;
+SIRBarklem sirbarklem = {0};
 // 04/04/20 epm: Structure to pass some command line flags from SIR to RH.
-SIRflags sirflags;
+SIRflags sirflags = {0};
 // 07/07/20 epm: Structure to pass Kurucz data from SIR to RH.
-SIRKurucz sirkurucz;
+SIRKurucz sirkurucz = {0};
 // 08/08/20 epm: Structure to pass abundance values from SIR to RH.
 SIRabun sirabun = {0,
                    NULL,
@@ -59,11 +61,18 @@ SIRabun sirabun = {0,
                     "PA","U","NP","PU","AM","CM","BK","CF","ES"}
                   };
 // 10/10/20 epm: Structure to pass the wavetable from SIR to RH.
-SIRwave sirwave;
+SIRwave sirwave = {0};
 // 10/10/20 epm: Structure to pass some keywords from SIR to RH.
-SIRkeywords sirkeywords;
+SIRkeywords sirkeywords = {0};
 // 11/11/20 epm: Structure to pass atmospheric models from SIR to RH.
-SIRatmos siratmos;
+SIRatmos siratmos = {0};
+// 04/04/21 epm: Structure to pass coupling data from SIR to RH.
+SIRcpl sircpl[2] = {{0}, {0}};
+
+// 06/06/21 epm: Structure to pass departure coefficients from RH to SIR.
+RHdc *rhdc = NULL;
+// 06/06/21 epm: Structure to pass H populations from RH to SIR.
+RHhpop rhhpop = {0};
 
 
 //____________________________________________________________________________

@@ -15,8 +15,6 @@
 	real*4 dcastigo(mfitmax),ddcastigo(mfitmax)
         integer iRH1,iRH2            !,ileoNLTE
         
-        data idiff/0/
-
 	common/uvesalida/stokesratio,ymodobs_RH
 	common/sigrealchi/sigreal,chireal,sumsq
         common/nciclos/nciclos   !del principal
@@ -30,7 +28,9 @@
         common/iRH/iRH1,iRH2 
         common/storing_diff/diff_NLTE_LTE
         common/storing_NLTE/scal_RH
-c        common/ileoNLTE/ileoNLTE
+c       common/ileoNLTE/ileoNLTE
+
+        data idiff/0/
 
         ndatosobs=ndata
         icastigo=0

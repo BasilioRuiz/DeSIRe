@@ -2,7 +2,7 @@
 
        Version:       rh2.0
        Author:        Han Uitenbroek (huitenbroek@nso.edu)
-       Last modified: Tue Feb  8 10:57:39 2000 --
+       Last modified: Fri May  7 16:09:49 2021 --
 
        --------------------------                      ----------RH-- */
 
@@ -120,3 +120,65 @@ void writeAtmos(Atmosphere *atmos)
   fclose(fp_out);
 }
 /* ------- end ---------------------------- writeAtmos.c ------------ */
+
+
+/* ------- begin -------------------------- freeAtmos.c ------------- */
+
+void freeAtmos(Atmosphere *atmos)
+{
+  register int n;
+  Element *element;
+
+  /* --- Free memory associated with atmospheric structure -- ------- */
+
+  free(atmos->N);      // 06/06/21 epm: add this free()
+  free(atmos->T);
+  free(atmos->ne);
+  free(atmos->vturb);  // 06/06/21 epm: add this free()
+  free(atmos->nHtot);
+  free(atmos->nHmin);
+
+  if (atmos->Stokes) {
+    free(atmos->B);
+    free(atmos->gamma_B);
+    free(atmos->chi_B);
+
+    freeMatrix((void **) atmos->cos_gamma);
+    freeMatrix((void **) atmos->cos_2chi);
+    freeMatrix((void **) atmos->sin_2chi);
+  }
+
+  for (n = 0;  n < atmos->Natom;  n++) {
+    if (atmos->atoms[n].active  ||  
+        atmos->hydrostatic  ||
+        input.solve_ne == ITERATION) 
+      freeAtom(&atmos->atoms[n]);
+  }
+  free(atmos->activeatoms);
+  
+  for (n = 0;  n < atmos->Nelem;  n++) {
+    element = &atmos->elements[n];
+    if (element->Nmolecule > 0)
+      free(element->mol_index);
+  }
+  free(atmos->elements);
+
+  for (n = 0;  n < atmos->Nmolecule;  n++) {
+    if (atmos->molecules[n].active  ||  
+        atmos->hydrostatic  ||
+        input.solve_ne == ITERATION) 
+      freeMolecule(&atmos->molecules[n]);
+  }
+  free(atmos->activemols);
+
+  free(atmos->backgrrecno);
+  free(atmos->backgrflags);
+
+  // 06/06/21 epm: Free also this array (allocated en hydrogen.c line 110).
+  if (!atmos->H_LTE)
+    if (!atmos->H->active) freeMatrix((void **) atmos->H->n);
+
+  // 06/06/21 epm: atmos.nH is freed in hydrogen.c line 151.
+  // freeMatrix((void **) atmos.nH);
+}
+/* ------- end ---------------------------- freeAtmos.c ------------- */

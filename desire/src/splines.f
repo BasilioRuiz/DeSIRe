@@ -5,7 +5,7 @@
         parameter (kt2=kt*kn)
         real*4 a(kt,kt),x(*),y(*),tau(*),yy(*),f(kt,kt),ff(kt2)
         real*4 taure(kt)
-        COMMON/FACTORSPLIN/FF
+        common/factorsplin/ff
         common/cambio/ncambno,ncambpre  !si 0,0 cambio nodos, cambio prec
 
 c ncambno vale 0 la primera vez que se corre un ciclo
