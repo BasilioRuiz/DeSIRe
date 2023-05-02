@@ -25,9 +25,6 @@ static inline double signFortran(const double val)
   return ((val >= 0.0)? 1.0 : -1.0);
 }
 
-/* --- Matrix inversion Cramer method SSE instructions -- ----------- */
-
-void SIMD_MatInv(float* src);
 
 /* --- Matrix inversion Shipley-Coleman (not used) --  -------------- */
 

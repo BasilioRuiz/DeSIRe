@@ -1,0 +1,36 @@
+## --- Machine dependent defs --                       -------------- ##
+#     
+#      CPU = arm64
+#      OS  = Darwin
+#
+#      Version:       rh2.0
+#      Author:        Han Uitenbroek (huitenbroek@nso.edu)
+#      Last modified: Tue Mar 22 17:01:29 2022 --
+#
+##     --------------------------                      ----------RH-- ##
+
+## --- Choose one if compilation is required for a specific target
+##     machine (use the fpversion command to determine optimal target)##
+
+TARGET =
+XARCH  =
+
+
+CC       = gcc
+CFLAGS   = -I../
+
+
+## --- If f90 compiler is not available replace loader with cc (LD = cc)
+
+LD       = gcc
+LDFLAGS  = -L../
+
+
+#      --                                              -------------- ##
+
+ARFLAGS  = rvs
+ARCHLIBS = -lm -lpthread
+ARCHINC  = 
+
+
+## ---                                                 -------------- ##

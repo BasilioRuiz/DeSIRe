@@ -37,6 +37,7 @@
 # 02/02/21  : (epm) Libreria externa para detectar fugas de memoria.
 # 03/03/21  : (epm) Paso el compilador al Makefile de RH.
 # 05/05/21  : (epm) Borro taulinea*.f ya que ahora solo hay modelos LoS.
+# 03/03/22  : (epm) Elimino -ffpe-summary pues en algunas maquinas no existe.
 #
 # ****************************************************************************
 
@@ -54,24 +55,23 @@
 # libreria -lpthread para el compilador gfortran.
 # 11/11/19 epm: No capturar ninguna excepcion (por la no convergencia) y
 # utilizar la opcion que salva las variables locales en memoria estatica
-# (si las capturamos y no ponemos -fno-automatic, gfortran produce un SIGFPE).
+# (si capturamos floating point exceptions se produce un SIGFPE y un core).
 # 06/06/20 epm: Se puede evitar el error del linker si 'kld' de PARAMETER
 # es muy grande (>= 10000). Leer los comentarios del final.
 
 ifeq ($(fc),gfortran)
-FC       = gfortran
-FFLAGS   = -Ofast -ffixed-line-length-none -fno-automatic \
-           -ffpe-summary=invalid,zero,overflow -std=legacy
-ARCHLIBS = -lpthread
+   FC       = gfortran
+   FFLAGS   = -Ofast -ffixed-line-length-none -fno-automatic -std=legacy
+   ARCHLIBS = -lpthread
 else
-FC       = ifort
-FFLAGS   = -O2 -extend_source -noautomatic
-ARCHLIBS =
+   FC       = ifort
+   FFLAGS   = -O2 -extend_source -noautomatic
+   ARCHLIBS =
 endif
 
 # 12/12/20 han: Required to the latest Ubuntu installation (20.10).
 ifneq ("$(wildcard /usr/include/tirpc)","")
-    ARCHLIBS += -ltirpc
+   ARCHLIBS += -ltirpc
 endif
 
 # 02/02/21 epm: Libreria externa para detectar fugas de memoria.
@@ -141,7 +141,6 @@ LIBSRC =amp2.f \
 	escribeFR.f \
 	fint.f \
 	fperfil2.f \
-	fperfil2err.f \
 	gasb.f \
 	gasb_db.f \
 	gasb_thermo.f \
@@ -171,8 +170,6 @@ LIBSRC =amp2.f \
 	lubksb.f \
 	ludcmp.f \
 	marqcoef2.f \
-	marqcoeferr.f \
-	marquarderr.f \
 	marquardt2.f \
 	matinx.f \
 	matinx2.f \
@@ -329,11 +326,16 @@ install:
 	@rm -f nstar
 #	05/05/21 epm: Borro taulinea*.f ya que solo trabajamos en LoS.
 	@rm -f taulinea.f taulinea2.f taulinea4.f taulinea4sub.f
+#	03/03/22 epm: Borro Makefile_cross, es obsoleto y no sirve para nada.
+	@rm -f Makefile_cross rh/rhf1d/Makefile_cross
+#	04/04/22 epm: Fichero renombrado (makefile.readme -> makefile-readme).
+	@rm -f rh/makefile.readme
 
 #	Finalmente borramos objetos y recompilamos.
 	@find . -name "*.a" -exec rm {} \;
 	@find . -name "*.o" -exec rm {} \;
 	$(MAKE) fc=$(FC) all
+
 #	04/04/20 epm: Ya no distribuimos los ejecutables de RH.
 #	11/11/20 epm: Con los modelos por memoria no funciona 'conversion'.
 #	$(MAKE) -C rh/rhf1d FC=$(FC) conversion

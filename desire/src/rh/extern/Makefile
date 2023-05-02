@@ -4,7 +4,7 @@
 # Description   : Compilation of the memory leak detection library.
 # Project       : DeSIRe
 # Creation date : 02/02/21
-# Autor         : epm@iac.es
+# Author        : epm@iac.es
 #
 # ****************************************************************************
 

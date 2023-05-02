@@ -123,4 +123,5 @@ c     can go through the string until len_trim() position.
       return
       end
 
+
 c_____________________________________________________________________________

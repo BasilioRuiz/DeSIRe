@@ -31,6 +31,7 @@ c para la atmosfera
         real*4 atmosr(*),atmos(kt16),atmostry(kt16),vmac1,vmac2
 c       real*4 atmosoutold(kt16)
         real*4 atmos1(kt8),atmos2(kt8),vof(kt),gam1(kt),fi1(kt)
+        real*4 atmos1err(kt8),atmos2err(kt8)
         real*4 atmos1LG(kt12),atmos2LG(kt12)  !,tauRH_step(kt)
 c       real*4 atmos1LGold(kt12)
 c para los perfiles y f. respuesta
@@ -103,6 +104,7 @@ c       common/atmos1LGold/atmos1LGold
         common/brklm/ntotal_lines,atom_arr,istage_arr,alfa_arr,sigma_arr,wave_arr
         common/hydroge_populations/hydro1,hydro2    !from deSIRe float (6,kt),H populations 
         common/scalemodelRH/imassortau  !integer    0=logtau, 1=mass column from deSIRe
+        common/atmoserr/atmos1err,atmos2err  !to desire for error evaluation
 c       common/tauRH_step/tauRH_step
 c       common/atmosSIRfromRH/atmosnew,pe1_change,pe2_change,pg1_change,pg2_change  
 c       common/ileoNLTE/ileoNLTE
@@ -335,7 +337,7 @@ c ************************* atmosfera 1 ***************************************
                  end if 
               end if   
 
-              call blendscon2(atmos1,scal1,rt1,rp1,rv1,rm1,mnod1tot,beta1_1,beta2_1)
+              call blendscon2(atmos1,scal1,rt1,rp1,rv1,rm1,mnod1tot,beta1_1,beta2_1,atmos1err)
 
               icallingRH1numericalT1=0
               if(icallingRH1.eq.1 .and. numerical(1).eq.1)icallingRH1numericalT1=1
@@ -399,7 +401,7 @@ c              endif
                     end if
                  end if   
 
-                 call blends2(atmos1,scal1,rt1,rp1,rh1,rv1,rg1,rf1,rm1,mnod1tot,beta1_1,beta2_1)
+                 call blends2(atmos1,scal1,rt1,rp1,rh1,rv1,rg1,rf1,rm1,mnod1tot,beta1_1,beta2_1,atmos1err)
 
 c Dado que dlamda0 entra en el common via blends2 la sentencia siguiente 
 c no puede colocarse antes de la llamada a blends2  
@@ -464,7 +466,7 @@ c ************************* atmosfera 2 ***************************************
                  end if  
               end if             
               
-              call blendscon2(atmos2,scal2,rt2,rp2,rv2,rm2,mnod2tot,beta1_2,beta2_2)
+              call blendscon2(atmos2,scal2,rt2,rp2,rv2,rm2,mnod2tot,beta1_2,beta2_2,atmos2err)
               if(vmac2.gt.0 .or. ifiltro.ge.1)then
                  do j=1,ntotal
                     sin02(j)=scal2(j)
@@ -501,7 +503,7 @@ c                 if(vmac2 .lt. 1.e-7)vmac2=1.e-7
                     call deconv(stok_RH_2,1,ntls,npass,dlamda0s,dlamdas,vmac2)
                  end if 
               end if
-              call blends2(atmos2,scal2,rt2,rp2,rh2,rv2,rg2,rf2,rm2,mnod2tot,beta1_2,beta2_2)
+              call blends2(atmos2,scal2,rt2,rp2,rh2,rv2,rg2,rf2,rm2,mnod2tot,beta1_2,beta2_2,atmos2err)
 
 c Dado que dlamda0 entra en el common via blends2 la sentencia siguiente 
 c no puede colocarse antes de la llamada a blends2  

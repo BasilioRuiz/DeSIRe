@@ -65,7 +65,7 @@ c       epsilon=1.d-2
         epsilon=1.e-8
 c       toffset=2000.
 c       22/05/20 brc: 3000 para evitar problemas de equilibtrio quimico de RH.
-        toffset=3000.
+        toffset=1750.
         pi=3.14159265
 
 c       precision equilibrio hidrostatico en tanto por uno (necesaria para equisubmu)

@@ -9,7 +9,7 @@ c ______________________________________________________________
 c
 c ist=1 (i); =2 (q); =3 (u); =4 (v)
 
-         subroutine blendscon2(atmos,inten,rt,rp,rv,rm,mnodos,beta1,beta2)
+         subroutine blendscon2(atmos,inten,rt,rp,rv,rm,mnodos,beta1,beta2,atmoserr)
          implicit real*4 (a-h,o-z)
          include 'PARAMETER'
 
@@ -19,10 +19,12 @@ c para las funciones respuesta
          real*4 x(kt)
 
 c para los perfiles 
-         real*4 atmos(*),inten(*),icont,continuoharr(kld)  !con_i(kl)
+         real*4 inten(*),icont,continuoharr(kld)  !con_i(kl)
          real*4 wcon_i1(kl),wcon_i2(kl)
 
 c para la atmosfera
+         real*4 atmos(*),atmoserr(*)
+         real*4 grtmax(kt),grpmax(kt),grmmax(kt),grvmax(kt)
          real*4 tau(kt),t(kt),pe(kt),vtur(kt),vz(kt)
          real*4 taue(kt),vof(kt),logpe(kt)
          real*4 continuoh    
@@ -157,10 +159,14 @@ c nble es el numero de componentes de cada linea
         
 c leemos la atmosfera
         do i=1,ntau
-	       t(i)=atmos(i+ntau)
-	       pe(i)=atmos(i+2*ntau)
-	       logpe(i)=alog(pe(i))
-	       vtur(i)=atmos(i+3*ntau)
+           grtmax(i)=0.  !inicializamos para calcular el maximo en lamda para cada tau
+           grpmax(i)=0.    
+           grmmax(i)=0.
+           grvmax(i)=0.
+           t(i)=atmos(i+ntau)
+           pe(i)=atmos(i+2*ntau)
+           logpe(i)=alog(pe(i))
+           vtur(i)=atmos(i+3*ntau)
            vz(i) =atmos(i+5*ntau)       !velocidad lines de vision
            vof(i)=vz(i)-voffset
         end do
@@ -643,24 +649,39 @@ c !ojo las perturbaciones son relativas a los parametros en z no a linea vision
               end do
            end if
            call rnorma(ntau,continuoh,grt)
-           if(iautomatico.ne.1.or.mnodos(1).eq.1)call 
-     &        nodos(grt,ntau,tau,t,mnodos(1))	  !al final de blends2
+           if(iautomatico.ne.1.or.mnodos(1).eq.1)then
+              call nodos(grt,ntau,tau,t,mnodos(1),grtmax) !al final de blends2
+              do ie=1,ntau
+                 atmoserr(ntau+ie)=grtmax(ie)
+              end do	
+           end if    
         end if
         if(mnodos(2).ne.0)then
-           call rnorma(ntau,continuoh,grp)
-           if(iautomatico.ne.1.or.mnodos(2).eq.1)call  
-c     &        nodosp(grp,ntau,tau,pe,mnodos(2))    !OJO nodosp escala con la pe en el ultimo nodo 
-     &        nodos(grp,ntau,tau,pe,mnodos(2))    !OJO nodosp escala con la pe en el ultimo nodo 
-        end if                                     !rutina al final de blends2
+           call rnorma(ntau,continuoh,grp,grpmax)
+           if(iautomatico.ne.1.or.mnodos(2).eq.1)then
+              call nodos(grp,ntau,tau,pe,mnodos(2),grpmax)    !OJO nodosp escala con la pe en el ultimo nodo 
+              do ie=1,ntau
+                 atmoserr(2*ntau+ie)=grpmax(ie)
+              end do  
+           end if   
+        end if                                    
         if(mnodos(3).ne.0)then
            call rnorma(ntau,continuoh,grm)
-           if(iautomatico.ne.1.or.mnodos(3).eq.1)call  
-     &        nodos(grm,ntau,tau,vtur,mnodos(3)) !al final de blends2
+           if(iautomatico.ne.1.or.mnodos(3).eq.1)then
+              call nodos(grm,ntau,tau,vtur,mnodos(3),grmmax) 
+              do ie=1,ntau
+                 atmoserr(3*ntau+ie)=grmmax(ie)
+              end do  
+           end if   
         end if
         if(mnodos(5).ne.0)then
           call rnorma(ntau,continuoh,grv)
-          if(iautomatico.ne.1.or.mnodos(5).eq.1)call  
-     &        nodos(grv,ntau,tau,vof,mnodos(5)) !al final de blends2
+          if(iautomatico.ne.1.or.mnodos(5).eq.1)then
+             call nodos(grv,ntau,tau,vof,mnodos(5),grvmax)
+             do ie=1,ntau
+                atmoserr(5*ntau+ie)=grvmax(ie)
+             end do  
+          end if             
         end if
 
 c las f. respuesta salen ordenadas en longitud de onda,perfil y tau

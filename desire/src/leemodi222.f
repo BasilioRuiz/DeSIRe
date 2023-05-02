@@ -190,7 +190,7 @@ c          escribimos los modelos
            open(ican,file=model1,err=803)
            write(ican,*)atmos(8*ntau+1),atmos(8*ntau+2),peso
            do i=1,ntau
-              if(atmos(i+ntau) .lt. 500)atmos(i+ntau)=500.            !T
+              if(atmos(i+ntau) .lt. 0)atmos(i+ntau)=0.            !T
               if(atmos(i+ntau) .gt. 9.999e4)atmos(i+ntau)=9.999e4     !T
               gamma_deg=atmos(i+6*ntau)/dtor  !inclination in degrees
               phi_deg=atmos(i+7*ntau)/dtor    !azimuth in degrees

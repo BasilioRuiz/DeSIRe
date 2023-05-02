@@ -1,11 +1,12 @@
+c=============================================================================
 c     gasb calcula las preiones parciales y sus derivadas con
 c     respectoa la temperatura y la presion.es una modificacion
 c     de la rutina gas.
-
+c
 c     dp es la derivada de p respecto a t, ddp respecto a pe.
+c=============================================================================
 
       subroutine gasb(theta,pe,p,dp,ddp)
-c     ...............................................................
       implicit real*4 (a-h, o-z)
       include 'PARAMETER'
       parameter (ncontr=28)
@@ -150,7 +151,7 @@ c evaluating partition functions u0,u1,u2 and its derivatives
 
       if(g5.lt.1.e-35)then
           call error(KSTOP,'gasb','The electronic pressure is too small.'
-     &     //         ' Check the atmospheric models')
+     &    //         ' Check the atmospheric models')
       end if
 
       call acotasig(g5,1.e-20,1.e20)
@@ -245,7 +246,6 @@ c evaluating partition functions u0,u1,u2 and its derivatives
 
         dlf200=dg2+divf1
         ddlf200=ddg2+ddivf1
-
 
         fe=f2-f3+f4+g1
         if(abs(fe).lt.1.e-30)then
@@ -358,8 +358,10 @@ c evaluating partition functions u0,u1,u2 and its derivatives
       return
       end
 
-c     ...............................................................
+
+c=============================================================================
 c     gasc calcula las presiones parciales
+c=============================================================================
 
       subroutine gasc(t,pe,pg,pp)
       parameter (ncontr=28)
@@ -438,6 +440,104 @@ c evaluating partition functions u0,u1,u2 and its derivatives
              phtot=pe/fe
            end do
         end if
+
+        pg=pe*(1.+(f1+f2+f3+f4+f5+0.1014)/fe)
+        pp(1)=f1   ! p(h)/p(h')
+        pp(6)=f2   ! p(h+)/p(h')        
+        pp(7)=f5   ! p(h2)/p(h')
+        pp(8)=fe   ! pe/p(h')
+        pp(9)=pe/(1.38054e-16*t) ! n(e)=pe/kt
+
+      return
+      end
+
+
+c=============================================================================
+c     gasccota es igual que gasc con control de fe < 0 (if de linea 524)
+c=============================================================================
+
+      subroutine gasccota(t,pe,pg,pp)
+      parameter (ncontr=28)
+      dimension cmol(91),alfai(ncontr),chi1(ncontr),chi2(ncontr),
+     *u0(ncontr),u1(ncontr),u2(ncontr)
+        real du0,du1,du2,dcmol(91)
+        real pp(*),p(28)
+
+      theta=5040./t
+      call molecb(theta,cmol,dcmol)
+      g4=pe*10.**(cmol(1))
+      g5=pe*10.**(cmol(2))
+c evaluating partition functions u0,u1,u2 and its derivatives
+      do i=1,ncontr
+         iii=i
+         call neldatb(iii,0.,weight,alfai(i),chi1(i),chi2(i))
+         call nelfctb(iii,t,u0(iii),u1(iii),u2(iii),du0,du1,du2)
+      end do 
+      g2=saha(theta,chi1(1),u0(1),u1(1),pe)   ! p(h+)/p(h)
+      g3=1./saha(theta,0.754,1.,u0(1),pe)     ! p(h-)/p(h)
+      pp(10)=g3
+      g1=0.
+
+       do i=2,ncontr
+          a=saha(theta,chi1(i),u0(i),u1(i),pe)
+          b=saha(theta,chi2(i),u1(i),u2(i),pe)
+          if(a .gt. 1.e30)then
+             p(i)=0.
+             if(b .lt. 1.e30)g1=g1+alfai(i)*((1.+2.*b)/(1.+b))
+             if(b .ge. 1.e30)g1=g1+2.*alfai(i)
+          else
+             if(b .ge. 1.e30)g1=g1+2.*alfai(i)
+             if(b .lt. 1.e30)then
+                if(a*b .gt. 1.e35)then
+                   p(i)=0.
+                   g1=g1+alfai(i)*((1./2.+2.*b)/(1.+b))
+                else
+                   c=1.+a*(1.+b)
+                   p(i)=alfai(i)/c   ! p/ph' for neutral he,li, ...
+                   g1=g1+p(i)*a*(1.+2.*b)
+                endif   
+             endif   
+          end if  
+       end do
+
+        pp(2)=p(2)
+        pp(3)=p(6)
+        pp(4)=p(11)
+        pp(5)=p(12)
+ 
+        a=1.+g2+g3
+        b=2.*(1.+g2/g5*g4)
+        c=g5
+        d=g2-g3
+        e=g2/g5*g4
+        c1=c*b**2+a*(d*b-e*a)
+        if(c1 .gt. 1.e33)c1=1.e33 
+        c2=2.*a*e-d*b+a*b*g1        
+        c3=-(e+b*g1)
+        f1=0.5*c2/c1
+        f1=-f1+sign(1.,c1)*sqrt(f1**2-c3/c1)
+        f5=(1.-a*f1)/b
+        f4=e*f5
+        f3=g3*f1
+        f2=g2*f1
+        fe=f2-f3+f4+g1
+        if(fe .le. 0)then !this is because f3 (H- population is too high --> 0)
+           f3=1.e-20
+           fe=f2+f4+g1
+        end if   
+        phtot=pe/fe
+
+        if(f5.le.1.e-4)then
+           const6=g5/pe*f1**2
+           const7=f2-f3+g1
+           do i=1,5
+             f5=phtot*const6
+             f4=e*f5
+             fe=const7+f4
+             phtot=pe/fe
+           end do
+        end if
+
         pg=pe*(1.+(f1+f2+f3+f4+f5+0.1014)/fe)
         pp(1)=f1   ! p(h)/p(h')
         pp(6)=f2   ! p(h+)/p(h')        

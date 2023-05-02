@@ -93,7 +93,7 @@ backgrcontr:  $(BACKGROPAC)  librh  ../librh.a
 ## --- If no FORTRAN compiler is available remove librh_f90.a in following.
 
 librh:
-	cd ..; $(MAKE) FC=$(FC) librh.a librh_f90.a
+	$(MAKE) -C .. FC=$(FC) librh.a librh_f90.a
 
 
 ## --- 27/05/19 epm: Addition to the library of all the objects we need.

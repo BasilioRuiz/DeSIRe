@@ -41,5 +41,5 @@ Gas pressure at surface 2    :                   !0 or blank=Pe boundary cond.
 NLTE thresh. (0=NLTE,>10 LTE): 0.01              !10 (LTE)=default
 Number of rays               : 3                 !0 or blank=3
 Integration method           : 2                 !0=herm_int, 1=herm, 2=bzr3 
-Final evaluation of profile  : 0,0,0,0,1
+Final evaluation of profile  : 0,0,0,0,2
 RH models mass (m) or tau(t) : t                 !default=m

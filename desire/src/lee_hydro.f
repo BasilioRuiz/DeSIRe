@@ -71,7 +71,7 @@ c-----------------------------------------------------------------------------
          include 'PARAMETER'
          real*4 hydro1(6,kt),tau(*)
          character*(*) filename
-
+         
          open(8,file=filename)
          write(8,100)'*   Index','nH(1)','nH(2)','nH(3)','nH(4)','nH(5)','nH+'
          do i=1,ntau
@@ -84,3 +84,31 @@ c-----------------------------------------------------------------------------
 
          return
          end
+
+c-----------------------------------------------------------------------------
+
+c rutina que copia las poblaciones de hidrogeno en otra variable 
+         subroutine copia_hydro(ntau,hidro1in,hidro1out,imodel2,hidro2in,hidro2out)
+         
+         implicit real*4 (a-h,o-z)
+         include 'PARAMETER'
+         real*4 hydro1in(6,kt),hidro1out(6,kt)
+         real*4 hydro2in(6,kt),hidro2out(6,kt)
+
+         do j=1,6
+            do i=1,ntau
+               hidro1out(j,i)=hydro1in(j,i)
+            end do
+         end do
+         if(imodel2 .eq. 1)then
+            do j=1,6
+               do i=1,ntau
+                  hidro2out(j,i)=hydro2in(j,i)
+               end do
+            end do
+         end if
+
+         return
+         end      
+
+c-----------------------------------------------------------------------------

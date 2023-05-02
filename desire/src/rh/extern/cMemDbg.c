@@ -2,7 +2,7 @@
 /*****************************************************************************
   This file is part of cMemDbg - Easy to use C memory leak detection library
 
-        Copyright (C) 2009 Ezequiel Gastón Miravalles
+        Copyright (C) 2009 Ezequiel Gaston Miravalles
 
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
         File: cMemDbg.c
         Version: 1.0
         Last modification: 8/4/2009
-        Author: Ezequiel Gastón Miravalles
+        Author: Ezequiel Gaston Miravalles
         Website: http://www.neoegm.com/software/cmemdbg/
         License: GNU GPL v3 (attached, read above)
 

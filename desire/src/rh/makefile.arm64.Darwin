@@ -1,0 +1,46 @@
+## --- Machine dependent defs --                       -------------- ##
+#     
+#      CPU = arm64
+#      OS  = Darwin
+#
+#      Version:       rh2.0
+#      Author:        Han Uitenbroek (huitenbroek@nso.edu)
+#      Last modified: Tue Mar 22 17:00:06 2022 --
+#
+##     --------------------------                      ----------RH-- ##
+
+## --- Choose one if compilation is required for a specific target
+##     machine (use the fpversion command to determine optimal target)##
+
+TARGET =
+XARCH  =
+
+## --- If no f90 compiler is available comment out -DHAVE_F90
+
+CC       = gcc
+CFLAGS   = -DHAVE_F90
+
+
+## --- Macros for F90 alternative routines --           ------------- ##
+#      03/03/21 epm: FC comes from the main Makefile in src directory.
+
+F90C     = $(FC)
+F90FLAGS =
+
+
+## -- Library settings --                               ------------- ##
+
+ARFLAGS  = rvs
+ARCHINC  =
+
+
+## --- GNU make does not automatically define the .f90 suffix and
+##     corresponding suffix rule --                    -------------- ##
+
+.SUFFIXES: .f90
+
+.f90.o:
+	$(F90C) -c $(F90FLAGS) $<
+
+
+## ---                                                 -------------- ##

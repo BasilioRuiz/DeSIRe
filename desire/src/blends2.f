@@ -14,7 +14,7 @@ c _________________________________________________________________
 c
 c ist=1 (i); =2 (q); =3 (u); =4 (v)
 
-        subroutine blends2(atmos,stok,rt,rp,rh,rv,rg,rf,rm,mnodos,beta1,beta2)
+        subroutine blends2(atmos,stok,rt,rp,rh,rv,rg,rf,rm,mnodos,beta1,beta2,atmoserr)
         
         implicit real*4 (a-h,o-z)
         include 'PARAMETER'
@@ -29,11 +29,14 @@ c para las funciones respuesta
         real*4 rm4(4,kt)
         real*4 grt(kt),grp(kt),grh(kt),grv(kt),grg(kt),grf(kt),grm(kt)
         real*4 x(kt)
-
+        
 c para los perfiles 
-        real*4 atmos(*),stok(*),svec(4),continuoharr(kld)  !con_i(kl)
+        real*4 stok(*),svec(4),continuoharr(kld)  !con_i(kl)
 
 c para la atmosfera
+        real*4 atmos(*),atmoserr(*)
+        real*4 grtmax(kt),grpmax(kt),grmmax(kt),grhmax(kt)
+        real*4 grvmax(kt),grgmax(kt),grfmax(kt)
         real*4 tau(kt),t(kt),pe(kt),vtur(kt),h(kt),vz(kt)
         real*4 vof(kt)
         real*4 taue(kt),gamma(kt),phi(kt),agamma(kt),aphi(kt)
@@ -132,7 +135,7 @@ c       common/continuos/con_i
         common/patronzeeman/dlp_arr,dll_arr,dlr_arr,sp_arr,sl_arr,sr_arr,np_arr,nl_arr,nr_arr  
         common/componente_nlte/linea_all_nlte
         common/continuosarr/continuoharr
-                               
+                    
         data iprimera/0/
                  
 c nble es el numero de componentes de cada linea
@@ -189,6 +192,14 @@ c nble es el numero de componentes de cada linea
 
 c leemos la atmosfera
         do i=1,ntau
+           grtmax(i)=0.  !inicializamos para calcular el maximo en lamda para cada tau
+           grpmax(i)=0.    
+           grmmax(i)=0.
+           grhmax(i)=0. 
+           grvmax(i)=0.
+           grgmax(i)=0.    
+           grfmax(i)=0.
+                            
            t(i)=atmos(i+ntau)
            pe(i)=atmos(i+2*ntau)
            
@@ -997,14 +1008,22 @@ c a sumatorio y normalizmos por el continuo
                     end if
                  end do 
                  call rnorma(ntau,continuoh,grt)
-                 if(iautomatico.ne.1.or.mnodos(1).eq.1)
-     &             call nodos(grt,ntau,tau,t,mnodos(1)) 
+                 if(iautomatico.ne.1.or.mnodos(1).eq.1)then
+                    call nodos(grt,ntau,tau,t,mnodos(1),grtmax)
+                    do ie=1,ntau
+                       atmoserr(ntau+ie)=grtmax(ie)
+                    end do
+                 end if   
               end if
      
               if(mnodos(2).ne.0)then
                  call rnorma(ntau,continuoh,grp)
-                 if(iautomatico.ne.1.or.mnodos(2).eq.1)
-     &             call nodos(grp,ntau,tau,pe,mnodos(2))  
+                 if(iautomatico.ne.1.or.mnodos(2).eq.1)then
+                    call nodos(grp,ntau,tau,pe,mnodos(2),grpmax)
+                    do ie=1,ntau
+                       atmoserr(2*ntau+ie)=grpmax(ie)
+                    end do  
+                 end if
               end if
 
               if(mnodos(3).ne.0)then
@@ -1015,8 +1034,12 @@ c a sumatorio y normalizmos por el continuo
                     grm(kk)=rm4(isv,kk)
                  end do 
                  call rnorma(ntau,continuoh,grm)
-                 if(iautomatico.ne.1.or.mnodos(3).eq.1)
-     &             call nodos(grm,ntau,tau,vtur,mnodos(3))   
+                 if(iautomatico.ne.1.or.mnodos(3).eq.1)then
+                   call nodos(grm,ntau,tau,vtur,mnodos(3),grmmax) 
+                   do ie=1,ntau
+                       atmoserr(3*ntau+ie)=grmmax(ie)
+                   end do  
+                 end if  
               end if
 
               if(mnodos(4).ne.0)then
@@ -1038,9 +1061,13 @@ c a sumatorio y normalizmos por el continuo
                     end do 
                  end if
                  call rnorma(ntau,continuoh,grh)
-                 if(iautomatico.ne.1.or.mnodos(4).eq.1)
-     &             call nodos(grh,ntau,tau,h,mnodos(4))
-                 end if
+                 if(iautomatico.ne.1.or.mnodos(4).eq.1)then
+                    call nodos(grh,ntau,tau,h,mnodos(4),grhmax)
+                    do ie=1,ntau
+                       atmoserr(4*ntau+ie)=grhmax(ie)
+                    end do  
+                 end if 
+             end if
                  
              if(mnodos(5).ne.0)then
                  do kk=1,icontorno-1
@@ -1050,8 +1077,12 @@ c a sumatorio y normalizmos por el continuo
                     grv(kk)=rv4(isv,kk)
                  end do 
                  call rnorma(ntau,continuoh,grv)
-                 if(iautomatico.ne.1.or.mnodos(5).eq.1)
-     &             call nodos(grv,ntau,tau,vof,mnodos(5))
+                 if(iautomatico.ne.1.or.mnodos(5).eq.1)then
+                    call nodos(grv,ntau,tau,vof,mnodos(5),grvmax)
+                    do ie=1,ntau
+                       atmoserr(5*ntau+ie)=grvmax(ie)
+                    end do  
+                 end if                     
               end if
 
               if(mnodos(6).ne.0)then
@@ -1073,8 +1104,12 @@ c                     grg(kk)=rg4(isv,kk)*2./(1.0+agamma(kk)*agamma(kk))
                    end do 
                  end if
                  call rnorma(ntau,continuoh,grg)
-                 if(iautomatico.ne.1.or.mnodos(6).eq.1)
-     &             call nodos(grg,ntau,tau,agamma,mnodos(6))
+                 if(iautomatico.ne.1.or.mnodos(6).eq.1)then
+                    call nodos(grg,ntau,tau,agamma,mnodos(6),grgmax)
+                    do ie=1,ntau
+                       atmoserr(6*ntau+ie)=grgmax(ie)
+                    end do                 
+                 end if   
               end if
               
               if(mnodos(7).ne.0)then
@@ -1086,8 +1121,12 @@ c                   grf(kk)=rf4(isv,kk)*4./(1.+aphi(kk)*aphi(kk))
                     grf(kk)=rf4(isv,kk)
                  end do
                  call rnorma(ntau,continuoh,grf)
-                 if(iautomatico.ne.1.or.mnodos(7).eq.1)
-     &             call nodos(grf,ntau,tau,aphi,mnodos(7))
+                 if(iautomatico.ne.1.or.mnodos(7).eq.1)then
+                    call nodos(grf,ntau,tau,aphi,mnodos(7),grfmax)
+                    do ie=1,ntau
+                       atmoserr(7*ntau+ie)=grfmax(ie)
+                    end do                 
+                 end if
               end if
 
 c las f. respuesta salen ordenadas en longitud de onda,perfil y tau
@@ -1136,18 +1175,27 @@ c __________________________________________________________________________
 
 c rutina nodos calcula las funciones respuesta equivalentes en los nodos
 
-        subroutine nodos(gr,n,tau,yy,no)
+        subroutine nodos(gr,n,tau,yy,no,grmax)
         
         implicit real*4 (a-h,o-z)
         include 'PARAMETER'
         real*4 gr(*),g(kt),tau(*),x(kt),y(kt),yy(kt),zz(kt),f(kt,kt)
-
+        real*4 grmax(*)
+        common/new_evaluation/new_evaluation  !from desire.f to evaluate uncertainties if new_evaluation=2
+        
         if(no.le.0)return
+        
+c        if(new_evaluation .ge. 2)then
+           do i=1,n
+              if(abs(gr(i)) .gt. grmax(i))grmax(i)=abs(gr(i))
+           end do
+c        end if 
 
         if(no.eq.1)then   !si perturbacion constante
 
            sumagr=0.
            yymedio=0.
+ 
            do i=1,n
 c              sumagr=sumagr+gr(i)*yy(i)  !pert. multiplicativa constante
                sumagr=sumagr+gr(i)        !pert. aditiva constante

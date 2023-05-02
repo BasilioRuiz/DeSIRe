@@ -269,7 +269,6 @@ c          close(ican)
 c       end if
 
 c       Pasamos todo a RH.
-
         call siratmos(codes,ncodes,geoscale,dlog10g,ntau,
      &                log_tau,T,elec_dens,vz,vmic,nB,B,gamma,phi)
         call siratmosnh(nh1,nh2,nh3,nh4,nh5,nh6)

@@ -42,7 +42,7 @@ c        all=alamda
         if(alamda.lt.0.)then
            alamda=alamda0
            call marqcoef2(y,sig,ndata,a,mnodos,mfit,alpha,beta,chisq)
-
+c           if(nciclos.eq.0)call marqcoef2(y,sig,ndata,a,mnodos,mfit,alpha,beta,chisq)  !Llama una segunda vez
            if(nciclos.lt.1)return
            iRH1=0
            iRH2=0
@@ -59,6 +59,11 @@ c        all=alamda
 786     format(1x,i3,6x,1pe9.2,1x,e10.3)
 
 c       ::::::::::::::::::::::::hasta aqui solo para la primera iteracion
+
+        if(alamda .gt. 12345.49 .and. alamda .lt. 12345.51)then
+           call marqcoef2(y,sig,ndata,a,mnodos,mfit,covar,da,chisq)
+           return
+        endif
 
         it=it+1
 
@@ -79,7 +84,7 @@ c       ::::::::::::::::::::::::hasta aqui solo para la primera iteracion
            atry(j)=a(j)*(1.+da(j))
            if(it .eq.1 .and. abs(da(j)) .gt. datTmax)datTmax=abs(da(j))
         end do
-        if(it .eq.1 .and. datTmax .gt. rnlte_th)iRH1=1
+        if(it .eq.1 .and. datTmax .gt. rnlte_th .and. rnlte_th .lt. 10. )iRH1=1
         do j=ipa1+1,ipa11                 !nodos en Pe atm 1
 c          atry(j)=a(ipa11)*(1.+da(j))    !escala con la Pe en el ultimo nodo
            if(da(j) .gt. .25) da(j)=.25
@@ -88,11 +93,9 @@ c          atry(j)=a(ipa11)*(1.+da(j))    !escala con la Pe en el ultimo nodo
         end do
         do j=ipa11+1,iga1                 !nodos en mic,H,Vz atm 1
            atry(j)=a(j)*(1.+da(j))
-c          print*,'marquardt2 93 j a(j) da(j) atry(j)',j,a(j),da(j),atry(j)
         end do
         do j=iga1+1,ifi11                 !nodos en gamma y fi atm 1
            atry(j)=a(j)+da(j)
-c          print*,'marquardt2 97',j,a(j),da(j),atry(j)
         end do
         do j=ifi11+1,ipa2                 !resto nodos atm1 y nodos T atm2
            atry(j)=a(j)*(1.+da(j))
@@ -124,7 +127,7 @@ c          atry(j)=a(ipa22)*(1.+da(j))    !escala con la Pe en el ultimo nodo
         if11old=ifi11
         if22old=ifi22
 
-        call marqcoef2(y,sig,ndata,atry,mnodos,mfit,covar,da,chisq)
+        call marqcoef2(y,sig,ndata,atry,mnodos,mfit,covar,da,chisq)    
 
         if(chisq.lt.ochisq)then
 
@@ -141,7 +144,6 @@ c          atry(j)=a(ipa22)*(1.+da(j))    !escala con la Pe en el ultimo nodo
               do k=1,mfit
                  alpha(j,k)=covar(j,k)
               end do
-c             beta1(j)=beta(j)
               beta(j)=da(j)
               a(j)=atry(j)
 
