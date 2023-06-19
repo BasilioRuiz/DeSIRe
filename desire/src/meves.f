@@ -12,9 +12,7 @@ c y 1 si es visible
 	do while((ich.eq.0.or.ich.eq.32.or.ich.eq.9).and.i.lt.n)
            i=i+1 
 	   ich=ichar(ch(i:i))
-c           print*,i,ich
         end do 
-c        print*,i
         if(i.eq.n)meves=0
         return
 	end 

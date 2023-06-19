@@ -117,9 +117,7 @@ c calculamos las f.resp
            rp(i)=ooo*pk(i)*ss
            rv(i)=ooo*vk(i)*ss
            rm(i)=ooo*mk(i)*ss
-c           print*,'bez3 sol,ooo,tk,ss,etall,bt=',sol(i),ooo,tk(i),ss,etall(i),bt(i)
         enddo
-c	    print*,'bez3 sol(n)=',svec
 	    rt(n)=0.
 	    rp(n)=0.
 	    rv(n)=0.

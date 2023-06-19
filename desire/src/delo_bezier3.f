@@ -215,8 +215,8 @@ c           call linearsystem(Ak,Bk,Xk)
         end do
 		
 	if(ierror.eq.1)then
-	   print*,'error in the integration of the RTE: bezier3'
-	   return
+           call error(KSTOP,'delo_bezier3',
+     &                'Error in the integration of the RTE')
 	endif
 	
 	do i=1,n

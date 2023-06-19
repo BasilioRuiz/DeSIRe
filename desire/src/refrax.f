@@ -18,6 +18,5 @@
 
 	wvp=1.e-2*h*wvsp
 	refrax = 1.+1.31579e-3*r*p/(1.+alpha*(t-15.)/(1.+15.*alpha))-5.49e-8*wvp/(1.+alpha*t)
-c        print*,'refrax=',refrax
 	return
 	end

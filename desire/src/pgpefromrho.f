@@ -41,8 +41,6 @@ c        pgold=pg
         do while (iv .lt. 30 .and. change .gt. 1.e-5) 
            iv=iv+1 
            pgold=pg
-c          print*,iv,pesomedio,ro,pg,pe,change,pe/pg
-c            print*,pg,pe,change,pe/pg
 
            pesomedio=pmusum/(asum+pp(8))
            pg=ro*cgases*t/pesomedio
@@ -57,10 +55,6 @@ c            print*,pg,pe,change,pe/pg
      &     //         ' We chose pg = 500')
            pg=500.
         endif  
-c        print*,iv,pesomedio,ro,pg,pe,change,pe/pg
-c        print*,pg,pe,change,pe/pg
-c
-c        print*,'estoy en  linea 35 pgpefromrho'
        
         return
         end

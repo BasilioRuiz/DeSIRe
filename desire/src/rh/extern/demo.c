@@ -35,8 +35,6 @@ int main( int argc, char *argv[] )
    char  *string1, *string2;
    struct contact *agenda;
 
-   printf("sizeof(struct contact) = %d\n\n", sizeof(struct contact));
-
    // Allocations.
 
    string1 = calloc(1, 10);
@@ -57,7 +55,6 @@ int main( int argc, char *argv[] )
 
    // Liberations.
 
-   printf("\n");
    //free(string1);
    //free(string2);
    //free(agenda[0].name);
@@ -80,13 +77,27 @@ int main( int argc, char *argv[] )
    FreeMemoryLeakNoRealloc();
    printf("---------------------------------\n");
 
-   printf("\n*(7)*\tPrintTotalAllocatedMemory() - AL TERMINAR\n");
+   printf("\n*(7)*\tPrintTotalAllocatedMemory()\n");
    PrintTotalAllocatedMemory();
 
    printf("\n*(8)*\tPrintMemoryReservedByCMemDbgLibrary()\n");
    PrintMemoryReservedByCMemDbgLibrary();
 
    printf("\n*(9)*\tPrintMemoryLeakInfo()\n");
+   PrintMemoryLeakInfo();
+
+   printf("\n---------------------------------");
+   printf("\n*(10)*\tFreeMemoryLeak()\n");
+   FreeMemoryLeak();
+   printf("---------------------------------\n");
+
+   printf("\n*(11)*\tPrintTotalAllocatedMemory()\n");
+   PrintTotalAllocatedMemory();
+
+   printf("\n*(12)*\tPrintMemoryReservedByCMemDbgLibrary()\n");
+   PrintMemoryReservedByCMemDbgLibrary();
+
+   printf("\n*(13)*\tPrintMemoryLeakInfo()\n");
    PrintMemoryLeakInfo();
    printf("\n");
 

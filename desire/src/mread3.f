@@ -58,7 +58,7 @@ c Basilio -Enero 1993
               if(ii.eq.0)goto 11
               ii=0
               if(dat(1:1).eq.'*')then
-                 n(ivar)=1000
+                 n(ivar)=kn
               else
                 read(dat,'(i13)',err=666) n(ivar)
               end if

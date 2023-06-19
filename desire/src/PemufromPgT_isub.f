@@ -34,20 +34,15 @@ c calculamos el peso molecular medio pesomedio
 	   pmusum=pmusum+wgt*abu
            asum=asum+abu
 	end do
-c	print*,'pmusum asum=',pmusum,asum
 
 	Pe=Pg*1.e-4 !inicializamos 
 	call pefrompg11(T,Pg,Pe)
-c	print*,'en PemufromPgT_isub.f T Pg Pe=',T,Pg,Pe
 
 	call gasc(T,Pe,Pg,pp)
-	
-c	print*,'pp=',pp
 	
 	call kappach(5.e-5,T,Pe,pp,d1,d1,kac,d2,d2)
 	pesomedio=pmusum/(asum+pp(8)) !peso molec. medio
 	
-c	print*,'pesomedio=',pesomedio
         kappa=kac*avog/pmusum         !coeficiente absorcion continuo a 5000 por gramo
         rho=pesomedio*Pg/T/cgases
            

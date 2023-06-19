@@ -551,8 +551,6 @@ c.......................................................................
 	kat=kat+dcarbon+dsodium+dmgatom
 	kap=kap+ddcarbon+ddsodium+ddmgatom
 	
-c	print*,'k',kac,kat,kap
-
 99999 wavelt=0.			! antes ponia wavelt=lambda
       end
 c=======================================================================

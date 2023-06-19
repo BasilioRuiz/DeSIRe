@@ -16,18 +16,11 @@ c _______________________________________________________________
         
 c        fichabun='THEVENIN'
               
-c        print*,'dame T y Pe'
         print*,'write abundances filename T and Pe:'
         read*,fichabun,T,Pe
         
         call PgmufromPeT_isub(T,Pe,Pg,pesomedio,rho,kappa)
         call thermosub(T,Pe,thermo)
-        
-c        print*,'Pe pesomedio rho kappa',Pe,pesomedio,rho,kappa
-c        print*,'ne nH nH+  ',thermo(5:7)
-c        print*,'grd_ion alpha delta  ',thermo(8:10)
-c        print*,'c_v c_p c_s nabl_ad ',thermo(11:14)
-        
         
 	open(2,file='output_PgmufromPeT_i')
 	write(2,1002)'Pg','pesomed','rho','kappa','  ne   ','  nH   ','   nH+  ',

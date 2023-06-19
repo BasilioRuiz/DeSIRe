@@ -224,7 +224,6 @@ c           call linearsystem(Ak,Bk,Xk)
 	if(ierror.eq.1)then
            call error(KSTOP,'delo_bezier3log',
      &                'Error in the integration of the RTE')
-	   return
 	endif
 	
 	do i=1,n
@@ -317,7 +316,6 @@ c We need to reverse the S, taue & etall arrays and integrate from n to 1
         do k=1,n-1
            taunui(k+1)=taunui(k)+deltabar(k)
            logtaunui(k+1)=dlog(taunui(k+1))
-c           if(logtaunui(k+1) .gt. 3. .and. kcontorno .eq. n)print*,'kcontorno=',k+1
            if(logtaunui(k+1) .gt. 10. .and. kcontorno .eq. n)kcontorno=k+1
         end do
         if (kcontorno .le. 5)kcontorno=5
@@ -338,11 +336,9 @@ c https://iopscience.iop.org/article/10.1088/0004-637X/764/1/33/pdf
 c Now derivatives are to respect logtaunui    
 c         call derivaarray(logtaunui,Sp,n,Spder)                  !using classical derivative of the Source function
 c          call bezier_cubic_deriv_array4(logtaunui,Sp,n,Spder)    !using Bezier3 derivative of the Source function
-c          print*,'kcontorno=',kcontorno
           call bezier_cubic_deriv_array4ini(logtaunui,Sp,1,kcontorno,Spder)    !using Bezier3 derivative of the Source function
 c         call derivaarray44(logtaunui,K4,n,K4der)               !using classical derivative of the Asorption matrix
 c         call bezier_cubic_deriv_array44(logtaunui,K4,n,K4der)  !using Bezier3 derivative of the Asorption matrix
-c          print*,'kcontorno=',kcontorno,'----------------------------------------'
 c          call bezier_cubic_deriv_absormodf(logtaunui,K4,n,K4der) !using Bezier3 derivative of the Asorption matrix (ONLY 6 values)
           call bezier_cubic_deriv_absormodfini(logtaunui,K4,1,kcontorno,K4der) !using Bezier3 derivative of the Asorption matrix (ONLY 6 values)
                                                           
@@ -490,8 +486,8 @@ c           call linearsystem(Ak,Bk,Xk)
         end do
   		
 	if(ierror.eq.1)then
-	   print*,'error in the integration of the RTE: bezier3'
-	   return
+           call error(KSTOP,'delo_bezier3logcont',
+     &                'Error in the integration of the RTE')
 	endif
 	
 	do i=1,n

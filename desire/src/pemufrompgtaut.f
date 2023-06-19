@@ -46,7 +46,6 @@ c calculamos el peso molecular medio pmu
            pesomedio=pmusum/(asum+pp(8)) !peso molec. medio
            kappa(i)=kac*avog/pmusum
            pmu(i)=pesomedio
-c          print*,'pesomedio=',pmu(i)
            ro(i)=pesomedio*pg(i)/tsi/cgases
         end do
 

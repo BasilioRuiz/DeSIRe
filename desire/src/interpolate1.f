@@ -32,7 +32,6 @@ c	   taunewi=tau1-step*(i-1)
 	   call locate(tau,num,taunewi,j)
 	   n3=j-n2-1
            if(n3.lt.0)n3=0
-c           print*,'j n3 n2 tau  ',j,n3,n2,tau(n3+1),tau(n3+2),tau(n3+3)
            if(j .le. 0)ngrado=1
            if(n3 .gt. 0)ngrado=2
            if(j .ge. num-1)ngrado=1
@@ -54,13 +53,11 @@ c           if(ngrado .eq. 1)ya(2)=ya(1)+(ya(2)-ya(1))*(ntau-i+1)/float(ntau)
            irow=2                           !log(pe)
 	   do k=1,ngrado+1
 	      ya(k)=alog(abs(atmos(nn+irow*ntau+n3+k)))  
-c	      print*,'interpoate1 ',i,k,xa(k),ya(k)
 	   end do
 c	   if(ngrado .eq. 1)ya(2)=ya(1)+(ya(2)-ya(1))*(ntau-i+1)/float(ntau)
 
 	   call polint(xa,ya,ngrado+1,taunewi,ti,dy)
 	   atmosnew(nn+irow*ntau+i)=exp(ti)
-c	   print*,'interpoate1 ',i,taunewi,ti,exp(ti)	   
 	   
 	   do irow=3,7                     !mic,h,vz,g,phi
 	      do k=1,ngrado+1

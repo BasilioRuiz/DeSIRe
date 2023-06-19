@@ -143,8 +143,6 @@ c      call acota_db(g3,1.d-30,1.d30)
 	dlg1=0.       !las dl son derivadas no de log(g) sino de g
 	ddlg1=0.
 	
-c      print*,'gasb_db 80 p(93)=',p(93),	ncontr
-
       do 1 i=2,ncontr
       a=saha_db(theta_r4,chi1_r4(i),u0_r4(i),u1_r4(i),pe_r4)
 	da=dsaha_db(theta_r4,chi1_r4(i),du0_r4(i),du1_r4(i))
@@ -166,14 +164,12 @@ c        call acotasig_db(ss1,1.d-20,1.d20)
    
 	ss=p(i)*a*ss1
         dss=dp(i)+da+2.*dlb/ss1
-c        print*,'gasb_db 163 ',dp(i),da,ss1,dlb,dlb/ss1
 
 	ddss=ddp(i)+dda+2.*ddlb/ss1
 
 c	g1=g1+p(i)*a*ss1
 	g1=g1+ss
 	dlg1=dlg1+ss*dss             !ojo estas no son derivadas del log
-c	print*,'gasb_db 168 ',ss,dss,dlg1
 1	ddlg1=ddlg1+ss*ddss
         a=1.+g2+g3
 	dla=g2*dg2+g3*dg3
@@ -230,7 +226,6 @@ c      call acotasig_db(c1,1.d-15,1.d15)
       call acotasig_db(c1,1.d-25,1.d25)
 
       f1=0.5*c2/c1
-c      print*,'gasb_db 220',f1,c1,c2
 
 c	dlf1=.5*(dlc2/c1-(dlc1*c2)/(c1*c1))
       dc1=dlc1/c1  !!!!!!!!
@@ -250,7 +245,6 @@ c	ddlf1=.5*(ddlc2/c1-(ddlc1*c2)/(c1*c1))
      *	/(2.*dsqrt(f1**2-c3/c1))
 
       f1=-f1+sign(1.d0,c1)*dsqrt(f1**2-c3/c1)
-c        print*,'gasb_db 238',f1,c3,c1,f1**2-c3/c1
 
       f5=(1.-a*f1)/b
 	if(dabs(f5).lt.1.d-30)then
@@ -409,7 +403,6 @@ c	   ddphtot=1./pe
       p(91)=pe/(1.38054e-16*t) ! n(e)=pe/kt
 	dp(91)=-1./t
 	ddp(91)=1./pe
-c      print*,'gasb fin'
       do i=1,ncontr
          p_r4(i)=real(p(i))
          dp_r4(i)=real(dp(i))
@@ -423,8 +416,6 @@ c      print*,'gasb fin'
 
       end if
 
-c      print*,'gasb_db 432 p(93)=',p(93),p_r4(93)
-      
       return
       end
 c	...............................................................

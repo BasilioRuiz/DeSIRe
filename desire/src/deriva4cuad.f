@@ -1,7 +1,6 @@
 	subroutine deriva4cuad(eta,deta,n,x)
         implicit real*4 (a-h,o-z)
 
-c	include 'PARAMETER'  !solo por kt	
 	integer n
 	real*4 eta(4,4,n), deta(4,4,n), y(n), dy(n),x(*)
 	integer indi(7),indj(7)
@@ -12,13 +11,11 @@ c	include 'PARAMETER'  !solo por kt
 	do i=1,7
 	   do ii=1,n 
 	      y(ii) = eta(indi(i),indj(i),ii)	      	   
-c	      print*,'deriva4cuad 15',ii,y(ii),indi(i),indj(i)
 	   enddo
 
 	   call derivacuad(y,dy,n,x)
 
 	   do ii=1,n
-c	      print*,'deriva4cuad 21',ii,dy(ii),indi(i),indj(i),ii
 	      deta(indi(i),indj(i),ii) = dy(ii)
 	   enddo
 	enddo

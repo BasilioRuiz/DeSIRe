@@ -38,6 +38,11 @@ c 3.11 (11/11/21): JJ coupling. PARAMETER adjusted, align common data.
 c 4.03 (03/03/22): Some includes added and gfortran flags changed.
 c 4.04 (04/04/22): Makefiles for M1. Some Bezier routines changed.
 c 4.12 (12/12/22): Option (in dtrol file) to write errors and H populations.
+c 5.03 (03/03/23): Option (in dtrol file) to write models in RH format.
+c                  Option (in dtrol file) to use numerical functions.
+c 5.06 (06/06/23): Numerical RF implementation. Change in the chi**2 values
+c                  written in file. Offset in velocity (see PARAMETER). New
+c                  uncertainties determination.
 c
 c_____________________________________________________________________________
 c
@@ -67,7 +72,6 @@ c     PARA LA ATMOSFERA
       real*4  atmos(kt16),atmosr(kt16),atmosrlin(kt16),atmosr_old(kt16)
       real*4  atmosout(kt16),atmoslin(kt16),tau(kt),atmosb(kt16),errores(kt16)
       real*4  atmos1err(8*kt),atmos2err(8*kt)
-c     real*4  atmosoutold(kt16)
       real*4  pg1(kt),z1(kt),ro1(kt),T1(kt),Pe1(kt)
       real*4  pg2(kt),z2(kt),ro2(kt),T2(kt),Pe2(kt)
       real*4  pg1b(kt),z1b(kt),ro1b(kt),deglat,deglon
@@ -77,6 +81,7 @@ c     real*4  atmosoutold(kt16)
 
 c     PARA EL PERFIL
       real*4  stok(kld4),sig(kld4),stray(kld4),sigd(kld4) !sigd es copia de sig
+      real*4  sigescala(kld4),deltastokes_i(kld4)
       real*4  pesos(kld4),ymodobs_RH(kld4)
       real*4  scal(kld4),smax(kl,4),vic(kl),perfil(kld4)
       integer npasobs(kl),numberfrec(4),ntl,icontinuo_normz
@@ -94,6 +99,10 @@ c     PARA LOS COEFICIENTES DE ALEJAMIENTO
 
 c     PARA LOS ERRORES
       real*4  maximo
+      real*4  tup(kt),peup(kt),pgup(kt),zup(kt),roup(kt)
+      real*4  tdown(kt),pedown(kt),pgdown(kt),zdown(kt),rodown(kt)
+      real*4  errz1(kt),errpg1(kt),errro1(kt)
+      real*4  errz2(kt),errpg2(kt),errro2(kt)    
 
 c     PARA EL FICHERO LOG
       integer nguvec(500),posicionciclo(20),mvec(500,18)   !,mvecmax(18)
@@ -105,11 +114,12 @@ c     PARA EL FICHERO LOG
 c     CADENAS
       character cha1*2,cha2*2,chag*1,chamod*4,chaerr*4,chalog*4,ca(18)*3
       character chaper*4
-      character chaweight*4,chahyd*4  
+      character chaweight*4,chahyd*4,chaRH*4,chaRHmag*4  
       character chasnychi*4
       character*100 uveobs,uveout
-      character*100 modelout1,modelout2,modelin1,modelin2,mod1inic,mod2inic
-      character*100 modelin2ini,coorfile,extensioncoor
+      character*100 modelout00,modelout1,modelout2
+      character*100 modelin1,modelin2,mod1inic,mod2inic
+      character*100 modelin2ini,coorfile,extensioncoor,modelout1b
       character*100 mod_hyd_in1,mod_hyd_in2,mod_hyd_out1,mod_hyd_out2
       character*100 malla,control,controlb,fcontrol,modelerr1,modelerr2,difusa
       character*100 pesos_file
@@ -142,7 +152,6 @@ c     COMUNES
       common/smalla1/dlamdas
       common/atmosfera/atmos
       common/atmosferaout/atmosout
-c     common/atmosferaoutold/atmosoutold
       common/iamplioold/iamplioold
       common/tol/tol
       common/filfac/fill
@@ -154,7 +163,6 @@ c     common/atmosferaoutold/atmosoutold
       common/cambio/ncambiono,ncambioprec  !para splines
       common/ifiltro/ifiltro
       common/filtro/filtro
-c     common/nlte/nlte
       common/contraste/contr
       common/repeticion/factorrep  !factor de diag para evitar repeticiones
       common/nciclos/nciclos       !para marquardt2, leeuve3, leemodi222
@@ -180,7 +188,6 @@ c     common/ifies/iga1,ifi11,iga2,ifi22
       common/contornopg/ncontpg,pg01,pg02
       common/contornoro/ro01,ro02
       common/primerchi/snn,chisn
-c     common/departcoef/beta1,beta2
       common/zetas/pg1,z1,ro1,pg2,z2,ro2  !para el calculo de z,pg y ro en amp22 y amp22err
       common/pgmag/ipgmag
 c     17/06/19 brc: Common repetido con valores absolutos.
@@ -203,13 +210,19 @@ c     common/mu/cthabs
       common/new_evaluation/new_evaluation  !to nodos (at blends2) to evaluate uncertainties if new_evaluation=2
       common/atmoserr/atmos1err,atmos2err  !from fperfil2 for error evaluation
       common/signaltonoise/sn  !to evaluate_errors
+      common/iwrtRHformat/iwriteRHformat  !=1 --> writes models on disk
 
 c     05/05/20 epm: Common to save command line flags.
       common/commandline/flagv,flagquiet
       
 c     05/05/21 brc: Common to set on/off the continuum normalization.
       common/icontnormalz/icontinuo_normz  !icontinuo_normz=0 input/output profiles are in SI units
-
+c     23/05/23 brc: Common to define chi**2 scale (calculated  in marqcoef2).
+      common/escalachi/escalachi,sigescala,chinew
+c     06/06/23 brc: Common to know if there is a difference between observed and synthesized lines wave grid
+c     common/iFP/iFP  !=1 in case there is a diference between observed and synthesized lines wave grid
+      common/deltastokes_i/deltastokes_i
+      
       data NEW_J/3/, OLD_J/4/  !see enum solution in "rh.h"
 
 c_____________________________________________________________________________
@@ -264,7 +277,7 @@ c     04/04/20 epm: Pass some command line flags to RH.
       call error(KLINE,'','')
       call error(KLINE,'',' __________________________________________________________ ')
       call error(KLINE,'','|                                                          |')
-      CARTEL=             '|            DeSIRe version 4.12  (12/Dec/2022)            |'
+      CARTEL=             '|            DeSIRe version 5.06  (06/Jun/2023)            |'
       call error(KLINE,'',CARTEL)
       call error(KLINE,'','|__________________________________________________________|')
       call error(KLINE,'','')
@@ -304,9 +317,10 @@ c     Se define el fichero log
 
 c     Se leen las condiciones de ejecucion
 
-c      do i=1,18
-c         mvecmax(i)=0  !para los errores
-c      end do
+c     do i=1,18
+c        mvecmax(i)=0  !para los errores
+c     end do
+      iwriteRHformat=0
       nciclos=1
       ici=0
       ll=0
@@ -364,14 +378,15 @@ c      end do
          nspl_lin  =mreadi3(ican,ici,0)      !0=splines, 1=lineal (regularizada splines(2 o 4) o lineal(3 o 5)
          pg01      =mreadr3(ican,ici,0.)     !condi. cont. pg atm. 1/negative value= density
          pg02      =mreadr3(ican,ici,0.)     !condi. cont. pg atm. 2/negative value= density
-         rnlte_th  =mreadr3(ican,ici,10.)    !NLTE thresh. (0=NLTE,>10 LTE)10 (LTE)= default
+         rnlte_th  =mreadr3(ican,ici,10.)    !NLTE thresh. (0=NLTE,>10 LTE)10 (LTEdefault
          nrays     =mreadi3(ican,ici,3)      !number of rays
          intemethod=mreadi3(ican,ici,0)      !integration method 0=herm_int,1=herm,2=bzr3,3=bzr3log
          new_evaluation=mreadi4(ican,ici,1)  !optional new evaluation and output writting
                                              !0= no output, no new evaluation (in last cycle 0=1)
-                                             !1= writting output model + profile
+                                             !1= writting output model + profile (default)
                                              !2= writting output model + profile + errors
                                              !3= writting output model + profile + errors + H population
+                                             !4= 3 option + model in RH format 
          mas_or_tau=mreadc4(ican,ici,'m')    !optional RH models in mass column or logtau 
 
          imassortau=0  !RH reads tau models (when imassortau=1 RH reads mass column models)
@@ -387,11 +402,13 @@ c           inew=0  !in RH: Using old values of background op & J. In SIR NO eva
 c           rnlte_th=-1*rnlte_th
 c        end if
          maxnumnodos=0
+         numcalculation=0
          do inum=1,18
             numerical(inum)=0  !RF for parameter i numerically evaluated in NLTE
             if(m(inum).ge.1000)then
                m(inum)=m(inum)-1000
                numerical(inum)=1
+               numcalculation=1
             endif
             if(m(inum).le.-1000)then
                m(inum)=m(inum)+1000
@@ -533,6 +550,8 @@ c        Definimos los nombres de los ficheros de salida
          chaper='.per'
          chaweight='.wht'
          chahyd='.hyd'
+         chaRH='.atm'
+         chaRHmag='.mag'
 
          pesos_file=uveobs
          call quitaex3(pesos_file,ixt3)
@@ -607,18 +626,19 @@ c        Determining if the observed file ends on .per or .spc
             endif
          endif
 
+         modelout00=modelout1  !requiered to build the output name (RH format) when new_evaluation=4 and nciclos=0
          call concatena(modelout1,chag,modelout1) !"guess_"
          call concatena(modelout1,cha1,modelout1) !"guess_1"
          
          mod_hyd_out1=modelout1  
          call concatena(mod_hyd_out1,chahyd,mod_hyd_out1) 
-         if(imodel2.eq.1 .and. imassortau .eq. 0)then 
+         if(imodel2.eq.1 .and. imassortau.eq.0)then 
             mod_hyd_out2=modelout2  ! "guess" without ".mod'
             call concatena(mod_hyd_out2,chahyd,mod_hyd_out2)         
          end if           
-         
          call concatena(modelout1,chaper,uveout)
          call concatena(modelout1,chaerr,modelerr1)
+         modelout1b=modelout1
          call concatena(modelout1,chamod,modelout1) 
          
          if(imodel2.eq.1)then
@@ -827,10 +847,21 @@ c        ---------------------------------------------------------------
                   call leeuveobsindic(uveobs,ist,ntl,nliobs,indice,npasobs,
      &                             dlamdaobs,nble,stok)
                   call leemalla2(malla,ntl,nli,nliobs,nlin,npasobs,npas,
-     &                        dlamdaobs,dlamda,nble,nposi,indice)
+     &                        dlamdaobs,dlamda,nble,nposi,indice)  
+c                 nli    = number of frequencies for each line in grid
+c                 nliobs = number of frequencies for each line in observed profiles
+c                 iFP=0 !=1 if Fabry-Perot= non equispaced observed wavelength grid
+c                 if(nli .ne. nliobs)then
+c                    if(nli .lt. nliobs)then
+c                       print*,'desire line 855: the number of frequencies points in the grid is lower than in the observed profile'
+c                       stop
+c                    end if
+c                    iFP=1
+c                 endif 
                endif
             endif
          end if
+         
          if(atmos(16*ntau+5).gt.0.)then  !comprobaciones varias, esto es si tenemos difusa
             if(ntlcheck.ne.ntl)then
                call error(KSTOP,'desire','The number of lines'
@@ -871,7 +902,7 @@ c        Print these values on screen.
          call error(KLITE,'',msg)
          call error(KLINE,'','')
 
-         if(nciclos.ge.1)then
+         if(nciclos.ge.1 .or. nciclos.eq.0)then
             if(new_evaluation .ge. 2)then
                if(ierror.eq.0)then
                   call error(KPARA,'',
@@ -885,6 +916,11 @@ c        Print these values on screen.
      &            //  ' Output profiles: '//uveout(1:43)//' (1 component)')
                else
                   call error(KSTOP,'desire','Models not specified or unexistent')
+               end if
+               if(new_evaluation .eq. 4)then
+                  if(nciclos .eq. 0)modelout1b=modelout00
+                  call concatena(modelout1b,chaRH,RH_model)
+                  call concatena(modelout1b,chaRHmag,RH_magneticfield) 
                end if
             else if(new_evaluation .eq. 1 .or. ici .eq. nciclos)then
                 if(ierror.eq.0)then
@@ -904,7 +940,8 @@ c        Print these values on screen.
 c        ---------------------
 c        Sentencias de control
 c        ---------------------
-         if(ici .eq. 1)then  !acabo en 982
+         if(ici .eq. 1)then  
+
             if(ierror.ne.0.and.contr.gt.-1.e-6)then
                contr=-1.e-6
                call error(KWARN,'desire','No contrast calculation can be done'
@@ -970,6 +1007,7 @@ c           Definimos nlins,ntls,npass,dlamda0s,dlamdas
             ii=0
             vmax=-2.
             vmin=2.
+            nfrecI=0 !number of frequencies in I
             do i=1,4
                do j=1,ist(i)
                   iinli=ii*nli
@@ -995,6 +1033,7 @@ c           Definimos nlins,ntls,npass,dlamda0s,dlamdas
                         if(sk4.gt.cotaminima)then
                            if(i.eq.1 .and. nciclos.gt.0)then
                               xmax=-1.
+                              nfrecI=nfrecI+1
                               do lll=1,npasobs(k)
                                  if(xmax.le.stok(k4-l+lll))xmax=stok(k4-l+lll)
                               end do
@@ -1031,7 +1070,8 @@ c           Definimos nlins,ntls,npass,dlamda0s,dlamdas
                   smax(k,1)=maximo
                endif
             enddo
-         end if !viene de 853
+            
+         end if !end if(ici .eq. 1)then
 
          nfrecs=k4
 
@@ -1125,9 +1165,12 @@ c        Escribe en atmosr los valores de atmos en los nodos
                         if(pesos(k40).gt.1.e-10)pesos_inv=1./pesos(k40)
                         if(pesos(k40).le.1.e-10)pesos_inv=1.e10
                         sig(k40)=sigc2
+                        sigescala(k40)=vic(k)/sn
+                        deltastokes_i(k40)=sigescala(k40) !inicializado: en marqcoef2 se calcula el maximo entre abs(dy) y este valor a cada frecuencia
                         if(stok(k40).lt.cotaminima)then
                            sigx=sigmamax
                            sig(k40)=sigx
+                           sigescala(k40)=sigx
                            ielimino=ielimino+1
                         end if
                         sig(k40)=sig(k40)*pesos_inv
@@ -1172,11 +1215,13 @@ c        Escribe en atmosr los valores de atmos en los nodos
 
          chireal_store=chireal
          sumsq_store=sumsq
+         icorrijo=0
                
 c        ===============================================================
 c                        Empieza el ciclo iterativo
 c        ===============================================================
 
+         if(nciclos.eq.0 .and. new_evaluation.eq.4)iwriteRHformat=1
          factorrep=1.
          diag=-1.0
          if(ici.eq.1)chi0=1.e20
@@ -1193,6 +1238,15 @@ c        ===============================================================
          deltaT1_rel=0.
          deltaT2_rel=0.
          iamplioold=0
+         
+         if(it .eq. 0 .and. ici .eq. 1)then
+            chirealgood  = 1.e8
+            escalachigood= 1.
+            chinewgood   = 1.e8
+            sumsqgood    = 1.e8
+            snchigood    = 1.e8
+            chprintgood  = 1.e8
+         end if   
                   
          if(ici.gt.1 .and. chprint.le.umbralchi)then
             isigo=0
@@ -1212,13 +1266,14 @@ c        ===============================================================
 
          do while(isigo.eq.1)
             it=it+1
-            if(it.gt.1 .and. new_evaluation .eq. 3)then
+            if(it.gt.1 .and. new_evaluation.ge.3)then
                call copia_hydro(ntau,hydro1_conv,hydro1,imodel2,hydro2_conv,hydro2)
             end if
-            if(it.gt.1)then
+            if(it.gt.1 .and. icorrijo.eq.0)then           
                iRH1=0
                iRH2=0
             end if
+            icorrijo=0
             if(it.gt.2)then
                if(iamplio.eq.0 .and. iRH1_store(it-1).eq.1
      &            .and. iRH1_store(it-2).eq.0 .and. rnlte_th.lt.10.)IRH1=1
@@ -1230,18 +1285,8 @@ c        ===============================================================
      &            .and. rnlte_th.lt.10.)IRH1=1
                if(iamplio.eq.1 .and. imodel2.eq.1 .and. deltaT2_rel.gt.rnlte_th
      &            .and. rnlte_th.lt.10.)IRH2=1
-c              10/10/20 epm: Tell RH to re-evaluate J if T has changed enough.
-c              Finally we don't implement this because there's no improvement.
-c              if(iRH1.ne.0 .or. iRH2.ne.0) then
-c                 if(deltaT1_rel .ge. rnlte_th*2.)then
-c                    startj=NEW_J
-c                 else
-c                    startj=OLD_J
-c                 end if
-c                 call sirkeywords(nrays,startj)
-c              end if
             end if
-
+            
             iRH1_store(it)=IRH1
             iRH2_store(it)=IRH2
 
@@ -1258,7 +1303,6 @@ c              end if
             end if
 
             nn=8*ntau+2
-
             call marquardt2(stok,sig,nfrecs,atmosr,m,mfit,
      &                      covar,alpha,chisq,diag,iamplio,beta)
 
@@ -1301,6 +1345,14 @@ c              10/05/19 epm: Measure time before existing the program.
             varchiLTE=varchi
             if(iRH1 .eq.1 .or. iRH2.eq.1)varchi=(chi00-chisq)/(chi00+chisq)
             call diagonal(diag0,diag,isigo,iamplio,varchi,it)
+
+            if(isigo. eq. 0 .and. iRH1 .eq. 0 .and. varchi .gt. 1.e-3 .and. numcalculation .eq. 1)then            
+               isigo=1
+               icorrijo=1
+               iRH1=1  
+               iRH2=1
+            end if
+
             if(istatusdep1*istatusdep2.ne.0)iamplio=0
             if(istatusdep1*istatusdep2.ne.0)then
                call error(KWARN,'desire','Setting old atmosphere due to'
@@ -1330,17 +1382,24 @@ c           Copiamos la primera sintesis del primer ciclo en perfil.
             end if
             
             if(iamplio.eq.1)then  !converge
+            
+               chirealgood=chireal
+               escalachigood=escalachi
+               chinewgood=chinew
+               sumsqgood=sumsq
+               snchigood=snchi
+               chprintgood=chprint
+              
                ngu=ngu+1
                chi0=chisq
 
                chireal_store=chireal
                sumsq_store=sumsq
 
-c Copiamos la atmosfera de salida (via common) atmosout en atmos
-c para no machacar el common y la duplicamos en atmoslin 
-c La inversion se realiza en la linea de vision, en radianes, pero
-c los modelos de entrada y salida se escriben en disco en grados 
-
+c              Copiamos la atmosfera de salida (via common) atmosout en atmos
+c              para no machacar el common y la duplicamos en atmoslin.
+c              La inversion se realiza en la linea de vision, en radianes, pero
+c              los modelos de entrada y salida se escriben en disco en grados.
                do i=1,16*ntau+5
                   atmos(i)=atmosout(i)
                   atmosb(i)=atmosout(i)
@@ -1355,7 +1414,7 @@ c los modelos de entrada y salida se escriben en disco en grados
                   ro2b(i)=ro2(i)
                end do
                
-              if( it.gt.1 .and. new_evaluation .eq. 3)then
+              if(it.gt.1 .and. new_evaluation.ge.3)then
                  call copia_hydro(ntau,hydro1,hydro1_conv,imodel2,hydro2,hydro2_conv)
               end if
 
@@ -1434,14 +1493,11 @@ c             Si amplio copio en la variable perfil el perfil sintetico.
                fill2vec(ll)=fill2
                contrastevec(ll)=contraste
                porcienvector(ll)=porcien
-
-c              if(isigo.eq.1)posicionciclo(ici)=ll
                posicionciclo(ici)=ll
 
                kv=0
                do i=1,18
                   mvec(ll,i)=m(i)
-c                  if(mvecmax(i).lt.m(i))mvecmax(i)=m(i)
                end do
 
                if(iauto.eq.0) then
@@ -1474,12 +1530,10 @@ c        ===============================================================
          end do 
 
          if(ngu.eq.0)then
-
             if(chprint .gt. umbralchi)then
                call error(KWARN,'desire','Finishing without changing'
      &         //         ' initial model')
             end if
-
          end if  !03/03/21 brc: termino el if(ngu.eq.0)
 
          if(rnlte_th.ge.10. .and. new_evaluation.ne.0)then
@@ -1493,7 +1547,9 @@ c        ===============================================================
                   end do
                   do j=1,8
                      ini1=j*ntau
-                     call evaluate_errors(ntau,m(j),ini1,ini1,atmos1err,errores)
+                     mj=m(j)
+                     if(j .eq. 2)mj=m(1)
+                     call evaluate_errors(ntau,mj,ini1,ini1,atmos1err,errores)
                   end do               
                else
                   do i=1,16*ntau+5  !2 componentes
@@ -1502,8 +1558,12 @@ c        ===============================================================
                   do j=1,8
                      ini1=j*ntau
                      ini2=(8+j)*ntau+2
-                     call evaluate_errors(ntau,m(j),ini1,ini1,atmos1err,errores)
-                     call evaluate_errors(ntau,m(j+8),ini1,ini2,atmos2err,errores)
+                     mj=m(j)
+                     mj8=m(j+8)
+                     if(j .eq. 2)mj=m(1)
+                     if(j .eq. 2)mj8=m(9)
+                     call evaluate_errors(ntau,mj,ini1,ini1,atmos1err,errores)
+                     call evaluate_errors(ntau,mj8,ini1,ini2,atmos2err,errores)
                   end do 
                end if            
                call leemodi222(1,modelerr1,modelerr2,errores,
@@ -1513,27 +1573,26 @@ c        ===============================================================
 
 c        ---------------------------------------------------------
 c        Hacemos una sintesis NLTE
-
+         iwriteRHformat=0
          if(rnlte_th.lt.10. .and. new_evaluation.ne.0)then
-
+               if(new_evaluation .eq. 4)iwriteRHformat=1
                ievaluo=1          
                IRH1=1
                if(imodel2.eq.1)IRH2=1
                
                iamplio=1
                nciclosor=nciclos
+c              Desactivamos las FR numericas en la sintesis final pero
+c              guardamos la variable para reactivarla mas adelante.               
+               do inum=1,18
+                  numericalor(inum)=numerical(inum)
+                  numerical(inum)=0
+               end do
                diagor=diag
   
                startj=NEW_J
                call sirkeywords(nrays,startj)             
                
-c              if(ici.eq.nciclosor)then
-                  do inum=1,18
-                     numericalor(inum)=numerical(inum)
-                     numerical(inum)=0
-                  end do
-c              end if
-
                call comprime2(ntau,m,atmos,atmosr)
                call marquardt2(stok,sig,nfrecs,atmosr,m,mfit,
      &                      covar,alpha,chisq,12345.5,iamplio,beta)
@@ -1544,33 +1603,77 @@ c              end if
      &                      z1,pg1,ro1,z2,pg2,ro2)
      
                if(new_evaluation .ge. 2)then
-                  if(new_evaluation .eq. 3)then
-                    if(imassortau.eq. 0)then
+                  if(new_evaluation .ge. 3)then
+                    if(imassortau .eq. 0)then
                        call write_hydro(mod_hyd_out1,ntau,tau,hydro1)                  !writing H populations model1 if exist (ihydro1=1)
                        if(imodel2 .eq. 1)call write_hydro(mod_hyd_out2,ntau,tau,hydro2)!writing H populations model2 if exist (ihydro2=1)
                     end if
                   end if
                   if(ierror .eq. 2)then !solo atmosfera 1
                      do i=1,8*ntau+2
-                        errores(i)=abs(atmos(i)) !initializing with the atmosphere value
+                        errores(i)=abs(atmos(i)) !initializing with the atmosphere value, used as a threshold (uncertainties < 2*abs(atmos(i)))
                      end do
-                     do j=1,8
+                     j=1 !Temperature
+                     ini1=j*ntau
+                     call evaluate_errors(ntau,m(1),ini1,ini1,atmos1err,errores)
+                     j=2 !Pe
+                     do i=1,ntau
+                        tup(i)=atmos(ntau+i)+errores(ntau+i)
+                        if(tup(i).gt. 2*atmos(ntau+i))tup(i)=2*atmos(ntau+i)
+                        tdown(i)=atmos(ntau+i)-errores(ntau+i)
+                        if(tdown(i) .lt. 0.5*atmos(ntau+i))tdown(i)=0.5*atmos(ntau+i)
+                        if(tdown(i) .lt. 2000.)tdown(i)=2000.
+                        peup(i)=1.05*atmos(2*ntau+i)    !initialization
+                        pedown(i)=0.95*atmos(2*ntau+i)  !initialization
+                     end do   
+                     call equisubmu(ntau,tau,tup,peup,pgup,zup,roup)
+                     call equisubmu(ntau,tau,tdown,pedown,pgdown,zdown,rodown)
+                     do i=1,ntau
+                        errorpe1=abs(peup(i)-atmos(2*ntau+i))
+                        errorpe2=abs(pedown(i)-atmos(2*ntau+i))
+                        if(errorpe2 .gt. errorpe1)errorpe1=errorpe2
+                        errores(2*ntau+i)=errorpe1  !uncertainties of Pe
+                        errorz1=abs(zup(i)-z1(i))
+                        errorz2=abs(zdown(i)-z1(i))
+                        if(errorz2 .gt. errorz1)errorz1=errorz2
+                        errz1(i)=errorz1  !uncertainties of Pg
+                        errorpg1=abs(pgup(i)-pg1(i))
+                        errorpg2=abs(pgdown(i)-pg1(i))
+                        if(errorpg2 .gt. errorpg1)errorpg1=errorpg2
+                        errpg1(i)=errorpg1  !uncertainties of Pg
+                        errorro1=abs(roup(i)-ro1(i))
+                        errorro2=abs(rodown(i)-ro1(i))
+                        if(errorro2 .gt. errorro1)errorro1=errorro2
+                        errro1(i)=errorro1  !uncertainties of density                                                            
+                     end do
+                   
+                     do j=3,8
                         ini1=j*ntau
+c                       Errors as input is the value of the parameter.
+c                       As output contains the uncertainties.
                         call evaluate_errors(ntau,m(j),ini1,ini1,atmos1err,errores)
                      end do               
                   else
                      do i=1,16*ntau+5  !2 componentes
-                        errores(i)=abs(atmos(i)) !initializing with the atmosphere value
+c                       Initializing with the atmosphere value, used as
+c                       threshols (uncertainties < 2*abs(atmos(i))).
+                        errores(i)=abs(atmos(i))
                      end do
                      do j=1,8
                         ini1=j*ntau
                         ini2=(8+j)*ntau+2
-                        call evaluate_errors(ntau,m(j),ini1,ini1,atmos1err,errores)
-                        call evaluate_errors(ntau,m(j+8),ini1,ini2,atmos2err,errores)
+c                       Errors as input is the value of the parameter.
+c                       As output contains the uncertainties.
+                        mj=m(j)
+                        mj8=m(j+8)
+                        if(j .eq. 2)mj=m(1)
+                        if(j .eq. 2)mj8=m(9)                       
+                        call evaluate_errors(ntau,mj,ini1,ini1,atmos1err,errores)
+                        call evaluate_errors(ntau,mj8,ini1,ini2,atmos2err,errores)
                      end do 
                   end if            
-                  call leemodi222(1,modelerr1,modelerr2,errores,
-     &                       ntau,ierror,z1*0,z1*0,z1*0,z2*0,z2*0,z2*0)
+                  call leemodi222(1,modelerr1,modelerr2,errores,ntau,
+     &                            ierror,errz1,errpg1,errro1,z2*0,z2*0,z2*0)
                end if
 
                diag=diagor
@@ -1611,7 +1714,7 @@ c              end if
 c     Write the ".chi" file.
 c     05/05/20 epm: To run in parallel, we need this information.
       open(78,file=snychi)
-      write(78,*) snchi,chprint,sumsq*sn*sn/float(nfree-ielimino)
+      write(78,*) snchigood,escalachigood/chirealgood,chinewgood
       close(78)
 
 c     Write the ".log" file.
@@ -1684,103 +1787,7 @@ c     21/06/19 epm: Error opening the control file.
 
       end
 
-c_____________________________________________________________________________
-
-      subroutine diagonal_FUNCIONA_PEOR(diag0,diag,isigo,iamplio,varchi,it)
-
-      implicit real*4(a-h,o-z)
-      include 'PARAMETER'
-      real*4 diagon(7),diagonold(7)
-      character diver*11,espacio*35
-      character*100 msg
-      common/iteradiagonal/itt
-      common/repeticion/factorrep !factor de diag para evitar repeticiones
-      data ir/1/
-
-      diver=' increases '
-      espacio='---------------------------------'
-
-      if(it.eq.1)then
-         ir=1
-         itt=0
-
-         diagonold(1)=diag0
-         diagon(1)=diag0
-         do j=2,7 
-            diagonold(j)=diag
-         end do
-      end if
-      ir=it
-      if(ir .gt. 6)ir=6
-      do j=1,ir
-         diagonold(j)=diagon(j)
-      end do
-      do j=1,ir-1
-         diagon(j)=diagonold(j+1)
-      end do
-      diagon(ir)=diag
-
-      if(abs(diag).lt.1.e-15)then
-         isigo=0
-         iamplio=0
-         write(msg,'(a,e10.3,a)')
-     &         'Stop iterating (diagonal) because diag = ',abs(diag),
-     &         ' < 1.e-15'
-         call error(KLINE,'',msg)
-         return
-      else if(diag.gt.diag0)then
-         isigo=1
-         iamplio=0
-         itt=itt+1
-      else if(diag.le.diag0)then
-         isigo=1
-         iamplio=1
-         itt=0
-      end if
-
-      if(ir.gt.5)then
-         dir02=abs(diagon(ir)-diagon(ir-2))
-         dir13=abs(diagon(ir-1)-diagon(ir-3))
-         if(dir02 .lt. 1.e-8 .or. dir13 .lt. 1.e-8)then
-            factorrep=0.
-         else
-            factorrep=1.
-         end if 
-      end if
-
-c     if(ir.eq.7)then
-c        dir01=abs(diagon(ir)-diagon(ir-1))
-c        dir03=abs(diagon(ir)-diagon(ir-3))
-c        dir04=abs(diagon(ir)-diagon(ir-4))
-c        dir05=abs(diagon(ir)-diagon(ir-5))
-c
-c        if(dir01 .lt. 1.e-12 .and.dir02 .lt. 1.e-12 .and.
-c    &      dir03 .lt. 1.e-12 .and.dir04 .lt. 1.e-12 .and.
-c    &      dir05 .lt. 1.e-12 )factorrep=1.
-c     end if
-
-      if(diag0.gt.0)then
-         if(diag.gt.diag0)then
-            varchi=1.0
-            add=-20.
-            if(diag0.gt.0.0)add=alog10(diag0)
-            write(msg,1100)add,diver,espacio
-            call error(KLITE,'',msg)
-            if(itt.ge.4)then
-               isigo=0
-               iamplio=0
-               write(msg,'(a,e10.3,a)')
-     &               'Stop iterating (diagonal) because itt = ',itt,' >= 4'
-               call error(KLINE,'',msg)
-            end if
-         end if
-      end if
-
-1100  format(5x,f4.0,1x,a11,a)
-      return
-      end
-
-c_____________________________________________________________________________
+c ______________________________________________________________________
 
       subroutine diagonal(diag0,diag,isigo,iamplio,varchi,it)
 
@@ -1852,6 +1859,11 @@ c_____________________________________________________________________________
                isigo=0
                iamplio=0
             end if
+         else
+           if(varchi .lt. 1.e-3)then
+               isigo=0
+               iamplio=0
+           end if   
          end if
       end if
 
@@ -2118,9 +2130,7 @@ c_____________________________________________________________________________
             do i=1,ntau
                ileo=ini1+i
                iescribo=ini2+i
-               errfac=atmoserr(ileo)*sn
-               if(errfac .lt. 1.e-10)errfac=1.e-10
-               errfac=1./errfac
+               errfac=atmoserr(ileo)
                if(errfac .gt. 2*errores(iescribo))errfac=2*errores(iescribo)
                errores(iescribo)=errfac
             end do

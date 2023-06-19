@@ -1,4 +1,4 @@
-c penalty2 calcula el castigo en la chi² por picos en las estratificaciones
+c penalty2 calcula el castigo en la chi por picos en las estratificaciones
 c         calcula tambien dcastigo que es la derivada de castigo respecto
 c         a la varicion de cada parametro del modelo
 c         d2castigo es la derivada segunda.
@@ -34,13 +34,9 @@ c es llamada por marqcoef2 (linea 83)
 	         suma=suma+abs(f-abs(f))
 	      end do
 	      castigo=castigo+suma/c
-c	      print*,'castigo sobre la variable',j,suma/c
 	   endif
 	   kred=kred+mnodos(j)
 	end do
-
-c	print*,'castigo total',castigo
-
 
 	kred=0
 	do j=1,18            !do en grupos de varibles (1=t,2=p,...etc)
@@ -99,10 +95,3 @@ c signo: signo(x)=1 si x>=0 y signo(x)=-1 si x<0
 	return
 	end
 c-----------------------------------------------------------------------------
-
-
-
-
-
-
-

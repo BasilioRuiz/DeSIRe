@@ -19,7 +19,6 @@ c    &  covar(mfit,mfit),alpha(mfit,mfit),atry(mmx),beta(mfit),da(mmx)
 
         common/tol/tol
         common/alamda0/alamda0
-c        common/allc/all
         common/ochisq/ochisq
         common/sigrealchi/sigreal,chireal,sumsq
         common/repeticion/factorrep !factor de lambda para evitar repeticiones
@@ -27,7 +26,6 @@ c        common/allc/all
 c       El common siguiente viene del principal y es para pasarle a marquardt2
 c       los indices iniciales y finales de las perturbaciones a gamma y fi
 c       aditivas.
-c       common/ifies/iga1,ifi11,iga2,ifi22
         common/ifies/ipa1,ipa11,iga1,ifi11,ipa2,ipa22,iga2,ifi22
         common/ieliminofrec/ielimino  !(del ppal) para el print de la S/N
         common/primerchi/snn,chisn
@@ -35,23 +33,18 @@ c       common/ifies/iga1,ifi11,iga2,ifi22
         common/thresholdNLTE/rnlte_th
 
         data it/0/
-
-c        all=alamda
         xpi=3.14159265
 
         if(alamda.lt.0.)then
            alamda=alamda0
            call marqcoef2(y,sig,ndata,a,mnodos,mfit,alpha,beta,chisq)
-c           if(nciclos.eq.0)call marqcoef2(y,sig,ndata,a,mnodos,mfit,alpha,beta,chisq)  !Llama una segunda vez
            if(nciclos.lt.1)return
            iRH1=0
            iRH2=0
-
            ochisq=chisq
            chip=sumsq/float(ndata-ielimino)
            snn=1./sqrt(chip)
            chisn=chireal/float(ndata-ielimino-mfit)
-
            write(msg,786)0,snn,chisn
            call error(KLITE,'',msg)
         endif
@@ -86,7 +79,6 @@ c       ::::::::::::::::::::::::hasta aqui solo para la primera iteracion
         end do
         if(it .eq.1 .and. datTmax .gt. rnlte_th .and. rnlte_th .lt. 10. )iRH1=1
         do j=ipa1+1,ipa11                 !nodos en Pe atm 1
-c          atry(j)=a(ipa11)*(1.+da(j))    !escala con la Pe en el ultimo nodo
            if(da(j) .gt. .25) da(j)=.25
            if(da(j) .lt. -0.25) da(j)=-0.25
            atry(j)=a(j)*(1.+da(j))        !escala con la Pe en el ultimo nodo
@@ -101,7 +93,6 @@ c          atry(j)=a(ipa11)*(1.+da(j))    !escala con la Pe en el ultimo nodo
            atry(j)=a(j)*(1.+da(j))
         end do
         do j=ipa2+1,ipa22                 !nodos en Pe atm 2
-c          atry(j)=a(ipa22)*(1.+da(j))    !escala con la Pe en el ultimo nodo
            atry(j)=a(j)*(1.+da(j))        !escala con la Pe en el ultimo nodo
         end do
         do j=ipa22+1,iga2                 !nodos en mic,H,Vz atm 2
@@ -151,13 +142,6 @@ c          atry(j)=a(ipa22)*(1.+da(j))    !escala con la Pe en el ultimo nodo
            end do
 
         else
-
-c          alamda=10.*alamda
-c          if(alamda.lt.1.e3)then
-c             alamda=10.*alamda
-c          else
-c             alamda=2.*alamda
-c          end if
 
            if(alamda.le.1.e-3)then
               alamda=100.*alamda

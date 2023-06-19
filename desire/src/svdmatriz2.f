@@ -12,17 +12,6 @@ c la matriz a queda destruida a la salida
 	real wt(kt),ww(kt),wi(2,kt)
 
 
-c      print*,'mfitmax,n=',mfitmax,n
-c      do i=1,mfitmax
-c          do j=1,mfitmax
-c             print*,'a(i,j)=',i,j,a(i,j)
-c          enddo
-c      enddo
-
-c      do i=1,mfitmax
-c         print*,'i,b=',i,b(i)
-c      enddo
-
        call svdcmp2(a,n,n,n,n,w,v)
 
 c contamos el numero de variables (no param. libres sino variables t,pe...)
@@ -31,7 +20,6 @@ c contamos el numero de variables (no param. libres sino variables t,pe...)
 	   if(mnodos(i).gt.0)then
 	       nvar=nvar+1
 	       mm(nvar)=mnodos(i)
-c               print*,'en svdmatriz2 mm(',nvar,')=',mm(nvar),' n=',n
 	   end if
 	end do	
 
@@ -113,12 +101,7 @@ c adopto la primera correccion modificada por la segunda
 
         end if
 
-c        print*,'en svdmatriz2 a',a(1,1),' b=',b(1)
-
 	call svbksb(a,w,v,n,n,n,n,b,b)
-
-c        print*,'en svdmatriz2 a*x=b x=',b(1)
-
 
 	return
 	end

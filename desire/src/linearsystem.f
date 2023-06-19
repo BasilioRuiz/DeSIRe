@@ -620,12 +620,10 @@ c------------------------------------------------------
            call error(KSTOP,'bezier_cubic_deriv',
      &                'Stop at bezier_cubic_deriv because x1=x2=x3')
         endif
-c        print*,'bezier_cubic_deriv x1 x2 x3 y1 y2 y3=',x1,x2,x3,y1,y2,y3
         if(abhk .ge. eps .and. abhk_1 .ge. eps) then 
             alphak=(1.+hk/(hk+hk_1))/3.       
             dkplus=(y3-y2)/hk
             dkminus=(y2-y1)/hk_1
-c            print*,'hk=',hk,'hk_1=',hk_1,'alphak=',alphak,dkplus,dkminus
         else 
             if(abhk .ge. eps) then 
                alphak=0. 
@@ -639,14 +637,12 @@ c            print*,'hk=',hk,'hk_1=',hk_1,'alphak=',alphak,dkplus,dkminus
                dkplus=1.
                if(dkminus .lt. -eps)dkplus=-1.
             endif
-c            print*,'bis hk=',hk,'hk_1=',hk_1,'alphak =',alphak,dkplus,dkminus
         endif
                    
         dkprod=dkplus*dkminus
         yder=0.
         if(dkprod.gt.0.)yder=dkprod/(alphak*dkplus+(1.-alphak)*dkminus)
         bezier_cubic_deriv=yder
-c        print*,'bezier_cubic_deriv=',yder
         return
         end    
 
@@ -705,7 +701,6 @@ c It uses function bezier_cubic_deriv
         yki_1=yki   
 c        Skder(1)=bezier_cubic_deriv(xki_1,xki,xki1,yki_1,yki,yki1)    
         Skder(1)=bezier_cubic_deriv2(xki-xki_1,xki1-xki,yki-yki_1,yki1-yki) 
-c        print*,'bezier_cubic_deriv_array ',bezier_cubic_deriv(xki_1,xki,xki1,yki_1,yki,yki1),Skder(1)
              
         do j=2,nk-1
            xki_1=xki 
@@ -716,7 +711,6 @@ c        print*,'bezier_cubic_deriv_array ',bezier_cubic_deriv(xki_1,xki,xki1,yk
            yki1=Sk(j+1) 
 c           Skder(j)=bezier_cubic_deriv(xki_1,xki,xki1,yki_1,yki,yki1)   
            Skder(j)=bezier_cubic_deriv2(xki-xki_1,xki1-xki,yki-yki_1,yki1-yki) 
-c           print*,'bezier_cubic_deriv_array ',bezier_cubic_deriv(xki_1,xki,xki1,yki_1,yki,yki1),Skder(j)
         end do
         Skder(nk)=Skder(nk-1)
         return
@@ -770,7 +764,6 @@ c It uses function bezier_cubic_deriv
               Skder(j,k)=0.
            end do  
         end do
-c        print*,ni,nk
         if(ni .le. 1)then                        
           x21=0.
           x32=xk(2)-xk(1) 
@@ -1060,7 +1053,6 @@ c It uses function bezier_cubic_deriv
              hk3=(xki1-xki)/3.
              Ek(j)=yki+hk3*yder
              Fk1(j)=yki1-hk3*yder1
-c             print*,'bz coeff j=',j,'hk3=',hk3,'yki=',yki,'yder=',yder,'yder1=',yder1,'Ek=',Ek(j),'Fk1=',Fk1(j)
 
         end do
         
@@ -1124,7 +1116,6 @@ c It uses function bezier_cubic_deriv
              C0=yki-hk*yder   !antes yki+hk*yder     !!!!Atencion: cambio de signo porque en el input la red en tau va de arriba a abajo...
              C1=yki1+hk*yder1 !antes yki1-hk*yder1   !!!!Atencion: cambio de signo porque en el input la red en tau va de arriba a abajo...
              Ck(j)=(C0+C1)/2.
-c             print*,'bz quad coeff j=',j,'hk=',hk,'yki=',yki,'yder=',yder,'yder1=',yder1,'C0=',C0,'C1=',C1
 
         end do
         

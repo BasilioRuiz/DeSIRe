@@ -7,8 +7,6 @@ C     SAHA-EGGERT EQUATION
       else
         SAHA=1.e38
       endif  
-c      print*,'saha en saha =          ',saha
-c      print*,theta,chi,u1,u2,pe
       RETURN
       END   
 

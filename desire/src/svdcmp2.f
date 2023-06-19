@@ -14,17 +14,11 @@
 
       anorm=0.0d0
 
-c      print*,'mfitmax,m,n,mp,np=',mfitmax,m,n,mp,np
       do i=1,m
           do j=1,n
-c             print*,'svdcmp2 a(i,j)=',i,j,a(i,j)
              da(i,j)=a(i,j)*1.d0
           enddo
       enddo
-
-c      do i=1,mfitmax
-c         print*,'i,w,rv1=',i,w(i),rv1(i)
-c      enddo
 
       do 25 i=1,n
 
@@ -184,7 +178,6 @@ c          if (g.ne.0.0) then
             do 26 j=l,n
 
               v(j,i)=real( (da(i,j)/da(i,l))/g )
-c              if(abs(a(i,l)) .lt. 1.e-12)print,'svdcmp 183',i,l,a(i,l) 
 26          continue
 
             do 29 j=l,n
@@ -380,8 +373,6 @@ c	      pause 'no convergence in 50 iterations SVDCMP'
 
           h=rv1(k)
 
-c          print*,'svdcmp2 381 h y',h,y,h*y,y,z,g,h
-          
           f=((y-z)*(y+z)+(g-h)*(g+h))/(2.0*h*y)
 
           g=dsqrt(f*f+1.0)
@@ -406,7 +397,6 @@ c          print*,'svdcmp2 381 h y',h,y,h*y,y,z,g,h
 
             z=dsqrt(f*f+h*h)
 
-c            print*,'svdcmp2 405 f h z ',f,h,z,1./z
             rv1(j)=z
 
             c=f/z
@@ -433,7 +423,6 @@ c            print*,'svdcmp2 405 f h z ',f,h,z,1./z
               
 c              vnmj=(x*c)+(z*s)
 c              vnmi=-(x*s)+(z*c)
-c              print*,'svdcmp2 nm i j', v(nm,i),v(nm,j),x,c,z,s
 c             if(vnmj+1 .eq. vnmj)print*,'svdcmp2 vnmj nm es nan!!!!',vnmj
 c              if(vnmi+1 .eq. vnmi)print*,'svdcmp2 vnmi nm es nan!!!!',vnmi
 c              if(vnmj+1 .eq. vnmj)stop
@@ -491,7 +480,6 @@ c            if (z.ne.0.0) then
 
 999     do i=1,m
           do j=1,n
-c             print*,'svdcmp2 a(i,j)=',i,j,a(i,j)
              a(i,j)=real(da(i,j))
           enddo
        enddo  

@@ -17,7 +17,6 @@ c        IF(W(J).NE.0.)THEN
           DO 11 I=1,M
 
             S=S+U(I,J)*B(I)
-c            print*,'svbksb 17',i,j,U(I,J),B(i),w(j)
 
 11        CONTINUE
 
@@ -36,7 +35,6 @@ c            print*,'svbksb 17',i,j,U(I,J),B(i),w(j)
         DO 13 JJ=1,N
 
           S=S+V(J,JJ)*TMP(JJ)
-c          print*,'svbksb 36',j,jj,V(J,JJ),TMP(JJ)
 
 13      CONTINUE
 

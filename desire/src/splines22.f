@@ -12,8 +12,6 @@
 
         if(nspl_lin.eq.0 .or. nspl_lin.eq.2 .or. nspl_lin.eq.4) then !if 0
 c Interpolamos por splines ---------------------------------
-c           print*,'splines22 interpola splines'
-
 
            paso=x(2)-x(1)
            p2=2*paso*paso
@@ -44,7 +42,6 @@ c           print*,'splines22 interpola splines'
 	         end do
               if(n.eq.2)then !if 2
       		      ks=0
-c                      print*,'trabajamos con 2 nodos bb'
 		      do i=1,ntau
 			 f(i,1)=1.0-taure(i)
 			 f(i,2)=taure(i)
@@ -71,7 +68,6 @@ c                      print*,'trabajamos con 2 nodos bb'
            end if !fin (if 1)
        else
 c Interpolamos por rectas ---------------------------------
-c        print*,'splines22 interpola lineal'
 	if(n.gt.2)then
 
               i_inter=(ntau-1)/(n-1) !numero de puntos entre 2 nodos
@@ -91,7 +87,6 @@ c        print*,'splines22 interpola lineal'
                     taure(i)=(tau(i)-x(j1))/pasoj
                     f(i,j1)=1.0-taure(i)
                     f(i,j2)=taure(i)
-c           print*,j1,j2,x(j1),x(j2),'--',i,taure(i),'---',f(i,j1),f(i,j2)
                  enddo
               enddo
               f(ntau,n)=1.

@@ -38,17 +38,13 @@ c calculamos el peso molecular medio pmu
   	   tsi=t(i)
            psi=pe(i)
            pgi=pg(i)
-c           print*,'petaufrompgzro in00 ',pg(i),psi
            call pefrompg11(tsi,pg(i),psi)
            pe(i)=psi
-c           print*,'petaufrompgzro in1 ',pg(i),psi
            call gasc(tsi,psi,pgi,pp)
-c           print*,'petaufrompgzro out0 ',pg(i),psi
 	   call kappach(5.e-5,tsi,psi,pp,d1,d1,kac,d2,d2)
            pesomedio=pmusum/(asum+pp(8)) !peso molec. medio
            kappa(i)=kac*avog/pmusum
            ro(i)=pesomedio*pgi/tsi/cgases
-c           print*,'petaufrompgzro out1 ',
         end do
 
         tau(ntau)=10.**(tau(ntau)) !cond. de contorno la tau superf. (entrada)

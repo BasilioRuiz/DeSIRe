@@ -123,7 +123,6 @@ c          kap(i-1)=kap(i)
               kap(i-1)=kac*avog
               pg(i-1)=pg(i)+2.*g*paso/ (kap(i-1)+kap(i))
               dif=abs(pgold/pg(i-1)-1.)
-c              print*,'i=',i,' n=',n,' dif=',dif,' pg=',pg(i-1)
            end do
            if(n.gt.50)then 
                 write(msg,*)'The error at tau(',i+1,') >=',dif*100.,' %'
@@ -226,7 +225,6 @@ c              pgold=pg(i-1)
               call pefrompg1(t(i-1),pg(i-1),pe(i-1))
 
               dif=abs(pgold/pg(i-1)-1.)
-c              print*,'i=',i-1,' n=',n,' dif=',dif,' pg=',pg(i-1),'pe=',pe(i-1)
            end do
            if(n.gt.50)then 
                 write(msg,*)'The error at tau(',i+1,') >=',dif*100.,' %'

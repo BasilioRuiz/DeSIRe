@@ -205,7 +205,6 @@ c-------------------------------------------------------------------
        do i=icontorno+1,n
            delta=deltai(i)
            delt2=delt2i(i)
-c           print*,i,delta,delt2
 
 	   do jj=1,4
               e0=etal(jj,1,i-1)
@@ -229,7 +228,6 @@ c           print*,i,delta,delt2
 	      enddo
 	      num(jj,jj) = 1.0 + num(jj,jj)
 	      den2(jj,jj) = 1.0 + den2(jj,jj)
-c	      print*,jj,num(jj,jj),den2(jj,jj)
 	   enddo
 	   call matinx(num)
 

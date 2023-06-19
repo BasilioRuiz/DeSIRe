@@ -74,7 +74,6 @@ c inicializamos (atencion gamma debe entrar en radianes)
         if(pmagsi.gt.epsilon*pg0)pmagsi=epsilon*pg0
 
         pg00=pg0-pmagsi !nueva presion gaseosa
-c        print*,'pg0 pg00 pmagsi epsilon',pg0,pg00,pmagsi,epsilon,sin(gamma(ntau))
 
         call pefrompg11(tsi,pg00,psi)
         pe(ntau)=psi

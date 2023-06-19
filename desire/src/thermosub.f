@@ -53,14 +53,12 @@ c        pesomedio=pmusum/(asum+p(90)) !peso molec. medio
         pesomedio0=pmusum/asum        !peso molec. medio por atomo
         pesomedio=pesomedio0/grado1
         
-c        print*,pmusum/(asum+p(90)),pesomedio,pmusum/(asum+p(90))/pesomedio
-
 c calculamos la densidad y las derivadas de su logaritmo a T y Pe
         rho=pesomedio*pg/t/cgases
         drho=grado1*dpg-1./t
         ddrho=grado1*(ddpg-1./pg)
                        
-c calculamos la energía interna por unidad de masa  y sus derivadas
+c calculamos la energia interna por unidad de masa  y sus derivadas
 c        uint_neutro=1.5*pg/rho
         
 c calculamos la energia interna de ionizacion por unidad de masa

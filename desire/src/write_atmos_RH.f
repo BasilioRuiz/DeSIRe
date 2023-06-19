@@ -1,7 +1,7 @@
 c_____________________________________________________________________________
 c
 c write_atmos_RH
-c write the model atmosphere in RH format
+c write the atmosphere model in RH format
 c
 c 11/11/20 epm: Save the model in memory instead of file.
 c_____________________________________________________________________________
@@ -143,7 +143,7 @@ c       Pasamos todo a RH.
 c_____________________________________________________________________________
 c
 c write_atmos_RH_tau
-c write the model atmosphere in RH format in logtau scale (needs H populations)
+c write the atmosphere model in RH format in logtau scale (needs H populations)
 c
 c 11/11/20 epm: Save the model in memory instead of file.
 c_____________________________________________________________________________
@@ -278,3 +278,144 @@ c       Pasamos todo a RH.
 
         return
         end
+
+c_____________________________________________________________________________
+c
+c write_atmos_RH_tau_disk
+c write the atmosphere model on disk in RH format in logtau scale
+c
+c 03/03/23 epm: Write the model on disk.
+c_____________________________________________________________________________
+
+        subroutine write_atmos_RH_tau_disk(ID_model,RH_model,RH_mag,atmosLG,
+     &                                     ntau,natmos)
+
+        implicit real*4 (a-h,o-z)
+        include 'PARAMETER'
+
+        character RH_model*(*),RH_mag*(*),ID_model*(*)
+        character geoscale
+        integer*4 ntau,nB,natmos
+        integer*4 codes(100)
+        real*4    deglat,deglon
+        real*4    atmosLG(*)
+        real*4    T(kt),elec_dens(kt),vz(kt),vmic(kt)
+        real*4    B(kt),gamma(kt),phi(kt)
+        real*4    hydro1(6,kt),hydro2(6,kt)
+        real*4    nh1(kt),nh2(kt),nh3(kt),nh4(kt),nh5(kt),nh6(kt)
+        real*8    gravity,dlog10g
+        real*8    log_tau(kt)
+
+        character*40 msg
+
+        save nh1,nh2,nh3,nh4,nh5,nh6
+
+        common/hydroge_populations/hydro1,hydro2  !float (6,kt), H populations
+        common/latlong/deglat,deglon
+c       Usamos este common compartido con write_atmos_RH() para salvar
+c       las variables en el (en vez de usar save) y ahorrar algo de memoria.
+        common/saveatmos/log_tau,T,elec_dens,vz,vmic,B,gamma,phi
+
+        epsil=1.e-6
+        bolr=1.3806488e-16
+        gravity=27413.847972d0   !cgs
+        dlog10g=dlog10(gravity)  !4.43797
+
+        ican=53
+c       RH_model='Temporary.atmos' !now the filename is an input argument
+        open(ican,file=RH_model)
+        write(ican,*)ID_model(1:20)
+        write(ican,*)'Tau scale'
+        write(ican,'("* log g [cm s^-2]")')
+        write(ican,*)dlog10g
+        write(ican,'("* Ndep")')
+        write(ican,*)ntau
+        write(ican,'("*")')
+        write(ican,'("*lgtau Temperature Ne V Vturb")')
+
+        call toascii(trim(ID_model),100,codes)
+        ncodes=len_trim(ID_model)
+        geoscale='T'
+
+c       Le damos la vuelta a los arrays porque SIR va desde lo mas profundo
+c       a la superficie y RH va al reves, de la superficie a lo profundo.
+
+        i=1
+        do k=ntau,1,-1
+           T(i)=atmosLG(k+ntau)
+           elec_dens(i)=atmosLG(k+2*ntau)/bolr/T(i)
+           vz(i)=-atmosLG(k+5*ntau)*1.e-5
+           vmic(i)=atmosLG(k+3*ntau)*1.e-5
+           log_tau(i)= dble(atmosLG(k))
+           write(ican,100)log_tau(i),T(i),elec_dens(i),vz(i),vmic(i)
+           i=i+1
+        end do
+
+        write(ican,'("*")')
+        write(ican,'("* Hydrogen populations ")')
+        write(ican,'("*    nh(1)        nh(2)        n(h3)        nh(4)'
+     &  //         '        nh(5)        np ")')
+        if(natmos.eq.1)then
+           i=1
+           do k=ntau,1,-1
+              nh1(i)=hydro1(1,k)
+              nh2(i)=hydro1(2,k)
+              nh3(i)=hydro1(3,k)
+              nh4(i)=hydro1(4,k)
+              nh5(i)=hydro1(5,k)
+              nh6(i)=hydro1(6,k)
+              i=i+1
+              write(ican,101)(hydro1(j,k),j=1,6)
+           end do
+        else if(natmos.eq.2)then
+           i=1
+           do k=ntau,1,-1
+              nh1(i)=hydro2(1,k)
+              nh2(i)=hydro2(2,k)
+              nh3(i)=hydro2(3,k)
+              nh4(i)=hydro2(4,k)
+              nh5(i)=hydro2(5,k)
+              nh6(i)=hydro2(6,k)
+              i=i+1
+              write(ican,101)(hydro2(j,k),j=1,6)
+           end do
+        else
+           write(msg,'(a,i2)') 'Wrong number of atmospheres = ',natmos
+           call error(KSTOP,'write_atmos_RH_tau',msg)
+        end if
+
+        close(ican)
+
+c  Writting magnetic field
+
+        nB=0
+        i=1
+        do k=ntau,1,-1
+           B(i)=atmosLG(4*ntau+k)*1.e-4
+           gamma(i)=atmosLG(6*ntau+k)
+           phi(i)=atmosLG(7*ntau+k)
+           if(B(i).gt.0) nB=ntau
+           i=i+1
+        end do
+
+c       RH_mag ='Temporary_field.mod' !now the filename is an input argument
+        if(RH_mag.ne.'none')then
+           open(ican,file=RH_mag)
+           do i=1,ntau
+              write(ican,*)B(i),gamma(i),phi(i)
+           end do
+           close(ican)
+        end if
+
+c       Pasamos todo a RH.
+c        call siratmos(codes,ncodes,geoscale,dlog10g,ntau,
+c     &                log_tau,T,elec_dens,vz,vmic,nB,B,gamma,phi)
+c        call siratmosnh(nh1,nh2,nh3,nh4,nh5,nh6)
+
+100     format(1x,f13.9,1x,f10.2,1x,1pe12.5,1x,e11.4,1x,e11.4,1x)
+101     format(6(1x,e12.5))
+
+        return
+        end
+
+c_____________________________________________________________________________

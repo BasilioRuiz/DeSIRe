@@ -24,6 +24,67 @@ c _____________________________________________________________
         subroutine comprime2(ntau,m,atmos,atmosr)
 
         implicit real*4 (a-h,o-z)
+        include 'PARAMETER' !incluidng vthresh: the threshold for velocity
+
+        real*4 atmos(*),atmosr(*)
+        integer m(*)
+        common/offset/voffset  !para respuestas
+        common/ivez/ivez
+
+        if(ivez.eq.0)then
+           ivez=1
+c           vmin=20.e5
+c           if(m(13).ne.0.or.m(5).ne.0)vmin=1.e20
+c           do i=1,ntau              
+c              if(atmos(2+13*ntau+i).lt.vmin.and.m(13).ne.0)
+c     &           vmin=atmos(2+13*ntau+i)
+c              if(atmos(5*ntau+i).lt.vmin.and.m(5).ne.0)vmin=atmos(5*ntau+i)
+c           end do
+c           voffset=vmin-vthresh    !cm/s
+           voffset=-vthresh    !cm/s
+        end if
+
+        kred=0     !indice reducido
+        kamp=ntau  !indice ampliado (los ntau puntos de tau1)
+
+        do i=1,18  !do en grupos de variables (1=t,2=p,...etc)
+           ntau2=ntau
+           if(i.eq.8.or.i.eq.16.or.i.eq.17.or.i.eq.18)ntau2=1  !si mac1,mac2 o ff22,%
+           if(m(i).eq.1)then  !si pert. constante promedio la atm.
+              kred=kred+1
+              sum=0.
+              do ii=1,ntau2
+                 sum=sum+atmos(kamp+ii) 
+              end do
+              atmosr(kred)=sum/float(ntau2)
+              if(i.eq.17)atmosr(kred)=(1.e0-atmosr(kred))/atmosr(kred)  !ff
+              if(i.eq.18)atmosr(kred)=atmosr(kred)/(100.-atmosr(kred))  !%
+              if(i.eq.5.or.i.eq.13)atmosr(kred)=atmosr(kred)-voffset
+           else if(m(i).gt.1)then
+              mm=(ntau-1)/(m(i)-1)   !espaciado entre nodos 
+              do j=1,m(i)
+                 kred=kred+1
+                 jj=kamp+(j-1)*mm+1
+                 atmosr(kred)=atmos(jj)
+                 if(i.eq.5.or.i.eq.13)atmosr(kred)=atmosr(kred)-voffset                                      
+              end do
+           end if     
+           kamp=kamp+ntau2
+              if(i.eq.8)kamp=kamp+ntau+1  !los ntau puntos de tau2 y el de ff1
+       end do
+       
+       return
+       end
+
+
+c _____________________________________________________________
+c
+c "comprime3" = comprime2 for 1 atmosphere
+c _____________________________________________________________
+
+        subroutine comprime3(ntau,m,atmos,atmosr)
+
+        implicit real*4 (a-h,o-z)
         include 'PARAMETER'
 
         real*4 atmos(*),atmosr(*)
@@ -33,83 +94,45 @@ c _____________________________________________________________
 
         if(ivez.eq.0)then
            ivez=1
-c el calculo de vof esta duplicado en fperfil2 OJO!!!!!!!!!!!!
-           vmin=7.e5
-           if(m(13).ne.0.or.m(5).ne.0)vmin=1.e20
-
-           do i=1,ntau              
-	      if(atmos(2+13*ntau+i).lt.vmin.and.m(13).ne.0)
-     &                              vmin=atmos(2+13*ntau+i)
-              if(atmos(5*ntau+i).lt.vmin.and.m(5).ne.0)vmin=atmos(5*ntau+i)
-           end do
-          voffset=vmin-7.e5    !cm/s
-c           voffset=1.0
+c           vmin=20.e5
+c           if(m(13).ne.0.or.m(5).ne.0)vmin=1.e20
+c           do i=1,ntau              
+c              if(atmos(2+13*ntau+i).lt.vmin.and.m(13).ne.0)
+c     &           vmin=atmos(2+13*ntau+i)
+c              if(atmos(5*ntau+i).lt.vmin.and.m(5).ne.0)vmin=atmos(5*ntau+i)
+c           end do
+c          voffset=vmin-vthresh     !cm/s
+           voffset=-vthresh
         end if
 
+        kred=0     !indice reducido
+        kamp=ntau  !indice ampliado (los ntau puntos de tau1)
 
-	kred=0		!indice reducido
-	kamp=ntau	!indice ampliado (los ntau puntos de tau1)
-
-	do i=1,18	!do en grupos de variables (1=t,2=p,...etc)
-
+        do i=1,8   !do en grupos de variables (1=t,2=p,...etc)
            ntau2=ntau
-           if(i.eq.8.or.i.eq.16.or.i.eq.17.or.i.eq.18)ntau2=1 !si mac1,mac2 o ff22,%
-
-           if(m(i).eq.1)then	!si pert. constante promedio la atm.
+           if(i.eq.8)ntau2=1  !si mac1,mac2 o ff22,%
+           if(m(i).eq.1)then  !si pert. constante promedio la atm.
               kred=kred+1
               sum=0.
               do ii=1,ntau2
                  sum=sum+atmos(kamp+ii) 
               end do
               atmosr(kred)=sum/float(ntau2)
-              
-c              if(i .eq.2 .or. i .eq. 10)then
-c                 sum=0.
-c                 do ii=1,ntau2
-c                    sum=sum+alog(atmos(kamp+ii)) 
-c                 end do
-c                 atmosr(kred)=sum/float(ntau2)
-c              end if
-
-	      if(i.eq.17)atmosr(kred)=(1.e0-atmosr(kred))/atmosr(kred) !ff
-	      if(i.eq.18)atmosr(kred)=atmosr(kred)/(100.-atmosr(kred)) !%
-c              if(i.eq.6.or.i.eq.14)atmosr(kred)=tan(atmosr(kred)/2.0)
-c	       if(i.eq.7.or.i.eq.15)atmosr(kred)=tan(atmosr(kred)/4.0)
-c              print*,'comprime2 kred=',kred,'a=',atmos(kamp+ntau2),'ar=',atmosr(kred)
-              if(i.eq.5.or.i.eq.13)atmosr(kred)=atmosr(kred)-voffset
-c                    print*,'comprime2 102',kred,atmosr(kred)
-
+              if(i.eq.5)atmosr(kred)=atmosr(kred)-voffset
            else if(m(i).gt.1)then
-	   
               mm=(ntau-1)/(m(i)-1)   !espaciado entre nodos 
-c              if(i.eq.6.or.i.eq.14)then	!g1 o g2
-c                do j=1,m(i)
-c                   kred=kred+1
-c                   jj=kamp+(j-1)*mm+1
-c                   atmosr(kred)=tan(atmos(jj)/2.0)
-c                end do
-c              else if(i.eq.7.or.i.eq.15)then	!f1 o f2
-c               do j=1,m(i)
-c                   kred=kred+1
-c                   jj=kamp+(j-1)*mm+1
-c                    atmosr(kred)=tan(atmos(jj)/4.0)
-c                 end do
-c	      else
-                 do j=1,m(i)
-                    kred=kred+1
-                    jj=kamp+(j-1)*mm+1
-                    atmosr(kred)=atmos(jj)
-                    if(i.eq.5.or.i.eq.13)atmosr(kred)=atmosr(kred)-voffset
-c                    if(i.eq.2.or.i.eq.10)atmosr(kred)=alog(atmos(kred))                                       
-                 end do	
-c	      end if
+              do j=1,m(i)
+                 kred=kred+1
+                 jj=kamp+(j-1)*mm+1
+                 atmosr(kred)=atmos(jj)
+                 if(i.eq.5)atmosr(kred)=atmosr(kred)-voffset                                    
+              end do
+           end if     
+           kamp=kamp+ntau2
+           if(i.eq.8)kamp=kamp+ntau+1	!los ntau puntos de tau2 y el de ff1
+        end do
+        return
+        end
 
-	   end if	     
-	   kamp=kamp+ntau2
-	   if(i.eq.8)kamp=kamp+ntau+1	!los ntau puntos de tau2 y el de ff1
-	
-	end do
 
-	return
-	end
 c _____________________________________________________________

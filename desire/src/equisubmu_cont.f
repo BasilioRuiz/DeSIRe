@@ -42,7 +42,6 @@ c           tau(i)=tau1(i)+alog10(abs(cth))  !this is the optical depth in
               tau0=tau1(i)
            end if
         end do
-c        print*,'imin tau(imin)=',imin,tau0,tau1(imin)
 
         do i=1,10
            d1(i)=0
@@ -69,16 +68,11 @@ c inicializamos
 	tsi=t(ntau)
         psi=pe(ntau)
 
-c       print*,'equisubmu_cont 1 pg0 pe0',pg0,psi
         call pefrompg11(tsi,pg0,psi)
-c        print*,'equisubmu_cont 2 pg0 pe0',pg0,psi
-c        stop
         
         pe(ntau)=psi
         call gasc(tsi,psi,pg(ntau),pp)
-c        print*,'equisubmu_cont 3 pg0 pe0',pg(ntau),psi
         pg(ntau)=pg0
-c        print*,'equisubmu_cont 4 pg0 pe0',pg(ntau),pe(ntau)
 	call kappach(5.e-5,tsi,psi,pp,d1,d1,kac,d2,d2)
         pesomedio=pmusum/(asum+pp(8)) !peso molec. medio
         kappa(ntau)=kac*avog/pmusum
@@ -126,7 +120,6 @@ c integramos
             ro(i)=pesomedio*pg(i)/tsi/cgases
 
             y(i)=taue(i)/kappa(i)/ro(i)
-c	    print*,'equisubmu_cont 3',i,'pg(i) ro kappa= ',pg(i),ro(i),pesomedio,tsi,cgases,kappa(i),y(i)
 	end do
 
         z1(1)=0.
@@ -134,12 +127,9 @@ c	    print*,'equisubmu_cont 3',i,'pg(i) ro kappa= ',pg(i),ro(i),pesomedio,tsi,c
            z1(i)=z1(i-1)+x(i)/g*(y(i-1)+y(i))/2.
         end do
 	z00=z1(imin)
-c	print*,'equisumbmu_cont imin z1(imin) =',imin,z1(imin)
         do i=1,ntau
            z(i)=(z1(i)-z00)*1.e-5
-c           print*,i,z(i)
         end do
-c        print*,imin,abs(tau(imin)),z(imin)
 c        do i=1,ntau   !we output geometrical heights ALONG the LOS
 c          z(i)=z(i)/abs(cth)
 c        enddo

@@ -173,12 +173,8 @@ c	ddlf1=.5*(ddlc2/c1-(ddlc1*c2)/(c1*c1))
       ddlf1=f1*(ddc2-ddc1)             
 
 
-c      print*,'gasb 802 ',ddlf1,sign(1.,c1),2.*f1*dlf1,dlc3/c1,dlc1*c3/(c1*c1)
-
-
 	dlf1=-dlf1+sign(1.,c1)*(2.*f1*dlf1-dlc3/c1+dlc1*c3/(c1*c1))
      *	/(2.*sqrt(f1**2-c3/c1))
-c      print*,'gasb 81 ',f1,dlf1,ddlf1
 
 	ddlf1=-ddlf1+sign(1.,c1)*(2.*f1*ddlf1-ddlc3/c1+ddlc1*c3/(c1*c1))
      *	/(2.*sqrt(f1**2-c3/c1))
@@ -326,13 +322,9 @@ c      print*,'gasb 81 ',f1,dlf1,ddlf1
 	ddp(90)=ddfe		!ddlfe/fe
 
 	
-c	print*,'gasb_thermo 331 p(h)/p(hh)=',p(1),'p(hh)=',p(85),'p(h+)/p(hh)=',p(86),'p(h-)/p(hh)=',p(87),'pe/p(hh)=',p(90)
-	
-	
       p(91)=pe/(1.38054e-16*t) ! n(e)=pe/kt
 	dp(91)=-1./t
 	ddp(91)=1./pe
-c      print*,'gasb fin'
 
         eneri=p(86)*chi1(1)
           deneri=dp(86)

@@ -22,12 +22,6 @@ c        fichabun='THEVENIN'
         call PemufromPgT_isub(T,Pg,Pe,pesomedio,rho,kappa)
         call thermosub(T,Pe,thermo)
         
-c        print*,'Pe pesomedio rho kappa',Pe,pesomedio,rho,kappa
-c        print*,'ne nH nH+  ',thermo(5:7)
-c        print*,'grd_ion alpha delta  ',thermo(8:10)
-c        print*,'c_v c_p c_s nabl_ad ',thermo(11:14)
-        
-        
 	open(2,file='output_PemufromPgT_i')
 	write(2,1002) 'Pe','pesomed','rho','kappa','  ne   ','  nH   ','   nH+  ',
      &	'   grd_ion','   alpha ','   delta ','   c_v   ','  c_p   ',

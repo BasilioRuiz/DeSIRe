@@ -102,12 +102,7 @@ c                   end do
 c                end do
 c	end if
 
-c      print*,'en matinx (4)',det
-
       fdeta = fabsmx / det
-
-c      print*,'en matinx (5)',fdeta
-
 
       do 5000 i = 1 , 4
       do 5000 j = 1 , 4
@@ -125,8 +120,6 @@ c             end do
 c           end do
 c         end if 
 
-c      print*,'en matinx (6)',fdeta
-   
       return
       end
 

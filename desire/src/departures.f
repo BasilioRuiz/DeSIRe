@@ -17,6 +17,7 @@ c 08/08/20 epm: Use common/niveles instead of passing arguments.
 c               New routine to pass abundance values to RH.
 c 10/10/20 epm: New routine to pass the wavetable to RH.
 c 04/04/21 epm: New routine to pass coupling data to RH.
+c 03/03/23 epm: New routine to write the model on disk in RH format.
 c_____________________________________________________________________________
 
       subroutine departures(label_ID_model,RH_model,
@@ -42,8 +43,8 @@ c     real*4        beta1(kl,kt),beta2(kl,kt)
 c     06/06/19 epm: Double precision for departure coefficients.
       real*8        departure(ntau*2)
 
-c      real*4 tau(kt),T(kt),Pe(kt),Pg(kt),z(kt),ro(kt)
-c      real*4 Vmac,fill,strayfac
+c     real*4 tau(kt),T(kt),Pe(kt),Pg(kt),z(kt),ro(kt)
+c     real*4 Vmac,fill,strayfac
 c     real*4 atmosnew(kt16)
 c     real*4 pe1_change(kt),pe2_change(kt),pg1_change(kt),pg2_change(kt)
 c     real*4 tauoriginal(kt)
@@ -82,6 +83,7 @@ c     04/04/21 epm: Coupling data (read from common/cpldata).
      &          qn5_low(kl),qn5_up(kl),qn6_low(kl),qn6_up(kl)
 
       common/istatus12/istatus1,istatus2
+      common/iwrtRHformat/iwriteRHformat  ! =1 --> writes model in RH format
 
 c     common/atmos1LGold/atmos1LGold
 c     common/ichange/ichange
@@ -118,17 +120,23 @@ c     data (pg2_change(i), i=1,kt)/kt*1.0/
       ivez=ivez+1
       bol=1.3806488d-16  !erg/s
 
+c     11/11/20 epm: Save the model in memory instead of file.
       if(imassortau .eq. 0)then
-          call write_atmos_RH_tau(label_ID_model,RH_model,RH_magneticfield,
-     &                            atmosLG,ntau,natmos)
+          call write_atmos_RH_tau(label_ID_model,RH_model,
+     &                            RH_magneticfield,atmosLG,ntau,natmos)
       else
-          call write_atmos_RH(label_ID_model,RH_model,RH_magneticfield,
-     &                        atmosLG,ntau)
+          call write_atmos_RH(label_ID_model,RH_model,
+     &                        RH_magneticfield,atmosLG,ntau)
+      end if
+c     03/03/23 epm: Option to write the model on disk in RH format.
+      if(iwriteRHformat .eq. 1)then
+          call write_atmos_RH_tau_disk(label_ID_model,RH_model,
+     &                                 RH_magneticfield,atmosLG,ntau,natmos)
       end if
 
-c      Vmac=atmosLG(8*ntau+1)
-c      fill=atmosLG(8*ntau+2)
-c      strayfac=atmosLG(11*ntau+3)
+c     Vmac=atmosLG(8*ntau+1)
+c     fill=atmosLG(8*ntau+2)
+c     strayfac=atmosLG(11*ntau+3)
 
 c     Passing data to RH.
       if (ivez .eq. 1) then
